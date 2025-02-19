@@ -3,7 +3,7 @@
 # Canale per Mediaset Play
 # ------------------------------------------------------------
 import functools
-
+import time
 from platformcode import logger, config
 import uuid, datetime, xbmc
 
@@ -11,8 +11,10 @@ import requests, sys
 from core import jsontools, support, httptools
 
 if sys.version_info[0] >= 3:
+    from concurrent import futures
     from urllib.parse import urlencode, quote
 else:
+    from concurrent_py2 import futures
     from urllib import urlencode, quote
 
 host = 'https://www.mediasetplay.mediaset.it'
@@ -82,9 +84,41 @@ def menu(item):
 def live(item):
     itemlist = []
 
+    epg_url = "https://api-ott-prod-fe.mediaset.net/PROD/play/feed/allListingFeedEpg/v2.0?byListingTime={0}~{0}&byCallSign={1}"
     res = session.get('https://static3.mediasetplay.mediaset.it/apigw/nownext/nownext.json').json()['response']
     allguide = res['listings']
     stations = res['stations']
+
+    def find_high_res_image(arts, prefix):
+        return max(
+            (item for key, item in arts.items() if key.startswith(prefix)),
+            key=lambda x: x.get('width', 0),
+            default=None
+        )
+    
+    def itArt(it):
+        current_time_millis = int(time.time() * 1000)
+        arts = ""
+        try:
+            response = session.get(epg_url.format(current_time_millis, it['callSign'])).json()
+            listings = response.get('response', {}).get('entries', [{}])[0].get('listings', [{}])
+
+            for listing in listings: # for some reason, sometimes, the API returns multiple listings
+                if listing['startTime'] < current_time_millis < listing['endTime']:
+                    arts = listing.get('program', {}).get('thumbnails', {})
+                    break
+
+            poster = find_high_res_image(arts, "image_horizontal_cover") or find_high_res_image(arts, "image_keyframe_poster")
+
+            it['fanart'] = poster.get('url')
+        except Exception as e:
+            logger.debug(f"could not get art for {it['callSign']}: {e}")
+            it['fanart'] = ""
+    
+    with futures.ThreadPoolExecutor() as executor:
+        itlist = [executor.submit(itArt, it) for it in stations.values()]
+        for res in futures.as_completed(itlist):
+            pass
 
     for it in stations.values():
         logger.debug(jsontools.dump(it))
@@ -93,6 +127,7 @@ def live(item):
         url = 'https:' + it['mediasetstation$pageUrl']
         if 'SVOD' in it['mediasetstation$channelsRights']: continue
         thumb = it.get('thumbnails',{}).get('channel_logo-100x100',{}).get('url','')
+
         if it['callSign'] in allguide:
 
             guide = allguide[it['callSign']]
@@ -106,6 +141,7 @@ def live(item):
                                        url=url,
                                        action='findvideos',
                                        thumbnail=thumb,
+                                       fanart = it['fanart'],
                                        forcethumb=True))
 
     itemlist.sort(key=lambda it: support.channels_order.get(it.fulltitle, 999))
@@ -349,9 +385,3 @@ def get_programs(item):
             next = res.get('pagination',{}).get('hasNextPage', False)
             ret['next'] = pag + 1 if next else 0
     return ret
-
-
-
-
-
-
