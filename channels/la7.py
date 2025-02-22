@@ -51,7 +51,11 @@ def live(item):
     html_content = httptools.downloadpage(la7live_item.url).data
 
     match = support.match(html_content, patron=r'"name":\s*"([^"]+)",\s*"description":\s*"([^"]+)",.*?"url":\s*"([^"]+)"')
-    titolo, plot, image_url = match.matches[0]
+    if match and hasattr(match, "matches") and match.matches:
+        titolo, plot, image_url = match.matches[0]
+    else:
+        titolo = "La7"
+        plot = image_url = ""
 
     la7live_item.plot = support.typo(titolo, 'bold') + " - " + plot
     la7live_item.fanart = image_url
@@ -78,7 +82,8 @@ def live(item):
 
     la7dlive_item.plot = support.typo(current_show, 'bold')
     match = support.match(html_content, patron=r"(?<!//)\bposter:\s*['\"](.*?)['\"]")
-    la7dlive_item.fanart = f'{host}{match.matches[0][0]}'
+    if match and hasattr(match, "matches") and match.matches and len(match.matches[0]):
+        la7dlive_item.fanart = f'{host}{match.matches[0][0]}'
 
     itemlist = [la7live_item, la7dlive_item]
     return support.thumb(itemlist, live=True)
