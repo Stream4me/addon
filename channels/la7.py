@@ -4,19 +4,21 @@
 # ------------------------------------------------------------
 
 import sys
-import requests
 from core import support, httptools
 from platformcode import logger
 from datetime import datetime, timezone, timedelta
 import html
-import re
+import json
+import ssl
 
 if sys.version_info[0] >= 3:
     from concurrent import futures
     from urllib.parse import urlencode
+    import urllib.request as urllib_request
 else:
     from concurrent_py2 import futures
     from urllib import urlencode
+    import urllib2 as urllib_request  # urllib2 is used in Python 2
 
 DRM = 'com.widevine.alpha'
 key_widevine = "https://la7.prod.conax.cloud/widevine/license"
@@ -46,43 +48,56 @@ def mainlist(item):
 
 def live(item):
     la7live_item = item.clone(title=support.typo('La7', 'bold'), fulltitle='La7', url= host + '/dirette-tv', action='findvideos', forcethumb = True, no_return=True)
-    html_content = requests.get(la7live_item.url).text
+    html_content = httptools.downloadpage(la7live_item.url).data
 
-    patron = r'"name":\s*"([^"]+)",\s*"description":\s*"([^"]+)",.*?"url":\s*"([^"]+)"'
-    titolo, plot, image_url = re.findall(patron, html_content, re.DOTALL)[0]
+    match = support.match(html_content, patron=r'"name":\s*"([^"]+)",\s*"description":\s*"([^"]+)",.*?"url":\s*"([^"]+)"')
+    if match and hasattr(match, "matches") and match.matches:
+        titolo, plot, image_url = match.matches[0]
+    else:
+        titolo = "La7"
+        plot = image_url = ""
+
     la7live_item.plot = support.typo(titolo, 'bold') + " - " + plot
     la7live_item.fanart = image_url
     
     la7dlive_item = item.clone(title=support.typo('La7d', 'bold'), fulltitle='La7d', url= host + '/live-la7d', action='findvideos', forcethumb = True, no_return=True)
-    html_content = requests.get(la7dlive_item.url).text
+    html_content = httptools.downloadpage(la7dlive_item.url).data
 
-    patron = r'<div class="orario">\s*(.*?)\s*</div>.*?<span class="dsk">\s*(.*?)\s*</span>'
-    schedule = {k:v for k,v in re.findall(patron, html_content)}
+    match = support.match(html_content, patron=r'<div class="orario">\s*(.*?)\s*</div>.*?<span class="dsk">\s*(.*?)\s*</span>')
+    schedule = {k:v for k,v in match.matches}
     italy_tz = timezone(timedelta(hours=1))  # CET (Central European Time, UTC+1)
 
     current_time_utc = datetime.now(timezone.utc)  # Get current time in UTC
     italian_time = current_time_utc.astimezone(italy_tz).time()  # Convert to Italy time zone
 
-    current_show = next((show for (t1, show), (t2, _) in zip(
-        sorted((datetime.strptime(t, "%H:%M").time(), show) for t, show in schedule.items()),
-        sorted((datetime.strptime(t, "%H:%M").time(), show) for t, show in schedule.items())[1:] + 
-        sorted((datetime.strptime(t, "%H:%M").time(), show) for t, show in schedule.items())[:1]
-    ) if t1 <= italian_time < t2), "No show currently playing.")
+    try:
+        current_show = next((show for (t1, show), (t2, _) in zip(
+            sorted((datetime.strptime(t, "%H:%M").time(), show) for t, show in schedule.items()),
+            sorted((datetime.strptime(t, "%H:%M").time(), show) for t, show in schedule.items())[1:] + 
+            sorted((datetime.strptime(t, "%H:%M").time(), show) for t, show in schedule.items())[:1]
+        ) if t1 <= italian_time < t2), "No show currently playing.")
+    except Exception as e:
+        logger.info(f'Error in finding current show: {e}')
+        current_show = ""
 
     la7dlive_item.plot = support.typo(current_show, 'bold')
-    patron = r"(?<!//)\bposter:\s*['\"](.*?)['\"]"
-    la7dlive_item.fanart = f'{host}{re.findall(patron, html_content)[0]}'
+    match = support.match(html_content, patron=r"(?<!//)\bposter:\s*['\"](.*?)['\"]")
+    if match and hasattr(match, "matches") and match.matches and len(match.matches[0]):
+        la7dlive_item.fanart = f'{host}{match.matches[0][0]}'
 
-
-    itemlist = [la7live_item,
-                la7dlive_item]
+    itemlist = [la7live_item, la7dlive_item]
     return support.thumb(itemlist, live=True)
 
 
 def replay_channels(item):
     itemlist = [item.clone(title=support.typo('La7', 'bold'), fulltitle='La7', url= host + '/rivedila7/0/la7', action='replay_menu', forcethumb = True),
                 item.clone(title=support.typo('La7d', 'bold'), fulltitle='La7d', url= host + '/rivedila7/0/la7d', action='replay_menu', forcethumb = True)]
-    return support.thumb(itemlist, live=True)
+    itemlist = support.thumb(itemlist, live=True)
+    itemlist.append(item.clone(title=support.typo('TG La7', 'bold'), fulltitle='TG La7',
+                               plot='Informazione a cura della redazione del TG LA7', url= host + '/tgla7', action='episodios',
+                               thumbnail='https://raw.githubusercontent.com/Stream4me/media/refs/heads/master/resources/thumb/tg.png',
+                               fanart='https://raw.githubusercontent.com/Stream4me/media/refs/heads/master/resources/thumb/tg.png'))
+    return itemlist
 
 
 @support.scrape
@@ -121,127 +136,121 @@ def search(item, text):
 
 
 def peliculas(item):
-    page_size = 20
-
-    """Split a list into chunks of size page_size."""
-    def chunk_list(lst):
-        return [lst[i:i + page_size] for i in range(0, len(lst), page_size)]
-
-    html_content = requests.get(item.url).text
+    html_content = httptools.downloadpage(item.url).data
 
     if 'la7teche' in item.url:
         patron = r'<a href="(?P<url>[^"]+)" title="(?P<title>[^"]+)" class="teche-i-img".*?url\(\'(?P<thumb>[^\']+)'
     else:
-        patron = r'<a href="(?P<url>[^"]+)"[^>]+><div class="[^"]+" data-background-image="(?P<thumb>[^"]+)"></div><div class="titolo">\s*(?P<title>[^<]+)<'
-    
-    matches = chunk_list(re.findall(patron, html_content))
-    url_splits = item.url.split('?')
-    page = 0 if len(url_splits)==1 else int(url_splits[1])
+        patron = r'<a href="(?P<url>[^"]+)"[^>]+><div class="[^"]+" data-background-image="(?P<thumb>[^"]+)"'
 
-    def itInfo(n, key, item):
+    match = support.match(html_content, patron=patron)
+    matches = match.matches
+    # url_splits = item.url.split('?')
+
+    itemlist = []
+    for n, key in enumerate(matches):
         if 'la7teche' in item.url:
             programma_url, titolo, thumb = key
         else:
-            programma_url, thumb, titolo = key
+            programma_url, thumb = key
+            titolo = " ".join(programma_url.replace("/", "").split('-')).title()
+
+        if not thumb.startswith("https://"):
+            thumb = f'{host}/{thumb}'
         programma_url = f'{host}{programma_url}'
         titolo = html.unescape(titolo)
 
-        html_content = requests.get(programma_url).text
-        plot = re.search(r'<div class="testo">.*?</div>', html_content, re.DOTALL)[0]
-        if plot:
-            text = re.sub(r'<[^>]+>', '\n', plot)   # Replace tags with newline
-            plot = re.sub(r'\n+', '\n', text).strip('\n')  # Collapse multiple newlines and remove leading/trailing ones
-        else:
-            plot = ""
-
-        regex = r'background-image:url\((\'|")([^\'"]+)(\'|")\);'
-        match = re.findall(regex, html_content)
-        if match:
-            fanart = match[0][1]
-        else:
-            fanart = ""
-
         it = item.clone(title=support.typo(titolo, 'bold'),
-                    data='',
-                    fulltitle=titolo,
-                    show=titolo,
-                    thumbnail= thumb,
-                    fanart=fanart,
-                    url=programma_url,
-                    video_url=programma_url,
-                    plot=plot,
-                    order=n)
+                        data='',
+                        fulltitle=titolo,
+                        show=titolo,
+                        thumbnail=thumb,
+                        url=programma_url,
+                        video_url=programma_url,
+                        order=n)
         it.action = 'episodios'
         it.contentSerieName = it.fulltitle
 
-        return it
-
-    itemlist = []
-    with futures.ThreadPoolExecutor() as executor:
-        itlist = [executor.submit(itInfo, n, it, item) for n, it in enumerate(matches[page])]
-        for res in futures.as_completed(itlist):
-            if res.result():
-                itemlist.append(res.result())
-    itemlist.sort(key=lambda it: it.order)
-
-    if page < len(matches)-1:
-        itemlist.append(
-            item.clone(title=support.typo('Next', 'bold'),
-                        url=f'{url_splits[0]}?{page+1}',
-                        order=len(itemlist)
-                )
-            )
+        itemlist.append(it)
 
     return itemlist
 
 
 def episodios(item):
-    html_content = requests.get(item.url).text
-
-    url_splits = item.url.split("=")
-    page = -1 if len(url_splits) == 1 else int(url_splits[-1])
-
-    if 'la7teche' in item.url:
-        # patron = r'<a href="(?P<url>[^"]+)">\s*<div class="holder-bg">.*?data-background-image="(?P<thumb>[^"]+)(?:[^>]+>){4}\s*(?P<title>[^<]+)(?:(?:[^>]+>){2}\s*(?P<plot>[^<]+))?'
-        patron = r'[^>]+>\s*<a href="(?P<url>[^"]+)">.*?image="(?P<thumb>[^"]+)(?:[^>]+>){4,5}\s*(?P<title>[\d\w][^<]+)(?:(?:[^>]+>){7}\s*(?P<title2>[\d\w][^<]+))?'
+    if item.url.endswith('/tgla7'):
+        html_content = httptools.downloadpage('https://tg.la7.it/ultime-edizioni-del-tgla7').data
     else:
-        if page == -1:
-            patron = r'<li class="voce_menu">\s*<a href="([^"]+)"[^>]*>\s*([^<]+)\s*</a>\s*</li>'
-            matches = re.findall(patron, html_content)
-            result_dict = {text.strip().lower(): href for href, text in matches}
-            if 'puntate' in result_dict:
-                html_content = requests.get(f'{host}{result_dict["puntate"]}').text
-            elif 'rivedila7' in result_dict:
-                html_content = requests.get(f'{host}{result_dict["rivedila7"]}').text
-            else:
-                html_content = requests.get(f'{host}{[*result_dict.values()][0]}').text
-            page = 0
-        # patron = r'item[^>]+>\s*<a href="(?P<url>[^"]+)">.*?image="(?P<thumb>[^"]+)(?:[^>]+>){4,5}\s*(?P<title>[\d\w][^<]+)(?:(?:[^>]+>){7}\s*(?P<title2>[\d\w][^<]+))?'
-        patron = r'<div class="[^"]*">.*?<a href="(?P<url>[^"]+)">.*?data-background-image="(?P<image>//[^"]+)"[^>]*>.*?<div class="title[^"]*">\s*(?P<title>[^<]+)\s*</div>'
+        html_content = httptools.downloadpage(item.url).data
 
-    matches = re.findall(patron, html_content)
+    itemlist = []
+    matches = []
+    
+    if 'la7teche' in item.url:
+        patron = r'[^>]+>\s*<a href="(?P<url>[^"]+)">.*?image="(?P<thumb>[^"]+)(?:[^>]+>){4,5}\s*(?P<title>[\d\w][^<]+)(?:(?:[^>]+>){7}\s*(?P<title2>[\d\w][^<]+))?'
+        html_content = html_content.split('id="block-system-main"')[1]
+    elif 'tgla7' in item.url:
+        patron = r'<a href="(?P<url>[^"]+)"[^>]+data-bg="(?P<thumb>[^"]+)".*?</a>.*?<h4 class="news-title">\s*<a [^>]*>(?P<title>[^<]+)</a>.*?<div class="news-descrizione">\s*(?P<plot>[^<]+)\s*<'
+    else:
+        if len(item.url.split('www.la7.it')[-1].strip('/').split("/")) == 1:
+            match = support.match(html_content, patron=r'<div class="testo">.*?</div>')
+            plot = match.matches[0][0] if match.matches else ""
+            if plot:
+                # Replace tags with newline
+                text = plot.replace('<', '\n<').replace('>', '>\n')
+                text = ''.join(line for line in text.splitlines() if not line.startswith('<'))
+                # Collapse multiple newlines and remove leading/trailing ones
+                plot = '\n'.join(line for line in text.splitlines() if line).strip('\n')
+            else:
+                plot = ""
+
+            match = support.match(html_content, patron=r'background-image:url\((\'|")([^\'"]+)(\'|")\);')
+            fanart = match.matches[0][1] if match.matches else ""
+
+            match = support.match(html_content, patron=r'<li class="voce_menu">\s*<a href="([^"]+)"[^>]*>\s*([^<]+)\s*</a>\s*</li>')
+            result_dict = {text: href for href, text in match.matches}
+            for k,v in result_dict.items():
+                if(len(v.strip('/').split("/")) > 1):
+                    v = f'{host}{v}'
+                    new_item = item.clone(
+                            title=support.typo(k, 'bold'),
+                            data='',
+                            fulltitle=k,
+                            show=k,
+                            url=v,
+                            plot=plot,
+                            fanart=fanart
+                        )
+                    itemlist.append(new_item)
+            return itemlist
+        else:
+            patron = r'<div class="[^"]*">.*?<a href="(?P<url>[^"]+)">.*?data-background-image="(?P<image>//[^"]+)"[^>]*>.*?<div class="title[^"]*">\s*(?P<title>[^<]+)\s*</div>'
+            html_content = html_content.split('<div class="view-content clearfix">')
+
+        if "?page=" not in item.url: # if first page check for la settimana
+            match = support.match(html_content[0], patron=r'<div class="item">.*?<a href="(?P<url>[^"]+)">.*?data-background-image="(?P<image>//[^"]+)"[^>]*>.*?<div class="title[^"]*">\s*(?P<title>[^<]+)\s*</div>')
+            matches.extend(match.matches)
+        html_content = html_content[-1]
+
+    match = support.match(html_content, patron=patron)
+    matches.extend(match.matches)
 
     visited = set()
     def itInfo(n, key, item):
         if 'la7teche' in item.url:
             programma_url, thumb, titolo, plot = key
-
+        elif 'tgla7' in item.url:
+            programma_url, thumb, titolo, plot = key
         else:
             programma_url, thumb, titolo = key
+            plot = ""
 
         if programma_url in visited: return None
 
         visited.add(programma_url)
-        programma_url = f'{host}{programma_url}'
+        programma_url = f'{"https://tg.la7.it" if "tgla7" in item.url else host}{programma_url}'
         thumb = 'https://'+thumb[2:] if thumb.startswith("//") else thumb
 
-        plot_page = requests.get(programma_url).text
-        match = re.search(r'<div[^>]*class="[^"]*occhiello[^"]*"[^>]*>(.*?)</div>', plot_page)
-        if match:
-            plot = match.group(1)
-        else:
-            plot = ""
-
+        titolo = html.unescape(titolo)
         it = item.clone(title=support.typo(titolo, 'bold'),
                     data='',
                     fulltitle=titolo,
@@ -249,13 +258,12 @@ def episodios(item):
                     thumbnail= thumb,
                     url=programma_url,
                     video_url=programma_url,
-                    plot=plot,
+                    plot = plot if plot != "" else item.plot,
                     order=n)
         it.action = 'findvideos'
 
         return it
 
-    itemlist = []
     with futures.ThreadPoolExecutor() as executor:
         itlist = [executor.submit(itInfo, n, it, item) for n, it in enumerate(matches)]
         for res in futures.as_completed(itlist):
@@ -263,14 +271,12 @@ def episodios(item):
                 itemlist.append(res.result())
     itemlist.sort(key=lambda it: it.order)
 
-
-    pattern = r'<li class="pager-next"><a href="(.*?)">›</a></li>'
-    match = re.search(pattern, html_content)
-    if match:
-        next_page_link = match.group(1)
+    match = support.match(html_content, patron=r'<li class="pager-next"><a href="(.*?)">›</a></li>')
+    if match.matches:
+        next_page_link = match.matches[0]
         itemlist.append(
             item.clone(title=support.typo('Next', 'bold'),
-                        url= f'{host}{match.group(1)}',
+                        url= f'{host}{next_page_link}',
                         order=len(itemlist),
                         video_url='',
                         thumbnail=''
@@ -302,7 +308,11 @@ def findvideos(item):
             'origin': headers['origin'],
             'referer': headers['referer'],
         }
-        preAuthToken = requests.get(preurl, headers=tokenHeader,verify=False).json()['preAuthToken']
+        req = urllib_request.Request(preurl, headers=tokenHeader)
+        with urllib_request.urlopen(req, context=ssl._create_unverified_context()) as response:
+            data = json.load(response)  # Parse JSON response
+        preAuthToken = data['preAuthToken']
+        logger.info(f'preAuthToken: {preAuthToken}')
         licenseHeader = {
             'host': headers['host_license'],
             'user-agent': headers['user-agent'],
