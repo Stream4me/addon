@@ -35,7 +35,7 @@
     <category label="30131">
         <setting label="30501" type="lsep"/>
         <!-- <setting id="videolibrarypath" type="action" label="30067" action="RunPlugin(plugin://plugin.video.s4me/?ew0KCSJjaGFubmVsIjoibW92ZV92aWRlb2xpYnJhcnkiLA0KCSJhY3Rpb24iOiJzZXRfdmlkZW9saWJyYXJ5X3BhdGgiDQp9)" default="special://profile/addon_data/plugin.video.s4me/videolibrary"/> -->
-        <setting id="videolibrarypath" type="folder" label="30067" default="" option="writeable"/>
+        <setting id="videolibrarypath" type="folder" label="30067" default="special://profile/addon_data/plugin.video.s4me/videolibrary/" option="writeable"/>
         <setting id="folder_tvshows" type="text" label="70118" default="Serie TV"/>
         <setting id="folder_movies" type="text" label="70119" default="Film"/>
         <setting id="videolibrary_kodi" type="bool" label="70120" default="false"/>
@@ -104,10 +104,10 @@
     <!-- Downloads -->
     <category label="30153">
         <setting id="downloadenabled" type="bool" label="70689" default="false"/>
-        <setting id="downloadpath" type="folder" label="30017" visible="eq(-1,true)" default="" option="writeable"/>
+        <setting id="downloadpath" type="folder" label="30017" visible="eq(-1,true)" default="special://profile/addon_data/plugin.video.s4me/downloads/" option="writeable"/>
         <!-- <setting id="library_add" type="bool" label="70230" default="false"/>
         <setting id="library_move" type="bool" label="70231" default="false" visible="eq(-1,true)" subsetting="true"/> -->
-        <setting id="downloadlistpath" type="folder" label="30018" visible="eq(-2,true)" default="" option="writeable"/>
+        <setting id="downloadlistpath" type="folder" label="30018" visible="eq(-2,true)" default="special://profile/addon_data/plugin.video.s4me/downloads/list/" option="writeable"/>
         <setting id="library_move" type="bool" label="70231" visible="eq(-3,true)" default="true"/>
         <setting id="browser" type="bool" label="70232" visible="eq(-4,true)" default="true"/>
         <setting id="server_speed" type="bool" label="70242" visible="eq(-5,true)" default="true"/>
