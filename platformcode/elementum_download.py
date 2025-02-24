@@ -13,24 +13,28 @@ elementum_setting = filetools.join(setting_path,'plugin.video.elementum')
 elementum_setting_file = filetools.join(elementum_setting,'settings.xml')
 s4me_setting_file = filetools.join(addon_path,'plugin.video.s4me', 'resources', 'settings', 'elementum', 'settings.xml')
 
-
 def download(item=None):
     ret = True
 
     if filetools.exists(elementum_path):
-        if platformtools.dialog_yesno(config.get_localized_string(70784), config.get_localized_string(70783)):
-            addon_file = filetools.file_open(filetools.join(elementum_path,'addon.xml')).read()
-            required = support.match(addon_file, patron=r'addon="([^"]+)').matches
-            for r in required: xbmc.executebuiltin('InstallAddon(' + r + ')', wait=True)
-            setting()
-            platformtools.dialog_ok('Elementum', config.get_localized_string(70783))
+        # Check if Elementum is active
+        is_active = xbmc.getCondVisibility('System.HasAddon(plugin.video.elementum)')
+        if not is_active:
+            if platformtools.dialog_yesno(config.get_localized_string(70784), config.get_localized_string(70783)):
+                addon_file = filetools.file_open(filetools.join(elementum_path, 'addon.xml')).read()
+                required = support.match(addon_file, patron=r'addon="([^"]+)').matches
+                for r in required:
+                    xbmc.executebuiltin('InstallAddon(' + r + ')', wait=True)
+                setting()
+                platformtools.dialog_ok('Elementum', config.get_localized_string(70783))
+            else:
+                ret = False
         else:
-            ret = False
-
+            platformtools.dialog_ok(config.get_localized_string(70784), config.get_localized_string(90006))
     else:
         if platformtools.dialog_yesno(config.get_localized_string(70784), config.get_localized_string(70782)):
             pform = get_platform()
-            real_elementum_url = elementum_url + '/expanded_assets/' + httptools.downloadpage(elementum_url +'/latest').url.split('/')[-1]
+            real_elementum_url = elementum_url + '/expanded_assets/' + httptools.downloadpage(elementum_url + '/latest').url.split('/')[-1]
             url = support.match(real_elementum_url, patron=r'<a href="([a-zA-Z0-9/\.-]+{}.zip)'.format(pform)).match
             support.info('OS:', pform)
             support.info('Extract IN:', elementum_path)
@@ -40,12 +44,13 @@ def download(item=None):
                 if dl == -3:
                     filetools.remove(filename)
                     dl = downloadtools.downloadfile(host + url, filename)
-                if dl == None:
+                if dl is None:
                     extract()
                     xbmc.sleep(1000)
-                    addon_file = filetools.file_open(filetools.join(elementum_path,'addon.xml')).read()
+                    addon_file = filetools.file_open(filetools.join(elementum_path, 'addon.xml')).read()
                     required = support.match(addon_file, patron=r'addon="([^"]+)').matches
-                    for r in required: xbmc.executebuiltin('InstallAddon(' + r + ')', wait=True)
+                    for r in required:
+                        xbmc.executebuiltin('InstallAddon(' + r + ')', wait=True)
                     setting()
                 else:
                     ret = False
@@ -54,7 +59,6 @@ def download(item=None):
         else:
             ret = False
     return ret
-
 
 def extract():
     import zipfile
