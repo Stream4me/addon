@@ -1,0 +1,29 @@
+{
+    "id": "guardaseriesocial",
+    "name": "GuardaSerie.social",
+    "active": true,
+    "language": ["ita", "vos"],
+    "thumbnail": "guardaserieclick.png",
+    "bannermenu": "guardaserieclick.png",
+    "categories": ["tvshow", "anime"],
+    "not_active": ["include_in_newest_peliculas", "include_in_newest_anime"],
+    "settings": [
+		{
+		  "id": "include_in_newest_peliculas",
+		  "type": "bool",
+		  "label": "@70727",
+		  "default": false,
+		  "enabled": false,
+		  "visible": false
+        },    
+		{
+		  "id": "include_in_newest_anime",
+		  "type": "bool",
+		  "label": "@70727",
+		  "default": false,
+		  "enabled": false,
+		  "visible": false
+		}
+    ],
+	"cloudflare": true
+}
