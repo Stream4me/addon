@@ -6519,3 +6519,7 @@ msgstr "No options"
 msgctxt "#90005"
 msgid "Search on S4Me"
 msgstr "Search with S4Me"
+
+msgctxt "#90006"
+msgid "Elementum is already installed"
+msgstr "Elementum is already installed"
