@@ -48,43 +48,18 @@ def mainlist(item):
 
 def live(item):
     la7live_item = item.clone(title=support.typo('La7', 'bold'), fulltitle='La7', url= host + '/dirette-tv', action='findvideos', forcethumb = True, no_return=True)
-    html_content = httptools.downloadpage(la7live_item.url).data
-
-    match = support.match(html_content, patron=r'"name":\s*"([^"]+)",\s*"description":\s*"([^"]+)",.*?"url":\s*"([^"]+)"')
-    if match and hasattr(match, "matches") and match.matches:
-        titolo, plot, image_url = match.matches[0]
-    else:
-        titolo = "La7"
-        plot = image_url = ""
-
-    la7live_item.plot = support.typo(titolo, 'bold') + " - " + plot
-    la7live_item.fanart = image_url
-    
     la7dlive_item = item.clone(title=support.typo('La7d', 'bold'), fulltitle='La7d', url= host + '/live-la7d', action='findvideos', forcethumb = True, no_return=True)
-    html_content = httptools.downloadpage(la7dlive_item.url).data
+    json_data = json.loads(httptools.downloadpage("https://www.la7.it/sites/default/files/la7_app_home_smarttv.json").data)
+    if "fascia_dirette" in json_data:
+        if 'la7' in json_data["fascia_dirette"]:
+            titolo = json_data["fascia_dirette"]["la7"]["titolo"]
+            la7live_item.plot = support.typo(titolo, 'bold') + " - " + json_data["fascia_dirette"]["la7"]["descrizione"]
+            la7live_item.fanart = json_data["fascia_dirette"]["la7"]["url_locandina"]
 
-    match = support.match(html_content, patron=r'<div class="orario">\s*(.*?)\s*</div>.*?<span class="dsk">\s*(.*?)\s*</span>')
-    schedule = {k:v for k,v in match.matches}
-    italy_tz = timezone(timedelta(hours=1))  # CET (Central European Time, UTC+1)
-
-    current_time_utc = datetime.now(timezone.utc)  # Get current time in UTC
-    italian_time = current_time_utc.astimezone(italy_tz).time()  # Convert to Italy time zone
-
-    try:
-        current_show = next((show for (t1, show), (t2, _) in zip(
-            sorted((datetime.strptime(t, "%H:%M").time(), show) for t, show in schedule.items()),
-            sorted((datetime.strptime(t, "%H:%M").time(), show) for t, show in schedule.items())[1:] + 
-            sorted((datetime.strptime(t, "%H:%M").time(), show) for t, show in schedule.items())[:1]
-        ) if t1 <= italian_time < t2), "No show currently playing.")
-    except Exception as e:
-        logger.info(f'Error in finding current show: {e}')
-        current_show = ""
-
-    la7dlive_item.plot = support.typo(current_show, 'bold')
-    match = support.match(html_content, patron=r"(?<!//)\bposter:\s*['\"](.*?)['\"]")
-    if match and hasattr(match, "matches") and match.matches and len(match.matches[0]):
-        la7dlive_item.fanart = f'{host}{match.matches[0][0]}'
-
+        if 'la7d' in json_data["fascia_dirette"]:
+            titolo = json_data["fascia_dirette"]["la7d"]["titolo"]
+            la7dlive_item.plot = support.typo(titolo, 'bold') + " - " + json_data["fascia_dirette"]["la7d"]["descrizione"]
+            la7dlive_item.fanart = json_data["fascia_dirette"]["la7d"]["url_locandina"]
     itemlist = [la7live_item, la7dlive_item]
     return support.thumb(itemlist, live=True)
 
