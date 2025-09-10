@@ -2,7 +2,7 @@
     "id": "dinostreaming",
     "name": "DinoStreaming",
     "language": ["ita"],
-    "active": true,
+    "active": false,
     "thumbnail": "dinostreaming.png",
     "banner": "dinostreaming.png",
     "categories": ["movie"],
