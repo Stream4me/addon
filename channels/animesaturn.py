@@ -28,11 +28,20 @@ def get_cookie(data, cookie_name):
 
 
 def get_data(url):
+    global headers
+
     data = support.match(url, headers=headers, follow_redirects=True).data
     cookie_name = support.match(data, patron=r'cookie="(.*?)="\+toHex\(slowAES').match
     if cookie_name:
         get_cookie(data, cookie_name)
-        data = get_data(url)
+        return get_data(url)
+    
+    cookie = support.match(data, patron=r'document.cookie=\"(.*?)\s').match
+    if cookie:        
+        headers['Cookie'] = cookie
+        support.config.set_setting('cookie', cookie, __channel__)
+        return get_data(url)
+    
     return data
 
 
@@ -152,7 +161,6 @@ def peliculas(item):
             if item.args == 'incorso':
                 patron = r'<a href="(?P<url>[^"]+)"[^>]+>(?P<title>[^<(]+)(?:\s*\((?P<year>\d+)\))?(?:\s*\((?P<lang>[A-za-z-]+)\))?</a>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>\s*<img width="[^"]+" height="[^"]+" src="(?P<thumb>[^"]+)"[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>(?P<plot>[^<]+)<'
             else:
-                # debug=True
                 patron = r'<img src="(?P<thumb>[^"]+)" alt="(?P<title>[^"\(]+)(?:\((?P<lang>[Ii][Tt][Aa])\))?(?:\s*\((?P<year>\d+)\))?[^"]*"[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>\s*<a class="[^"]+" href="(?P<url>[^"]+)">[^>]+>[^>]+>[^>]+>\s*<p[^>]+>(?:(?P<plot>[^<]+))?<'
 
     return locals()
