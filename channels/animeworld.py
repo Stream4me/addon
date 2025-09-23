@@ -132,12 +132,12 @@ def peliculas(item):
         action='findvideos'
     else:
         patron= r'<div class="inner">\s*<a href="(?P<url>[^"]+)" class[^>]+>\s*<img.*?src="(?P<thumb>[^"]+)" alt?="(?P<title>[^\("]+)(?:\((?P<year>\d+)\) )?(?:\((?P<lang>[^\)]+)\))?(?P<title2>[^"]+)?[^>]+>[^>]+>(?:\s*<div class="(?P<l>[^"]+)">[^>]+>)?\s*(?:<div class="[^"]+">(?P<type>[^<]+)</div>)?'
-        action='episodios'
+        action='check'
 
     # Controlla la lingua se assente
     patronNext=r'<a href="([^"]+)" class="[^"]+" id="go-next'
-    typeContentDict={'movie':['movie', 'special']}
-    typeActionDict={'findvideos':['movie', 'special']}
+    #typeContentDict={'movie':['movie', 'special']}
+    #typeActionDict={'findvideos':['movie', 'special']}
     def itemHook(item):
         if not item.contentLanguage:
             if 'dub=1' in item.url or item.l == 'dub':
@@ -148,6 +148,14 @@ def peliculas(item):
                 item.title += support.typo(item.contentLanguage,'_ [] color std')
         return item
     return locals()
+
+def check(item):
+    item.data = httptools.downloadpage(item.url).data
+    if support.match(item.data, patron='Episodi.*1</dd>.*?Stato:.*?Finito</').match == '':
+        item.contentType = 'tvshow'
+        return episodios(item)
+    else:
+        return findvideos(item)
 
 
 @support.scrape
@@ -161,7 +169,7 @@ def episodios(item):
         item.number = support.re.sub(r'\[[^\]]+\]', '', item.title)
         item.title += support.typo(item.fulltitle,'-- bold')
         return item
-    action='findvideos'
+    action='findvideos'    
     return locals()
 
 
