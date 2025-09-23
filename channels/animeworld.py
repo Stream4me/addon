@@ -108,7 +108,7 @@ def search(item, text):
     else:
         lang = ['?', '?dub=1&', '?dub=0&'][config.get_setting('lang', channel=item.channel)]
         item.url = '{}/filter{}&keyword={}&sort='.format(host, lang, text)
-    item.contentType = 'tvshow'
+    # item.contentType = 'tvshow'
     try:
         return peliculas(item)
     # Continua la ricerca in caso di errore
@@ -132,6 +132,7 @@ def peliculas(item):
         action='findvideos'
     else:
         patron= r'<div class="inner">\s*<a href="(?P<url>[^"]+)" class[^>]+>\s*<img.*?src="(?P<thumb>[^"]+)" alt?="(?P<title>[^\("]+)(?:\((?P<year>\d+)\) )?(?:\((?P<lang>[^\)]+)\))?(?P<title2>[^"]+)?[^>]+>[^>]+>(?:\s*<div class="(?P<l>[^"]+)">[^>]+>)?\s*(?:<div class="[^"]+">(?P<type>[^<]+)</div>)?'
+        item.contentType='undefined'
         action='check'
 
     # Controlla la lingua se assente
