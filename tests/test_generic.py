@@ -395,6 +395,6 @@ class GenericServerTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main(testRunner=HtmlTestRunner.HTMLTestRunner(report_name='report', add_timestamp=False, combine_reports=True,
-                 report_title='S4MeTest Suite', template=os.path.join(config.get_runtime_path(), 'tests', 'template.html')), exit=False)
+                 report_title='S4Me Test Suite', template=os.path.join(config.get_runtime_path(), 'tests', 'template.html')), exit=False)
     import webbrowser
     webbrowser.open(os.path.join(outDir, 'report.html'))
