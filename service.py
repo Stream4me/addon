@@ -465,7 +465,7 @@ class AddonMonitor(xbmc.Monitor):
 
 
 if __name__ == "__main__":
-    logger.info('Starting S4Meservice')
+    logger.info('Starting S4Me service')
 
     # Test if all the required directories are created
     config.verify_directories_created()
@@ -557,11 +557,11 @@ if __name__ == "__main__":
             break
 
         if monitor.waitForAbort(1): # every second
-            logger.debug('S4Meservice EXIT')
+            logger.debug('S4Me service EXIT')
             # db need to be closed when not used, it will cause freezes
             join_threads()
             logger.debug('Close Threads')
             db.close()
             logger.debug('Close DB')
             break
-    logger.debug('S4Meservice STOPPED')
+    logger.debug('S4Me service STOPPED')

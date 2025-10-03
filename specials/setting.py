@@ -1168,9 +1168,9 @@ def report_send(item, description='', fatal=False):
             status = True                                               # Upload operation completed successfully
             logger.info('Report created: ' + str(item.url))    # The URL of the user report is saved
             # if fatal:                                                   # For future use, for logger.crash
-            #     platformtools.dialog_ok('S4MeCREATED ERROR report', 'Report it in the forum by adding FATAL ERROR and this URL: ', '[COLOR gold]%s[/COLOR]' % item.url, pastebin_one_use_msg)
+            #     platformtools.dialog_ok('S4Me CREATED ERROR report', 'Report it in the forum by adding FATAL ERROR and this URL: ', '[COLOR gold]%s[/COLOR]' % item.url, pastebin_one_use_msg)
             # else:                                                       # Report URL passed to user
-            #     platformtools.dialog_ok('S4MeCrash Report CREATED', 'Report it on the forum by adding a bug description and this URL: ', '[COLOR gold]%s[/COLOR]' % item.url, pastebin_one_use_msg)
+            #     platformtools.dialog_ok('S4Me Crash Report CREATED', 'Report it on the forum by adding a bug description and this URL: ', '[COLOR gold]%s[/COLOR]' % item.url, pastebin_one_use_msg)
 
             break                                                       # Operation finished, we don't keep looking
 
