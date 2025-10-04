@@ -6477,7 +6477,7 @@ msgid "Do you want to include local episodes for the TV show "%s"?"
 msgstr ""
 
 msgctxt "#80045"
-msgid "The folder of the local episodes has to be different from the TV show one in the S4Mevideo library"
+msgid "The folder of the local episodes has to be different from the TV show one in the S4Me video library"
 msgstr ""
 
 msgctxt "#80046"

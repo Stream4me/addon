@@ -760,7 +760,7 @@ msgid "Delete TV show"
 msgstr "Elimina serie TV"
 
 msgctxt "#60026"
-msgid "S4Mesettings"
+msgid "S4Me settings"
 msgstr "Impostazioni S4Me"
 
 msgctxt "#60027"
@@ -2004,8 +2004,8 @@ msgid "This can be improved by limiting the maximum number of links or by displa
 msgstr "Questo può essere migliorato limitando il numero massimo di collegamenti o visualizzandoli in una finestra Pop-Up. Queste impostazioni possono essere trovate in 'Impostazioni>Impostazioni libreria' Vuoi accedere a queste impostazioni?"
 
 msgctxt "#60461"
-msgid "S4Me- FAQ - %s"
-msgstr "S4Me- FAQ - %s"
+msgid "S4Me - FAQ - %s"
+msgstr "S4Me - FAQ - %s"
 
 msgctxt "#60462"
 msgid "You may not have written the library path correctly in 'Settings>Preferences'.\nIl The specified path must be exactly the same as the 'source' entered in 'Archive' of the Kodi library.\nAVANZATO: This path is also found in 'sources.xml'.\nThere can be problems using some Kodi forks and paths with 'special://'. SPMC, for example, has problems with this, and there doesn't seem to be a solution, as it is an external problem to Stream4Me that has existed for a long time.\nYou can try solving these problems in 'Settings>Library Settings' by changing the 'Search in' setting from 'The folder of each TV show' to 'All library'."
@@ -2016,8 +2016,8 @@ msgid "The channel site may not work. In case the site works you can report the 
 msgstr "Può darsi che il sito del canale non funzioni. Nel caso il sito funzioni puoi segnalare il problema su github."
 
 msgctxt "#60464"
-msgid "It is possible that you have updated S4Merecently and that the changes have not been fully applied Well, you can try 'Settings>Other Tools', checking the *_data.json files or reattaching everything to the library again"
-msgstr "È Possibile che tu abbia aggiornato S4Medi recente e che i cambiamenti non siano stati totalmente applicati Bene, puoi provare in 'Impostazioni>Altri strumenti', controllando i files *_data.json o riaggiungendo tutto ancora alla libreria"
+msgid "It is possible that you have updated S4Me recently and that the changes have not been fully applied Well, you can try 'Settings>Other Tools', checking the *_data.json files or reattaching everything to the library again"
+msgstr "È Possibile che tu abbia aggiornato S4Me di recente e che i cambiamenti non siano stati totalmente applicati Bene, puoi provare in 'Impostazioni>Altri strumenti', controllando i files *_data.json o riaggiungendo tutto ancora alla libreria"
 
 msgctxt "#60465"
 msgid "Do you want access to these settings?"
@@ -3260,8 +3260,8 @@ msgid "The Kodi video library has been successfully configured"
 msgstr "La libreria di Kodi è stata configurata correttamente"
 
 msgctxt "#70105"
-msgid "Do you want S4Meto configure the Kodi library? You will be asked to set up scrapers for movies and TV shows."
-msgstr "Vuoi che S4Meconfiguri la videoteca di Kodi? Ti verrà chiesto di installare i providers info per film e serie TV."
+msgid "Do you want S4Me to configure the Kodi library? You will be asked to set up scrapers for movies and TV shows."
+msgstr "Vuoi che S4Me configuri la videoteca di Kodi? Ti verrà chiesto di installare i providers info per film e serie TV."
 
 msgctxt "#70106"
 msgid "If you choose 'No' you can do it later from 'Configuration > Preferences > Paths'."
@@ -3616,8 +3616,8 @@ msgid "S4Me-torrent"
 msgstr "S4Me-torrent"
 
 msgctxt "#70195"
-msgid "S4Me- Torrent"
-msgstr "S4Me- Torrent"
+msgid "S4Me - Torrent"
+msgstr "S4Me - Torrent"
 
 msgctxt "#70196"
 msgid "Beginning..."
@@ -3864,8 +3864,8 @@ msgid "Settings -- Torrent"
 msgstr "Impostazioni -- Torrent"
 
 msgctxt "#70258"
-msgid "S4Mestarted"
-msgstr "S4Meavviato"
+msgid "S4Me started"
+msgstr "S4Me avviato"
 
 msgctxt "#70259"
 msgid "The URL to access is http://%s:%s"
@@ -3884,8 +3884,8 @@ msgid "Stopping the Websocket server ..."
 msgstr "Arresto del WebSocket..."
 
 msgctxt "#70263"
-msgid "S4Mestopped"
-msgstr "S4Mearrestato"
+msgid "S4Me stopped"
+msgstr "S4Me arrestato"
 
 msgctxt "#70264"
 msgid "Enter the username and password to access S4Me"
@@ -5516,11 +5516,11 @@ msgid "Addon successfully updated to %s.fix %d"
 msgstr "Addon aggiornato correttamente a %s.fix%d"
 
 msgctxt "#70673"
-msgid "S4Meupdated to"
-msgstr "S4Meaggiornato a"
+msgid "S4Me updated to"
+msgstr "S4Me aggiornato a"
 
 msgctxt "#70674"
-msgid "S4Meupdates"
+msgid "S4Me updates"
 msgstr "Aggiornamenti S4Me"
 
 msgctxt "#70675"
@@ -5544,8 +5544,8 @@ msgid "From URL"
 msgstr "Da URL"
 
 msgctxt "#70680"
-msgid "S4Me- (Community)"
-msgstr "S4Me- (Community)"
+msgid "S4Me - (Community)"
+msgstr "S4Me - (Community)"
 
 msgctxt "#70681"
 msgid "Enter the channel URL"
@@ -5592,8 +5592,8 @@ msgid "Using the download function you declare that you have a physical copy and
 msgstr "Utilizzando la funzione di download dichiari di essere in possesso di una copia fisica e di utilizzare questa funzione come backup dello stesso."
 
 msgctxt "#70692"
-msgid "The S4Meteam assumes no responsibility for the use that is made of this proposed function"
-msgstr "Il team di S4Menon si assume alcuna responsabilità dell'uso che viene fatto di questa funzione proposta"
+msgid "The S4Me team assumes no responsibility for the use that is made of this proposed function"
+msgstr "Il team di S4Me non si assume alcuna responsabilità dell'uso che viene fatto di questa funzione proposta"
 
 msgctxt "#70693"
 msgid "Search"
@@ -5696,12 +5696,12 @@ msgid "I can't automatically find the special episode number, please enter it ma
 msgstr "Non riesco a trovare automaticamente il numero dell'episodio speciale, per favore inseriscilo manualmente"
 
 msgctxt "#70720"
-msgid "Dear User\n,You are currently not connected to any modem/router. We advise you to check at least that the modem/router is switched on and/or your device is connected.\nS4MeWONT FIND ANYTHING until the problem is resolved."
-msgstr "Gentile Utente,\nAttualmente non risulti connesso a nessun Modem/Router.\nControlla quanto meno che il modem/router sia acceso e/o il tuo dispositivo connesso.\nS4MeNON TROVERA NIENTE finchè non risolverai il problema."
+msgid "Dear User\n,You are currently not connected to any modem/router. We advise you to check at least that the modem/router is switched on and/or your device is connected.\nS4Me WON'T FIND ANYTHING until the problem is resolved."
+msgstr "Gentile Utente,\nAttualmente non risulti connesso a nessun Modem/Router.\nControlla quanto meno che il modem/router sia acceso e/o il tuo dispositivo connesso.\nS4Me NON TROVERÀ NIENTE finchè non risolverai il problema."
 
 msgctxt "#70721"
-msgid "Dear user, you seem to have problems with ADSL! We suggest you call your manager's toll-free number or check it out at least that the modem/router is on and/or your device is connected.\nS4MeWONT FIND ANYTHING until the problem is resolved"
-msgstr "Gentile Utente, sembra tu abbia problemi con l'ADSL!  Controlla quanto meno che il modem/router sia acceso e/o il tuo dispositivo connesso.\nS4MeNON TROVERA NIENTE finchè non risolverai il problema."
+msgid "Dear user, you seem to have problems with ADSL! We suggest you call your manager's toll-free number or check it out at least that the modem/router is on and/or your device is connected.\nS4Me WON'T FIND ANYTHING until the problem is resolved"
+msgstr "Gentile Utente, sembra tu abbia problemi con l'ADSL!  Controlla quanto meno che il modem/router sia acceso e/o il tuo dispositivo connesso.\nS4Me NON TROVERÀ NIENTE finchè non risolverai il problema."
 
 msgctxt "#70722"
 msgid "Dear User, you have disabled the DNS override and your current DNS do not allow you to reach all sites, ergo, not all Channels will work, we recommend you, to take advantage of more, to set up the DNS or re-enable the override in settings.\nSearch your favorite search engine for\n 1. guides on how to choose a free DNS.\n 2. set it up on your device.\nWe recommend the cloudflare DNS 1.1.1.1 and 1.0.0.1\nAlternatively the Google DNS 8.8.8.8 and 8.8.4.4.\nIf you have a VODAFONE station, enter the modem panel and disable 'Secure DNS' before proceeding.\n"
@@ -6386,7 +6386,7 @@ msgid "Folder name for TV shows"
 msgstr "Nome della cartella per le serie TV"
 
 msgctxt "#80022"
-msgid "You can configure the Kodi video library later from S4Mesettings"
+msgid "You can configure the Kodi video library later from S4Me settings"
 msgstr "Potrai configurare la libreria di Kodi in seguito dalle impostazioni di S4Me"
 
 msgctxt "#80023"
@@ -6394,7 +6394,7 @@ msgid "You will be asked to choose and configure the information providers for m
 msgstr "Ti verrà chiesto di scegliere e configurare i provider delle informazioni per film e serie TV"
 
 msgctxt "#80024"
-msgid "An error has occurred during the configuration of the Kodi video library. Please check the log and try again from S4Mesettings"
+msgid "An error has occurred during the configuration of the Kodi video library. Please check the log and try again from S4Me settings"
 msgstr "Si è verificato un errore durante la configurazione della libreria di Kodi. Si prega di controllare il log e riprovare dalle impostazioni di S4Me"
 
 msgctxt "#80025"
@@ -6414,7 +6414,7 @@ msgid "The selected folders are already used by the Kodi library. Please change 
 msgstr "Le cartelle selezionate sono già utilizzate dalla libreria di Kodi. Si prega di cambiarle opportunamente"
 
 msgctxt "#80029"
-msgid "The selected folders are already used by the Kodi library. Please change them properly from S4Mesettings"
+msgid "The selected folders are already used by the Kodi library. Please change them properly from S4Me settings"
 msgstr "Le cartelle selezionate sono già utilizzate dalla libreria di Kodi. Si prega di cambiarle opportunamente dalle impostazioni di S4Me"
 
 msgctxt "#80030"
@@ -6430,8 +6430,8 @@ msgid "Installing..."
 msgstr "Installazione..."
 
 msgctxt "#80033"
-msgid "Choose the version of S4Meto install"
-msgstr "Scegli la versione di S4Meda installare"
+msgid "Choose the version of S4Me to install"
+msgstr "Scegli la versione di S4Me da installare"
 
 msgctxt "#80034"
 msgid "release (stable version)"
@@ -6470,7 +6470,7 @@ msgid "Include local episodes when adding a TV shows"
 msgstr "Includere episodi in locale all'aggiunta di una serie TV"
 
 msgctxt "#80043"
-msgid "Attention, in order to watch local episodes you have to configure the Kodi video library from S4Mesettings"
+msgid "Attention, in order to watch local episodes you have to configure the Kodi video library from S4Me settings"
 msgstr "Attenzione, per guardare gli episodi in locale devi configurare la libreria di Kodi dalle impostazioni di S4Me"
 
 msgctxt "#80044"
@@ -6478,7 +6478,7 @@ msgid "Do you want to include local episodes for the TV show "%s"?"
 msgstr "Vuoi includere degli episodi in locale per la serie TV "%s"?"
 
 msgctxt "#80045"
-msgid "The folder of the local episodes has to be different from the TV show one in the S4Mevideo library"
+msgid "The folder of the local episodes has to be different from the TV show one in the S4Me video library"
 msgstr "La cartella degli episodi in locale deve essere diversa da quella della serie TV nella videoteca di S4Me"
 
 msgctxt "#80046"

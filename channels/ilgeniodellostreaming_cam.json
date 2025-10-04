@@ -5,6 +5,6 @@
     "language": ["ita"],
     "thumbnail": "ilgeniodellostreaming.png",
     "banner": "ilgeniodellostreaming.png",
-    "categories": ["movie"],
+    "categories": ["movie", "tvshow"],
     "settings": []
 }

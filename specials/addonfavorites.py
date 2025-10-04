@@ -71,7 +71,7 @@ def text_clean(txt, disallowed_chars = '[^a-zA-Z0-9\-_()\[\]. ]+', blank_char = 
 
 
 
-# Class to load and save in the S4MeFavorites file
+# Class to load and save in the S4Me Favorites file
 class KodfavouritesData(object):
 
     def __init__(self, filename = None):

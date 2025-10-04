@@ -493,7 +493,7 @@ def paint_env(item, environment={}):
     Links with the utility that allows the [COLOR yellow] to send the Kodi Log [/ COLOR] through a Pastebin service
     """
 
-    itemlist.append(Item(channel=item.channel, title="S4Meenvironment variables: %s Debug: %s" % (environment['addon_version'], environment['debug']),
+    itemlist.append(Item(channel=item.channel, title="S4Me environment variables: %s Debug: %s" % (environment['addon_version'], environment['debug']),
                          action="", plot=cabecera, thumbnail=thumb, folder=False))
 
     itemlist.append(Item(channel=item.channel, title=environment['os_name'] + ' ' + environment['prod_model'] + ' ' + environment['os_release'] + ' ' + environment['machine'] + ' ' + environment['architecture'] + ' ' + environment['language'],
