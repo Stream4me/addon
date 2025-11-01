@@ -143,11 +143,16 @@ def episodios(item):
 
 
 def check(item):
+    support.info('CHECK chiamata per:', item)
     item.data = httptools.downloadpage(item.url).data
-    if 'stagione' in item.data.lower():
+    # Controlla se ci sono stagioni nella pagina
+    if 'tab-pane fade' in item.data and 'season-' in item.data:
         item.contentType = 'tvshow'
+        support.info('Rilevata serie TV (trovate stagioni), chiamando episodios')
         return episodios(item)
     else:
+        item.contentType = 'movie'
+        support.info('Rilevato film, chiamando findvideos')
         return findvideos(item)
 
 
@@ -169,7 +174,6 @@ def newest(categoria):
             logger.error("{0}".format(line))
         return []
     return itemlist
-
 
 def findvideos(item):
     support.info('findvideos', item)
