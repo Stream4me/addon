@@ -207,8 +207,27 @@ def get_films_database():
     
     patron = r'<div class="sgtvfullfilmview_divCell[^>]*>.*?'
     patron += r'sgtvfullfilmview_spanTitleMovie">([^<]*)</span>.*?'
+    patron += r'sgtvfullfilmview_spanDirectorGenresMovie">[^<]*</span>.*?'
     patron += r'sgtvfullfilmview_spanDirectorGenresMovie">([^<]*)</span>.*?'
+    patron += r'sgtvfullfilmview_cover[^>]*data-src="([^"]*)"[^>]*>.*?'
     patron += r'sgtvfullfilmview_divMovieYear">[^<]*([0-9]{4})'
+    
+    for section_name, url in urls_to_scrape.items():
+        try:
+            data = httptools.downloadpage(url, timeout=TIMEOUT_TOTAL).data.replace('\n', '')
+            matches = re.compile(patron, re.DOTALL).findall(data)
+            
+            for scrapedtitle, scrapedgenre, scrapedthumb, scrapedyear in matches:
+                title_clean = scrapertools.decodeHtmlentities(scrapedtitle).strip().lower()
+                
+                films_dict[title_clean] = {
+                    'year': scrapedyear,
+                    'genre': scrapertools.decodeHtmlentities(scrapedgenre).strip(),
+                    'thumbnail': scrapedthumb.replace("?width=240", "?width=480")
+                }
+                
+        except Exception as e:
+            logger.error(f"[FILMONTV] Errore caricamento {section_name}: {e}")
     
     return films_dict
 
@@ -262,12 +281,14 @@ def now_on_misc(item):
             
             year = ""
             genre = ""
+            
             if content_type == 'movie':
                 title_lower = scrapedtitle.lower()
                 if title_lower in films_db:
                     year = films_db[title_lower]['year']
                     genre = films_db[title_lower]['genre']
-                    logger.info(f"[FILMONTV] Film '{scrapedtitle}' trovato nel dizionario: anno {year}, genere {genre}")
+                    if films_db[title_lower].get('thumbnail'):
+                        full_thumbnail = films_db[title_lower]['thumbnail']
             
             search_item = create_search_item(
                 title=f"[B]{scrapedtitle}[/B] - {scrapedchannel} - {scrapedtime}",
