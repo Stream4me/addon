@@ -48,6 +48,22 @@
             "visible": true
         },
         {
+            "id": "film6",
+            "type": "text",
+            "label": "Inserisci nome Film #6",
+            "default": "[Oggi in TV] Film #6",
+            "enabled": true,
+            "visible": true
+        },
+        {
+            "id": "film7",
+            "type": "text",
+            "label": "Inserisci nome Film #7",
+            "default": "[Oggi in TV] Film #7",
+            "enabled": true,
+            "visible": true
+        },
+        {
             "id": "now1",
             "type": "text",
             "label": "Inserisci nome adesso in onda #1",
@@ -84,6 +100,22 @@
             "type": "text",
             "label": "Inserisci nome adesso in onda #5",
             "default": "[Adesso in onda] Tutte le trasmissioni #5",
+            "enabled": true,
+            "visible": true
+        },
+        {
+            "id": "now6",
+            "type": "text",
+            "label": "Inserisci nome adesso in onda #6",
+            "default": "[Adesso in onda] Tutte le trasmissioni #6",
+            "enabled": true,
+            "visible": true
+        },
+        {
+            "id": "now7",
+            "type": "text",
+            "label": "Inserisci nome adesso in onda #7",
+            "default": "[Adesso in onda] Tutte le trasmissioni #7",
             "enabled": true,
             "visible": true
         }
