@@ -162,6 +162,8 @@ def peliculas(item):
                         "img": item.get("img", "").split('src="')[1].split('"')[0] if 'src="' in item.get("img", "") else "",
                         "img_verticale": item.get("img_verticale", "").split('src="')[1].split('"')[0] if 'src="' in item.get("img_verticale", "") else "",
                     }
+                else:
+                    return path, None
             except Exception as e:
                 return path, None  # Return None if request or parsing fails
 
