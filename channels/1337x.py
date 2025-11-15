@@ -8,7 +8,7 @@ from core import support
 from platformcode import logger, config
 
 # host = support.config.get_channel_url()
-host = 'https://x1337x.cc'
+host = 'https://1337x.to'
 
 @support.menu
 def mainlist(item):
