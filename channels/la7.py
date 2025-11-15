@@ -52,13 +52,13 @@ def live(item):
     json_data = json.loads(httptools.downloadpage("https://www.la7.it/sites/default/files/la7_app_home_smarttv.json").data)
     if "fascia_dirette" in json_data:
         if 'la7' in json_data["fascia_dirette"]:
-            titolo = json_data["fascia_dirette"]["la7"]["titolo"]
-            la7live_item.plot = support.typo(titolo, 'bold') + " - " + json_data["fascia_dirette"]["la7"]["descrizione"]
+            titolo = json_data["fascia_dirette"]["la7"].get("titolo","")
+            la7live_item.plot = support.typo(titolo, 'bold') + " - " + json_data["fascia_dirette"]["la7"].get("descrizione","")
             la7live_item.fanart = json_data["fascia_dirette"]["la7"]["url_locandina"]
 
         if 'la7d' in json_data["fascia_dirette"]:
-            titolo = json_data["fascia_dirette"]["la7d"]["titolo"]
-            la7dlive_item.plot = support.typo(titolo, 'bold') + " - " + json_data["fascia_dirette"]["la7d"]["descrizione"]
+            titolo = json_data["fascia_dirette"]["la7d"].get("titolo","")
+            la7dlive_item.plot = support.typo(titolo, 'bold') + " - " + json_data["fascia_dirette"]["la7d"].get("descrizione","")
             la7dlive_item.fanart = json_data["fascia_dirette"]["la7d"]["url_locandina"]
     itemlist = [la7live_item, la7dlive_item]
     return support.thumb(itemlist, live=True)
@@ -162,6 +162,8 @@ def peliculas(item):
                         "img": item.get("img", "").split('src="')[1].split('"')[0] if 'src="' in item.get("img", "") else "",
                         "img_verticale": item.get("img_verticale", "").split('src="')[1].split('"')[0] if 'src="' in item.get("img_verticale", "") else "",
                     }
+                else:
+                    return path, None
             except Exception as e:
                 return path, None  # Return None if request or parsing fails
 
