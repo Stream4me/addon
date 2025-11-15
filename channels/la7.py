@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 # ------------------------------------------------------------
 # Canale per La7
@@ -283,16 +282,18 @@ def episodios(item):
         else:
             html_content = html_content.split('<div class="main-content-node">')[-1].split('<div class="right">')[0]
 
-            # split on hidden pager and check what comes before it
+            # split the page here, above there is new videos, below archive
             html_content = html_content.split('<div class="view-content clearfix">')
-            if len(html_content) > 1:
-                patron = r'<div class="[^"]*">.*?<a href="(?P<url>[^"]+)">.*?data-background-image="(?P<image>(?:https?:)?//[^"]+)"[^>]*>.*?<div class="title[^"]*">\s*(?P<title>[^<]+)\s*</div>'
-                match = support.match(html_content[0], patron=patron)
-                matches.extend(match.matches)
+            patron = r'<div class="[^"]*"[^>]*>.*?<a href="(?P<url>[^"]+)">.*?data-background-image="(?P<image>(?:https?:)?//[^"]+)"[^>]*>.*?<div class="title[^"]*">\s*(?P<title>[^<]+)\s*</div>'
+            
+            # if first page scrape ultima puntata
+            if '<li class="pager-previous">' not in html_content[0]: # if no previous page
+                if len(html_content) > 1:
+                    match = support.match(html_content[0], patron=patron)
+                    matches.extend(match.matches)
 
-            # and after it
+            # scrape archive
             html_content = html_content[-1]
-            patron = r'<div class="[^"]*">.*?<a href="(?P<url>[^"]+)">.*?data-background-image="(?P<image>(?:https?:)?//[^"]+)"[^>]*>.*?<div class="title[^"]*">\s*(?P<title>[^<]+)\s*</div>'
             match = support.match(html_content, patron=patron)
             matches.extend(match.matches)
 
@@ -338,7 +339,7 @@ def episodios(item):
     if match.matches:
         next_page_link = match.matches[0]
         itemlist.append(
-            item.clone(title=support.typo('Next', 'bold'),
+            item.clone(title=support.typo(support.config.get_localized_string(30992), 'color std bold'),
                         url= f'{host}{next_page_link}',
                         order=len(itemlist),
                         video_url='',
