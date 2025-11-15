@@ -282,16 +282,19 @@ def episodios(item):
         else:
             html_content = html_content.split('<div class="main-content-node">')[-1].split('<div class="right">')[0]
 
-            # split on hidden pager and check what comes before it
+            # split the page here, above there is new videos, below archive
             html_content = html_content.split('<div class="view-content clearfix">')
-            if len(html_content) > 1:
-                patron = r'<div class="[^"]*">.*?<a href="(?P<url>[^"]+)">.*?data-background-image="(?P<image>(?:https?:)?//[^"]+)"[^>]*>.*?<div class="title[^"]*">\s*(?P<title>[^<]+)\s*</div>'
-                match = support.match(html_content[0], patron=patron)
-                matches.extend(match.matches)
 
-            # and after it
+            # if first page scrape ultima puntata
+            if '<li class="pager-previous">' not in html_content[0]: # if no previous page
+                if len(html_content) > 1:
+                    patron = r'<div class="[^"]*">.*?<a href="(?P<url>[^"]+)">.*?data-background-image="(?P<image>(?:https?:)?//[^"]+)"[^>]*>.*?<div class="title[^"]*">\s*(?P<title>[^<]+)\s*</div>'
+                    match = support.match(html_content[0], patron=patron)
+                    matches.extend(match.matches)
+
+            # scrape archive
             html_content = html_content[-1]
-            patron = r'<div class="[^"]*">.*?<a href="(?P<url>[^"]+)">.*?data-background-image="(?P<image>(?:https?:)?//[^"]+)"[^>]*>.*?<div class="title[^"]*">\s*(?P<title>[^<]+)\s*</div>'
+            patron = r'<div class="[^"]*"[^>]*>.*?<a href="(?P<url>[^"]+)">.*?data-background-image="(?P<image>(?:https?:)?//[^"]+)"[^>]*>.*?<div class="title[^"]*">\s*(?P<title>[^<]+)\s*</div>'
             match = support.match(html_content, patron=patron)
             matches.extend(match.matches)
 
