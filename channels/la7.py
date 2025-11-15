@@ -337,7 +337,7 @@ def episodios(item):
     if match.matches:
         next_page_link = match.matches[0]
         itemlist.append(
-            item.clone(title=support.typo('Next', 'bold'),
+            item.clone(title=support.typo(support.config.get_localized_string(30992), 'color std bold'),
                         url= f'{host}{next_page_link}',
                         order=len(itemlist),
                         video_url='',
