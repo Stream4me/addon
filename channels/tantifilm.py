@@ -55,20 +55,21 @@ def peliculas(item):
     action = 'check'
     item.contentType = 'undefined'
     if item.args == 'search':
-        patron = r'<div class="film.*?<a href="(?P<url>[^"]+)"(?:[^>]+)?>?\s*(?:<img[^s]+src="(?P<thumb>[^"]+)"[^>]+>\s*)?<p>(?P<title>[^<]+?)(?P<lang>[sS][uU][bB]\-[iI][tT][aA]+)?(?:[ ]?\((?P<year>\d{4})-?(?:\d{4})?).*?\)[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>\s*(?P<quality>[a-zA-Z]+)?'
+        patron = r'<div class="film.*?<a href="(?P<url>[^"]+)" title="(?P<title>.*?) \((?P<year>\d{4})[^"]+".*?<img[^s]+src="(?P<thumb>[^"]+)".*?(?:class="calitate"> <p>)(?P<quality>.*?)(?:</p>)'
     else:
         patronNext = r'<b class="nextpostslink">.*?<a href="([^"]+)">'
         if 'serie-tv' in item.url:
-            patron = r'<div class="mediaWrap mediaWrapAlt">\s*<a href="(?P<url>[^"]+)"(?:[^>]+)?>?\s*(?:<img[^s]+src="(?P<thumb>[^"]+)"[^>]+>\s*)?<\/a>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>(?P<title>[^<]+?)(?P<lang>[sS][uU][bB]\-[iI][tT][aA]+)?(?:[ ]?\((?P<year>\d{4})-?(?:\d{4})?).*?\)[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>\s*(?P<quality>[a-zA-Z]+)?'
+            patron = r'<div class="mediaWrap mediaWrapAlt"> <a href="(?P<url>[^"]+)" title="(?P<title>.*?) \((?P<year>\d{4})[^"]+".*?<img[^s]+src="(?P<thumb>[^"]+)".*?class="se_num">(?P<quality>.*?)</span>'
         else:
-            patron = r'<div class="mediaWrap mediaWrapAlt">\s*<a href="(?P<url>[^"]+)"(?:[^>]+)?>?\s*(?:<img[^s]+src="(?P<thumb>[^"]+)"[^>]+>\s*)?<\/a>[^>]+>[^>]+>[^>]+>(?P<title>[^<]+?)(?P<lang>[sS][uU][bB]\-[iI][tT][aA]+)?(?:[ ]?\((?P<year>\d{4})-?(?:\d{4})?).*?\)[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>\s*(?P<quality>[a-zA-Z]+)?'
-        patronBlock = r'<div id="dle-content">(?P<block>.*?)<!\-\- main_col \-\->'
+            patron = r'<div class="mediaWrap mediaWrapAlt"> <a href="(?P<url>[^"]+)" title="(?P<title>.*?) \((?P<year>\d{4})[^"]+".*?<img[^s]+src="(?P<thumb>[^"]+)".*?(?:class="se_num">|class="calitate"> <p> )(?P<quality>.*?)(?:</span>| </p>)'
+        patronBlock = r'<div id="dle-content">(?P<block>.*?)<!-- main_col -->'
 
     return locals()
 
 @support.scrape
 def episodios(item):
-    patron = r'data-num="(?P<season>.*?)x(?P<episode>.*?)"\s*data-title="(?P<title>[^"]+)(?P<lang>[sS][uU][bB]\-[iI][tT][aA]+)?".*?<div class="mirrors"(?P<server_links>.*?)<!---'
+    item.quality = ''
+    patron = r'data-num="(?P<season>.*?)x(?P<episode>.*?)" data-title="(?P<title>.+?)(?:: (?P<plot>.*?))?">.*?<div class="mirrors"(?P<server_links>.*?)<!---'
     action = 'findvideos'
     return locals()
 
