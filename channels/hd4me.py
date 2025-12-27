@@ -73,7 +73,20 @@ def search(item, text):
 
 def findvideos(item):
     url = support.match(item, patron=r'class="bot1" .*?href="(?P<url>[^"]+)"', debug=False).match
+    
     if not url.startswith('http'):
         url = host + url
-    url = support.httptools.downloadpage(url, followredirect=True).url
+    
+    # Trasforma gli URL /?file/ in link Mega.nz diretti
+    # Implementa la stessa logica del JavaScript nel sito
+    if '/?file/' in url:
+        # Estrae la parte dopo /?file/
+        file_part = url.split('/?file/')[-1]
+        # Converte ! in # e costruisce l'URL Mega
+        url = 'https://mega.nz/file/' + file_part.replace('!', '#')
+    elif '/?!' in url:
+        # Formato alternativo
+        file_part = url.split('/?!')[-1]
+        url = 'https://mega.nz/file/' + file_part.replace('!', '#')
+    
     return support.server(item, url)
