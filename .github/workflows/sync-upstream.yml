@@ -1,0 +1,81 @@
+name: Sync Upstream and Apply Optimizations
+on:
+  schedule:
+    # Esegui ogni 6 ore
+    - cron: '0 */6 * * *'
+  # Permette esecuzione manuale dalla tab Actions
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  sync-and-optimize:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Fork
+        uses: actions/checkout@v4
+        with:
+          ref: stable
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Action Bot"
+          git config user.email "action@github.com"
+      - name: Add Upstream Remote
+        run: |
+          git remote add upstream https://github.com/stream4me/addon.git || true
+      - name: Fetch Upstream
+        run: |
+          git fetch upstream stable
+      - name: Check for Upstream Changes
+        id: check
+        run: |
+          UPSTREAM_COMMIT=$(git rev-parse upstream/stable)
+          LOCAL_COMMIT=$(git rev-parse HEAD)
+          if [ "$UPSTREAM_COMMIT" != "$LOCAL_COMMIT" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Upstream has new commits"
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No new commits from upstream"
+          fi
+      - name: Merge Upstream Changes
+        if: steps.check.outputs.has_changes == 'true'
+        run: |
+          git merge upstream/stable -m "Sync with upstream stream4me/addon" --no-edit || {
+            echo "Merge conflict detected, attempting to resolve..."
+            git checkout --theirs .
+            git add .
+            git commit -m "Sync with upstream (auto-resolved conflicts)"
+          }
+      - name: Apply Speed Optimizations Patch
+        if: steps.check.outputs.has_changes == 'true'
+        run: |
+          if [ -f ".github/patches/speed-optimizations.patch" ]; then
+            echo "Applying speed optimizations patch..."
+            git apply --3way .github/patches/speed-optimizations.patch || {
+              echo "Patch failed to apply cleanly, trying with reject..."
+              git apply --reject .github/patches/speed-optimizations.patch || true
+            }
+            git add -A
+            git diff --cached --quiet || git commit -m "Apply speed optimizations for TMDb Helper integration"
+          fi
+      - name: Update Provider Name
+        if: steps.check.outputs.has_changes == 'true'
+        run: |
+          if ! grep -q "jin2o" addon.xml; then
+            sed -i 's/provider-name="S4Me Team"/provider-name="S4Me Team (Optimized by jin2o)"/' addon.xml
+            git add addon.xml
+            git diff --cached --quiet || git commit -m "Mark as optimized fork"
+          fi
+      - name: Push Changes
+        if: steps.check.outputs.has_changes == 'true'
+        run: |
+          git push origin stable
+      - name: Summary
+        run: |
+          echo "## Sync Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Fork: jin2o/addon" >> $GITHUB_STEP_SUMMARY
+          echo "- Upstream: stream4me/addon" >> $GITHUB_STEP_SUMMARY
+          echo "- Status: ${{ steps.check.outputs.has_changes == 'true' && 'Updated' || 'Already up to date' }}" >> $GITHUB_STEP_SUMMARY
