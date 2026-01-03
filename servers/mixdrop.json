@@ -14,7 +14,11 @@
       {
         "pattern": "(md[3bfyz][a-z0-9]*\\.[a-z0-9]+/(?:f|e)/[a-z0-9]+)",
         "url": "https://\\1"
-      }
+      },
+	  {
+	  "pattern": "mixdro?o?ps?.[^/]+/(?:f|e|emb)/([a-z0-9]+)",
+        "url": "https://mixdrop.ag/e/\\1"
+	  }
     ]
   },
   "free": true,
