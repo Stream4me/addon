@@ -1,11 +1,10 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.s4me" name="Stream4Me BETA" version="1.7.8" provider-name="S4Me Team">
+<addon id="plugin.video.s4me" name="Stream4Me" version="1.7.9" provider-name="S4Me Team">
   <requires>
     <!-- <import addon="script.module.libtorrent" optional="true"/> -->
     <import addon="metadata.themoviedb.org" optional="true"/>
     <import addon="metadata.tvshows.themoviedb.org" optional="true"/>
     <!-- <import addon="metadata.tvdb.com"/> -->
-    <import addon="script.module.web-pdb" />
+    
   </requires>
   <extension point="xbmc.python.pluginsource" library="default.py">
     <provides>video</provides>
@@ -19,6 +18,7 @@
     </menu>
   </extension>
   <extension point="xbmc.addon.metadata">
+    <reuselanguageinvoker>true</reuselanguageinvoker>
     <summary lang="en">Stream4Me is a Kodi add-on to search and watch contents on the web.</summary>
     <summary lang="it">Stream4Me è un addon per Kodi per cercare e guardare contenuti sul web.</summary>
     <assets>
@@ -28,7 +28,7 @@
       <screenshot>resources/media/screenshot-2.png</screenshot>
       <screenshot>resources/media/screenshot-3.png</screenshot>
     </assets>
-      <news>- Riaperto addon
+    <news>- Riaperto addon
 </news>
     <description lang="it">Naviga velocemente sul web e guarda i contenuti presenti</description>
     <disclaimer>[COLOR red]The owners and submitters to this addon do not host or distribute any of the content displayed by these addons nor do they have any affiliation with the content providers.[/COLOR]
