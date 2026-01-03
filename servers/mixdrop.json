@@ -17,7 +17,7 @@
       },
 	  {
         "pattern": "m1xdro?o?ps?.[^/]+/(?:f|e|emb)/([a-z0-9]+)",
-        "url": "https://mixdrop.ag/e/\\1"
+        "url": "https://m1xdrop.net//e/\\1"
       }
     ]
   },
