@@ -71,8 +71,10 @@ jobs:
           fi
       - name: Push Changes
         if: steps.check.outputs.has_changes == 'true'
-        run: |
-          git push origin stable
+        uses: actions-js/push@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: master
       - name: Summary
         run: |
           echo "## Sync Summary" >> $GITHUB_STEP_SUMMARY
