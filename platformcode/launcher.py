@@ -76,11 +76,28 @@ def run(item=None):
         # Special action for searching, first asks for the words then call the "search" function
         elif item.action == 'search': search(item)
 
+        # Special action for direct movie playback from TMDb Helper
+        elif item.action == 'play_movie_direct': play_movie_direct(item)
+
+        # Special action for direct episode playback from TMDb Helper
+        elif item.action == 'play_episode_direct': play_episode_direct(item)
+
+        # Special action for movie playback with fallback across channels
+        elif item.action == 'play_movie_fallback':
+            from platformcode.fallback_player import play_movie_fallback
+            play_movie_fallback(item)
+
+        # Special action for episode playback with fallback across channels
+        elif item.action == 'play_episode_fallback':
+            from platformcode.fallback_player import play_episode_fallback
+            play_episode_fallback(item)
+
         ######## Following shares must be improved ########
 
         # Special itemInfo Action
         elif item.action == "itemInfo":
             platformtools.dialog_textviewer('Item info', item.parent)
+
 
         # Special action for open item.url in browser
         elif item.action == "open_browser":
@@ -386,12 +403,16 @@ def search(item):
     channel = importChannel(item)
     from core import channeltools
 
-    if config.get_setting('last_search'):
-        last_search = channeltools.get_channel_setting('Last_searched', 'search', '')
+    # If text is already provided (e.g., from TMDb Helper), skip the dialog
+    if item.text:
+        search_text = item.text
     else:
-        last_search = ''
+        if config.get_setting('last_search'):
+            last_search = channeltools.get_channel_setting('Last_searched', 'search', '')
+        else:
+            last_search = ''
 
-    search_text = platformtools.dialog_input(last_search)
+        search_text = platformtools.dialog_input(last_search)
 
     if search_text is not None:
         channeltools.set_channel_setting('Last_searched', search_text, 'search')
@@ -446,3 +467,160 @@ def playFromLibrary(item):
     item.action = item.next_action if item.next_action else 'findvideos'
     logger.debug('Executing channel', item.channel, 'method', item.action)
     return run(item)
+
+
+def play_movie_direct(item):
+    """
+    Direct movie playback from TMDb Helper.
+    Searches for a movie on the specified channel and plays the first matching result.
+    
+    Expected item parameters:
+    - text: Movie title to search
+    - year: Release year (optional, for better matching)
+    - channel: S4ME channel to search on (default: streamingcommunity)
+    """
+    logger.debug('play_movie_direct called with:', item.tostring())
+    
+    channel_name = item.channel if item.channel else 'streamingcommunity'
+    search_text = item.text if item.text else ''
+    year = str(item.year) if item.year else ''
+    
+    if not search_text:
+        platformtools.dialog_notification(config.get_localized_string(20000), 'No title provided')
+        return
+    
+    try:
+        channel = importChannel(Item(channel=channel_name))
+        if not channel:
+            platformtools.dialog_notification(config.get_localized_string(20000), f'Channel {channel_name} not found')
+            return
+        
+        # Search for the movie
+        search_item = Item(channel=channel_name, action='search', infoLabels={'mediatype': 'movie'})
+        search_item.fast_search = True
+        results = new_search(search_item.clone(text=search_text), channel)
+        
+        if not results:
+            platformtools.dialog_notification(config.get_localized_string(20000), 'No results found')
+            try: import sys, xbmcplugin, xbmcgui; xbmcplugin.setResolvedUrl(int(sys.argv[1]), False, xbmcgui.ListItem())
+            except: pass
+            return
+        
+        
+        # Filter results - look for best match
+        from platformcode.fallback_player import find_best_movie_match
+        best_match = find_best_movie_match(results, search_text, year)
+
+        
+        if best_match:
+            logger.debug('Found match:', best_match.contentTitle or best_match.title)
+            # Go to findvideos and play
+            best_match.action = 'findvideos'
+            findvideos(best_match)
+        else:
+            platformtools.dialog_notification(config.get_localized_string(20000), 'No matching movie found')
+            try: import sys, xbmcplugin, xbmcgui; xbmcplugin.setResolvedUrl(int(sys.argv[1]), False, xbmcgui.ListItem())
+            except: pass
+            
+    except Exception as e:
+        import traceback
+        logger.error(traceback.format_exc())
+        platformtools.dialog_notification(config.get_localized_string(20000), str(e))
+
+
+def play_episode_direct(item):
+    """
+    Direct episode playback from TMDb Helper.
+    Searches for a TV show on the specified channel and plays the requested episode.
+    
+    Expected item parameters:
+    - text: TV show name to search
+    - season: Season number
+    - episode: Episode number
+    - year: Show premiere year (optional, for better matching)
+    - channel: S4ME channel to search on (default: streamingcommunity)
+    """
+    logger.debug('play_episode_direct called with:', item.tostring())
+    
+    channel_name = item.channel if item.channel else 'streamingcommunity'
+    search_text = item.text if item.text else ''
+    season = int(item.season) if item.season else 1
+    episode = int(item.episode) if item.episode else 1
+    year = str(item.year) if item.year else ''
+    
+    if not search_text:
+        platformtools.dialog_notification(config.get_localized_string(20000), 'No show name provided')
+        return
+    
+    try:
+        channel = importChannel(Item(channel=channel_name))
+        if not channel:
+            platformtools.dialog_notification(config.get_localized_string(20000), f'Channel {channel_name} not found')
+            return
+        
+        # Search for the TV show
+        search_item = Item(channel=channel_name, action='search', infoLabels={'mediatype': 'tvshow'})
+        search_item.fast_search = True
+        results = new_search(search_item.clone(text=search_text), channel)
+        
+        if not results:
+            platformtools.dialog_notification(config.get_localized_string(20000), 'No results found')
+            try: import sys, xbmcplugin, xbmcgui; xbmcplugin.setResolvedUrl(int(sys.argv[1]), False, xbmcgui.ListItem())
+            except: pass
+            return
+        
+        
+        # Filter results - look for best match
+        from platformcode.fallback_player import find_best_tvshow_match
+        best_match = find_best_tvshow_match(results, search_text, year)
+
+        
+        if best_match:
+            logger.debug('Found show match:', best_match.contentSerieName or best_match.title)
+            
+            # Optimization: Try to find episode directly if supported
+            if hasattr(channel, 'find_episode'):
+                target_episode = channel.find_episode(best_match, season, episode)
+                if target_episode:
+                    logger.debug(f'Found episode directly S{season}E{episode}')
+                    target_episode.action = 'findvideos'
+                    findvideos(target_episode)
+                    return
+
+            # Get episodes list
+            if hasattr(channel, 'episodios'):
+                episodes = channel.episodios(best_match)
+            elif hasattr(channel, 'episodes'):
+                episodes = channel.episodes(best_match)
+            else:
+                platformtools.dialog_notification(config.get_localized_string(20000), 'Channel does not support episodes')
+                return
+            
+            # Find the right episode
+            target_episode = None
+            for ep in episodes:
+                ep_season = ep.contentSeason or ep.infoLabels.get('season', 0)
+                ep_number = ep.contentEpisodeNumber or ep.infoLabels.get('episode', 0)
+                
+                if int(ep_season) == season and int(ep_number) == episode:
+                    target_episode = ep
+                    break
+            
+            if target_episode:
+                logger.debug(f'Found episode S{season}E{episode}')
+                target_episode.action = 'findvideos'
+                findvideos(target_episode)
+            else:
+                platformtools.dialog_notification(config.get_localized_string(20000), f'Episode S{season}E{episode} not found')
+                try: import sys, xbmcplugin, xbmcgui; xbmcplugin.setResolvedUrl(int(sys.argv[1]), False, xbmcgui.ListItem())
+                except: pass
+        else:
+            platformtools.dialog_notification(config.get_localized_string(20000), 'No matching show found')
+            try: import sys, xbmcplugin, xbmcgui; xbmcplugin.setResolvedUrl(int(sys.argv[1]), False, xbmcgui.ListItem())
+            except: pass
+            
+    except Exception as e:
+        import traceback
+        logger.error(traceback.format_exc())
+        platformtools.dialog_notification(config.get_localized_string(20000), str(e))
+
