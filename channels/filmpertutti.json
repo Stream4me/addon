@@ -1,7 +1,7 @@
 {
   "id": "filmpertutti",
   "name": "Filmpertutti",
-  "active": false,
+  "active": true,
   "language": ["ita", "sub-ita"],
   "thumbnail": "filmpertutti.png",
   "banner": "filmpertutti.png",

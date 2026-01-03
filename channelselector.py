@@ -58,11 +58,13 @@ def getmainlist(view="thumb_"):
 
     thumb_setting = "setting_%s.png" % 0  # config.get_setting("plugin_updates_available")
 
+
     itemlist.append(Item(title=config.get_localized_string(30100), channel="setting", action="settings",
                          thumbnail=get_thumb(thumb_setting, view), category=config.get_localized_string(30100), viewmode="list", folder=False))
     itemlist.append(Item(title=config.get_localized_string(30104) + " (v" + config.get_addon_version(with_fix=True) + ")", channel="help", action="mainlist",
                          thumbnail=get_thumb("help.png", view), category=config.get_localized_string(30104), viewmode="list"))
     return itemlist
+
 
 
 def getchanneltypes(view="thumb_"):

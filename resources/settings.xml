@@ -31,7 +31,21 @@
         <setting id="checklinks_number" type="slider" option="int" range="5,5,20" label="30021" default="5" visible="eq(-1,true)" subsetting="true"/>
     </category>
 
+    <!-- Fallback -->
+    <category label="Fallback">
+        <setting label="Film - Configurazione" type="lsep"/>
+        <setting id="movie_channel_1" type="labelenum" label="Canale Primario" values="StreamingCommunity|AltaDefinizione|CineBlog01|TantiFilm|Filmpertutti|CasaCinema|CinemaLibero|IlGenioDelloStreaming" default="StreamingCommunity"/>
+        <setting id="movie_channel_2" type="labelenum" label="Fallback 1" values="Nessuno|StreamingCommunity|AltaDefinizione|CineBlog01|TantiFilm|Filmpertutti|CasaCinema|CinemaLibero|IlGenioDelloStreaming" default="CineBlog01" enable="!eq(-1,Nessuno)"/>
+        <setting id="movie_channel_3" type="labelenum" label="Fallback 2" values="Nessuno|StreamingCommunity|AltaDefinizione|CineBlog01|TantiFilm|Filmpertutti|CasaCinema|CinemaLibero|IlGenioDelloStreaming" default="Nessuno" enable="!eq(-1,Nessuno)"/>
+
+        <setting label="Serie TV - Configurazione" type="lsep"/>
+        <setting id="tv_channel_1" type="labelenum" label="Canale Primario" values="StreamingCommunity|GuardaSerie|CineBlog01|Filmpertutti|EuroStreaming|ItaliaSerie|SerieTVU|IlGenioDelloStreaming" default="StreamingCommunity"/>
+        <setting id="tv_channel_2" type="labelenum" label="Fallback 1" values="Nessuno|StreamingCommunity|GuardaSerie|CineBlog01|Filmpertutti|EuroStreaming|ItaliaSerie|SerieTVU|IlGenioDelloStreaming" default="GuardaSerie" enable="!eq(-1,Nessuno)"/>
+        <setting id="tv_channel_3" type="labelenum" label="Fallback 2" values="Nessuno|StreamingCommunity|GuardaSerie|CineBlog01|Filmpertutti|EuroStreaming|ItaliaSerie|SerieTVU|IlGenioDelloStreaming" default="Nessuno" enable="!eq(-1,Nessuno)"/>
+    </category>
+
     <!-- Videolibrary -->
+
     <category label="30131">
         <setting label="30501" type="lsep"/>
         <!-- <setting id="videolibrarypath" type="action" label="30067" action="RunPlugin(plugin://plugin.video.s4me/?ew0KCSJjaGFubmVsIjoibW92ZV92aWRlb2xpYnJhcnkiLA0KCSJhY3Rpb24iOiJzZXRfdmlkZW9saWJyYXJ5X3BhdGgiDQp9)" default="special://profile/addon_data/plugin.video.s4me/videolibrary"/> -->
