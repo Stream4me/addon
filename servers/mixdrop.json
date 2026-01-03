@@ -4,8 +4,8 @@
     "ignore_urls": [],
     "patterns": [
       {
-        "pattern": "mixdro?o?ps?.[^/]+/(?:f|e|emb)/([a-z0-9]+)",
-        "url": "https://mixdrop.ag/e/\\1"
+        "pattern": "m1xdro?o?ps?.[^/]+/(?:f|e|emb)/([a-z0-9]+)",
+        "url": "https://m1xdrop.net/e/\\1"
       },
       {
         "pattern": "(mixdro?ps?.[^/]+/player\\.php\\?id=[a-z0-9-]+)",
@@ -14,10 +14,6 @@
       {
         "pattern": "(md[3bfyz][a-z0-9]*\\.[a-z0-9]+/(?:f|e)/[a-z0-9]+)",
         "url": "https://\\1"
-      },
-	  {
-        "pattern": "m1xdro?o?ps?.[^/]+/(?:f|e|emb)/([a-z0-9]+)",
-        "url": "https://m1xdrop.net//e/\\1"
       }
     ]
   },
