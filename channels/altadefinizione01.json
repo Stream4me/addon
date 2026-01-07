@@ -5,6 +5,6 @@
     "active": true,
     "thumbnail": "altadefinizione01.png",
     "banner": "altadefinizione01.png",
-    "categories": ["movie", "vos"],
+    "categories": ["tvshow","movie", "vos"],
     "settings": []
 }
