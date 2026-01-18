@@ -4,6 +4,10 @@
     "ignore_urls": [],
     "patterns": [
       {
+        "pattern": "(?:https?://)?(?:www\\.)?([a-zA-Z0-9.-]+\\.)?rpmplay\\.online/[^#]*#([A-Za-z0-9]+)",
+        "url": "https://\\1rpmplay.online/#\\2"
+      },
+      {
         "pattern": "(?:https?://)?(?:www\\.)?([a-zA-Z0-9.-]+\\.)?rpmplay\\.xyz/[^#]*#([A-Za-z0-9]+)",
         "url": "https://\\1rpmplay.xyz/#\\2"
       }
