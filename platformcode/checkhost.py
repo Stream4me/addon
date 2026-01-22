@@ -15,7 +15,7 @@ addon = xbmcaddon.Addon("plugin.video." + config.PLUGIN_NAME)
 addonname = addon.getAddonInfo('name')
 addonid = addon.getAddonInfo('id')
 
-LIST_SITE = ['http://www.ansa.it/', 'https://www.google.com']
+LIST_SITE = ['https://www.ansa.it/', 'https://www.google.com']
 
 # list of sites that will not be reached with the manager's DNS
 
