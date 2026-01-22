@@ -15,11 +15,11 @@ addon = xbmcaddon.Addon("plugin.video." + config.PLUGIN_NAME)
 addonname = addon.getAddonInfo('name')
 addonid = addon.getAddonInfo('id')
 
-LIST_SITE = ['http://www.ansa.it/', 'https://www.google.it']#, 'https://www.google.com']
+LIST_SITE = ['https://www.ansa.it/', 'https://www.google.com']
 
 # list of sites that will not be reached with the manager's DNS
 
-LST_SITE_CHCK_DNS = ['https://cb01.uno/']
+LST_SITE_CHCK_DNS = ['https://cb01official.uno/']
 
 class Kdicc():
 
