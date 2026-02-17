@@ -846,7 +846,7 @@ class Tmdb(object):
         self.searched_text = kwargs.get('searched_text', '')
 
         self.search_id = kwargs.get('id_Tmdb', '')
-        self.search_text = re.sub('\[\\\?(B|I|COLOR)\s?[^\]]*\]', '', self.searched_text).strip()
+        self.search_text = re.sub('\[[^\]]+\]', '', self.searched_text).strip()
         self.search_type = kwargs.get('search_type', '')
         self.search_language = kwargs.get('search_language', def_lang)
         self.fallback_language = 'en'

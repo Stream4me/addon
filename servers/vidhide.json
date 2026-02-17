@@ -4,12 +4,8 @@
     "ignore_urls": [],
     "patterns": [
       {
-        "pattern": "(?:vidhideplus)\\.(?:com)/(?:file)/([0-9a-zA-Z]+)",
-        "url": "https://peytonepre.com/embed/\\1"
-      },
-      {
-        "pattern": "(?:smoothpre)\\.(?:com)/(?:file)/([0-9a-zA-Z]+)",
-        "url": "https://smoothpre.com//embed/\\1"
+        "pattern": "(?://|\\.)((?:filelions|ajmidyadfihayh|alhayabambi|techradar|moflix-stream|azipcdn|[mad]lions|lumiawatch|javplaya|javlion|fviplions|egsyxutd|fdewsdc|vidhide|peytone|anime7u|coolciima|gsfomqu|katomen|dht|6sfkrspw4u|ryderjet|e4xb5c2xnz|(?:s|S)mooth|streamvid|movearnpre|bingezove|dingtezuni|dinisglows|motvy55|videoland|mivalyo|taylorplayer)(?:pro|vip|pre|plus|hub|fast)?\\.(?:su|com?|to|sbs|ink|click|pro|live|store|xyz|top|online|site|fun))/(?:s|v|f|d|embed|file|download)/([0-9a-zA-Z$:/.]+)",
+        "url": "https://\\1/file/\\2"
       }
     ]
   },

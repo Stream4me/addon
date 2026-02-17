@@ -152,7 +152,7 @@ def peliculas(item):
 
 def check(item):
     item.data = httptools.downloadpage(item.url).data
-    if support.match(item.data, patron='Episodi.*1</dd>.*?Stato:.*?Finito</').match == '':
+    if support.match(item.data, patron='Episodi.*?<dd>1</dd>.*?Stato:.*?Finito</').match == '':
         item.contentType = 'tvshow'
         return episodios(item)
     else:

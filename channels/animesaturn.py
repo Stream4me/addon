@@ -139,7 +139,7 @@ def peliculas(item):
         data = support.match(item, post=post, headers=headers).data
         if item.args == 'updated':
             page = support.match(data, patron=r'data-page="(\d+)" title="Next">').match
-            patron = r'<a href="(?P<url>[^"]+)" title="(?P<title>[^"(]+)(?:\s*\((?P<year>\d+)\))?(?:\s*\((?P<lang>[A-Za-z-]+)\))?">\s*<img src="(?P<thumb>[^"]+)"[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>\s\s*(?P<type>[^\s]+)\s*(?P<episode>\d+)'
+            patron = r'<a href="(?P<url>[^"]+)" title="(?P<title>(?:[^"]|"(?!>))+?)(?:\s*\((?P<year>\d+)\))?(?:\s*\((?P<lang>[A-Za-z-]+)\))?">\s*<img src="(?P<thumb>[^"]+)"[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>[^>]+>\s\s*(?P<type>[^\s]+)\s*(?P<episode>\d+)'
             typeContentDict = {'Movie':'movie', 'Episodio':'episode'} #item.contentType='episode'
             action = 'findvideos'
             def itemlistHook(itemlist):
