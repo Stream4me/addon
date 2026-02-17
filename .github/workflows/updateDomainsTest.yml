@@ -1,0 +1,32 @@
+name: Update channel domains
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 17 * * *'
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+      with:
+        ref: test
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.x
+
+    - name: Install dependencies
+      run: pip install requests
+
+    - name: Update domains
+      run: python tools/updateDomains.py
+
+    - name: Commit & Push changes
+      uses: actions-js/push@master
+      with:
+        message: "Aggiornamento domini"
+        branch: "test"
+        github_token: ${{ secrets.API_TOKEN_GITHUB }}
