@@ -6477,7 +6477,7 @@ msgid "Do you want to include local episodes for the TV show "%s"?"
 msgstr ""
 
 msgctxt "#80045"
-msgid "The folder of the local episodes has to be different from the TV show one in the S4Me video library"
+msgid "The folder of the local episodes has to be different from the TV show one in the S4Mevideo library"
 msgstr ""
 
 msgctxt "#80046"
@@ -6519,7 +6519,3 @@ msgstr "No options"
 msgctxt "#90005"
 msgid "Search on S4Me"
 msgstr "Search with S4Me"
-
-msgctxt "#90006"
-msgid "Elementum is already installed"
-msgstr "Elementum is already installed"

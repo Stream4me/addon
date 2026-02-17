@@ -62,11 +62,29 @@ def moviefilter(item):
 
 
 def filtered(item, values):
-    genre = item.genreValues[values['genre']]
-    lang = item.langValues[values['lang']]
-    sortby = item.sortValues[values['sort']]
-    order = item.orderValues[values['order']]
-    year = item.yearValues[values['year']]
+    # Supporta sia chiavi stringa (id) che indici numerici
+    try:
+        if 'genre' in values:
+            lang = item.langValues[values['lang']]
+            genre = item.genreValues[values['genre']]
+            year = item.yearValues[values['year']]
+            sortby = item.sortValues[values['sort']]
+            order = item.orderValues[values['order']]
+        else:
+            # Fallback per indici numerici (ordine dei controls)
+            lang = item.langValues[values.get(0, 0)]
+            genre = item.genreValues[values.get(1, 0)]
+            year = item.yearValues[values.get(2, 0)]
+            sortby = item.sortValues[values.get(3, 0)]
+            order = item.orderValues[values.get(4, 0)]
+    except (KeyError, IndexError, TypeError) as e:
+        support.logger.error("filtered error: %s - values: %s" % (e, values))
+        # Valori di default
+        genre = 'all'
+        lang = 'all'
+        sortby = 'popularity'
+        order = 'desc'
+        year = 'all'
 
     return '{}/movie-lib-sort/{}/{}/{}/{}/{}/1/'.format(host, genre, lang, sortby, order, year)
 
@@ -109,11 +127,13 @@ def peliculas(item):
         patron = r'<a href="(?P<url>[^"]+)">(?P<title>[^<]+)<(?:[^>]+>){3,7}(?P<seed>[^<]+)<(?:[^>]+>){6}(?P<size>[^<]+)<span'
         patronNext = r'"([^"]+)">&gt;&gt;'
     elif item.contentType == 'movie':
-        patron = r'<img[^>]+data-original="(?P<thumb>[^"]+)(?:[^>]+>){15}(?P<title>[^<]+).*?<p>(?P<plot>[^<]+).*?<a href="(?P<url>[^"]+)'
+        # Pattern fix: usa h3 direttamente invece di contare i tag, gestisce plot vuoti
+        patron = r'data-original="(?P<thumb>[^"]+)"[^>]*>.*?<h3>(?P<title>[^<]+)</h3>.*?<p>\s*(?P<plot>[^<]*?)\s*</p>.*?href="(?P<url>/movie/[^"]+)"'
         patronNext = r'"([^"]+)">&gt;&gt;'
     else:
         action = 'seasons'
-        patron = r'<img src="(?P<thumb>[^"]+)(?:[^>]+>){4}\s*<a href="(?P<url>[^"]+)[^>]+>(?P<title>[^<]+)'
+        # Pattern robusto per serie TV - cerca direttamente img src poi h3 > a
+        patron = r'<img src="(?P<thumb>[^"]+)"[^>]*>.*?<h3><a href="(?P<url>[^"]+)"[^>]*>(?P<title>[^<]+)</a></h3>'
 
     if (item.args == 'search' or item.contentType != 'movie') and not support.stackCheck(['get_channel_results']):
         patronNext = None

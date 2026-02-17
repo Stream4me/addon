@@ -431,14 +431,13 @@ def scrapeBlock(item, args, block, patron, headers, action, pagination, debug, t
                     if isinstance(langs, list):
                         lang = 'MULTI'
                     else:
-                        lang = langs.alpha3.upper()
+                        lang = vars(langs).get('alpha3').upper()
                     if not (lang.startswith('MUL') or lang.startswith('ITA')):
-                        if parsedTitle.get('subtitle_language'):
-                            subs = parsedTitle.get('subtitle_language')
-                            if isinstance(subs, list):
-                                lang = 'Multi-Sub'
-                            else:
-                                lang = subs.alpha3.upper()
+                        subs = parsedTitle.get('subtitle_language')
+                        if isinstance(subs, list):
+                            lang = 'Multi-Sub'
+                        else:
+                            lang = vars(subs).get('alpha3').upper()
 
             except:
                 import traceback

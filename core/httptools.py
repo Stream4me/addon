@@ -17,6 +17,76 @@ from core.jsontools import to_utf8
 from platformcode import config, logger
 from core import scrapertools
 
+# Import per cache Window Properties (persistenza sessioni FlareSolverr)
+try:
+    import xbmcgui
+    XBMC_AVAILABLE = True
+except ImportError:
+    XBMC_AVAILABLE = False
+
+# Cache Window Properties per persistenza sessioni FlareSolverr
+def get_cached_flaresolverr_session():
+    """
+    Ottiene session ID da cache Kodi window properties
+    Ritorna: (session_id, age_minutes) oppure (None, None)
+    """
+    if not XBMC_AVAILABLE:
+        return None, None
+    
+    try:
+        window = xbmcgui.Window(10000)  # Home window (sempre presente)
+        session_id = window.getProperty('s4me.flaresolverr.session')
+        timestamp_str = window.getProperty('s4me.flaresolverr.timestamp')
+        
+        if session_id and timestamp_str:
+            timestamp = float(timestamp_str)
+            age_minutes = (time.time() - timestamp) / 60.0
+            
+            # Session valida per max 25 minuti (CloudFlare cf_clearance dura ~30 min)
+            if age_minutes < 25:
+                logger.info("FlareSolverr: Found cached session (age: %.1f min)" % age_minutes)
+                return session_id, age_minutes
+            else:
+                logger.info("FlareSolverr: Cached session expired (%.1f min), clearing" % age_minutes)
+                clear_cached_flaresolverr_session()
+                return None, None
+        
+        return None, None
+    except Exception as e:
+        logger.error("Error reading cached session: %s" % str(e))
+        return None, None
+
+def save_cached_flaresolverr_session(session_id):
+    """
+    Salva session ID in cache Kodi window properties
+    Persiste tra reload addon!
+    """
+    if not XBMC_AVAILABLE:
+        return
+    
+    try:
+        window = xbmcgui.Window(10000)
+        window.setProperty('s4me.flaresolverr.session', session_id)
+        window.setProperty('s4me.flaresolverr.timestamp', str(time.time()))
+        logger.info("FlareSolverr: Cached session: %s" % session_id)
+    except Exception as e:
+        logger.error("Error saving session to cache: %s" % str(e))
+
+def clear_cached_flaresolverr_session():
+    """
+    Pulisce session cache
+    """
+    if not XBMC_AVAILABLE:
+        return
+    
+    try:
+        window = xbmcgui.Window(10000)
+        window.clearProperty('s4me.flaresolverr.session')
+        window.clearProperty('s4me.flaresolverr.timestamp')
+        logger.info("FlareSolverr: Cleared cached session")
+    except Exception as e:
+        logger.error("Error clearing cached session: %s" % str(e))
+
 # to surpress InsecureRequestWarning
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -418,8 +488,139 @@ def downloadpage(url, **opt):
         except:
             response['data'] = response['data'].decode('ISO-8859-1')
 
-    if req.headers.get('Server', '').startswith('cloudflare') and response_code in [429, 503, 403]\
-            and not opt.get('CF', False): # and not opt.get('post', None):
+    # Lista domini da forzare con FlareSolverr
+    force_flaresolverr_domains = ['hd4me.lol', 'hd4me.net', 'hd4me.club']
+    
+    # Log di debug per verificare
+    logger.info("Checking CloudFlare for domain: %s" % domain)
+    
+    # Rileva CloudFlare in 3 modi:
+    # 1. Header Server contiene "cloudflare"
+    # 2. Codici di errore CloudFlare (429, 503, 403)
+    # 3. Contenuto pagina contiene challenge CloudFlare
+    # 4. Dominio nella lista forzata
+    cf_in_header = req.headers.get('Server', '').startswith('cloudflare')
+    cf_error_code = response_code in [429, 503, 403]
+    cf_in_content = any(s in str(response['data']) for s in ['__cf_chl_jschl_tk__', 'cf-challenge', 'cf_clearance', 'Checking your browser', 'Just a moment'])
+    cf_forced_domain = any(d in domain for d in force_flaresolverr_domains)
+    
+    logger.info("CF detection: header=%s, error=%s, content=%s, forced=%s" % (cf_in_header, cf_error_code, cf_in_content, cf_forced_domain))
+    
+    cloudflare_detected = (cf_in_header and cf_error_code) or cf_in_content or cf_forced_domain
+    
+    if cloudflare_detected and not opt.get('CF', False) and not opt.get('post', None):
+        
+        # Verifica se FlareSolverr è abilitato
+        fs_enabled = config.get_setting('fs_enable', default=False)
+        
+        if not fs_enabled:
+            # FlareSolverr non è abilitato - chiedi all'utente e configura direttamente
+            reason = "forced domain" if cf_forced_domain else "CF challenge detected" if cf_in_content else "CF header/code"
+            logger.info("CloudFlare detected (%s) for: %s - but FlareSolverr is DISABLED" % (reason, domain))
+            
+            from platformcode import platformtools
+            import xbmc
+            
+            # Mostra dialog per chiedere se configurare FlareSolverr
+            dialog_msg = (
+                "[COLOR yellow]CloudFlare rilevato![/COLOR]\n\n"
+                "Il sito [COLOR cyan]%s[/COLOR] è protetto da CloudFlare.\n\n"
+                "FlareSolverr può bypassare questa protezione.\n\n"
+                "[COLOR lime]Vuoi configurare FlareSolverr ora?[/COLOR]" % domain
+            )
+            
+            configure_fs = platformtools.dialog_yesno(
+                "CloudFlare Rilevato",
+                dialog_msg
+            )
+            
+            if configure_fs:
+                # Chiedi URL FlareSolverr con dialog input
+                fs_url = platformtools.dialog_input(
+                    default="http://localhost:8191/v1",
+                    heading="Inserisci URL FlareSolverr"
+                )
+                
+                if fs_url and fs_url.strip():
+                    # Abilita FlareSolverr e salva URL (settings usa fs_host!)
+                    config.set_setting('fs_enable', True)
+                    config.set_setting('fs_host', fs_url.strip())
+                    fs_enabled = True
+                    
+                    platformtools.dialog_notification(
+                        "FlareSolverr Configurato",
+                        "Provo a bypassare CloudFlare...",
+                        time=3000
+                    )
+                    logger.info("FlareSolverr configured by user: URL=%s, attempting bypass for: %s" % (fs_url, domain))
+                else:
+                    # URL vuoto o cancellato - apri settings categoria Server (indice 4)
+                    logger.info("User cancelled URL input, opening Server settings...")
+                    platformtools.dialog_notification(
+                        "Configurazione Manuale",
+                        "Apro le impostazioni Server...",
+                        time=2000
+                    )
+                    xbmc.sleep(500)
+                    # Apri direttamente la categoria Server
+                    # Categorie: 0=Generale, 1=Riproduzione, 2=Videoteca, 3=Canali, 4=Server, 5=Ricerca
+                    xbmc.executebuiltin('Addon.OpenSettings(plugin.video.s4me,category=4)')
+                    
+                    # Ricarica setting dopo chiusura settings
+                    fs_enabled = config.get_setting('fs_enable', default=False)
+                    
+                    if fs_enabled:
+                        platformtools.dialog_notification(
+                            "FlareSolverr Configurato",
+                            "Provo a bypassare CloudFlare...",
+                            time=3000
+                        )
+                        logger.info("FlareSolverr enabled via settings, attempting bypass for: %s" % domain)
+                    else:
+                        platformtools.dialog_notification(
+                            "FlareSolverr Non Abilitato",
+                            "Il sito non funzionerà senza FlareSolverr",
+                            time=5000
+                        )
+                        logger.info("User closed settings without enabling FlareSolverr")
+            else:
+                logger.info("User declined to configure FlareSolverr for: %s" % domain)
+        
+        if fs_enabled:
+            reason = "forced domain" if cf_forced_domain else "CF challenge detected" if cf_in_content else "CF header/code"
+            logger.info("CloudFlare detected (%s), trying FlareSolverr for: %s" % (reason, domain))
+            
+            # Nota: notifica rimossa - modalità silenziosa totale
+            
+            try:
+                flare_data = flaresolve(url)
+                if flare_data:
+                    response['data'] = flare_data
+                    response['code'] = 200
+                    response['success'] = True
+                    response['url'] = url
+                    logger.info("FlareSolverr SUCCESS for: %s" % domain)
+                    
+                    # Nota: notifica successo rimossa - troppo fastidiosa
+                    
+                    return type('HTTPResponse', (), response)
+                else:
+                    raise Exception("FlareSolverr returned empty data")
+            except Exception as e:
+                logger.error("FlareSolverr failed: %s, falling back to proxy" % str(e))
+                
+                # Notifica errore
+                from platformcode import platformtools
+                platformtools.dialog_notification(
+                    "FlareSolverr Errore",
+                    str(e)[:50],
+                    time=5000
+                )
+        
+        # Se FlareSolverr fallisce o non è abilitato, prova con proxy
+        # NOTA: Proxy workers disabilitati temporaneamente per test FlareSolverr
+        # Per riabilitare, decommentare il codice sotto
+        """
         if 'Px-Host' in req_headers:  # first try with proxy
             logger.debug("CF retry with google translate for domain: %s" % domain)
             from lib import proxytranslate
@@ -441,6 +642,8 @@ def downloadpage(url, **opt):
             ret = downloadpage(urlparse.urlunparse((parse.scheme, cf_proxy['url'], parse.path, parse.params, parse.query, parse.fragment)), **opt)
             ret.url = url
             return ret
+        """
+        logger.info("Proxy workers disabled for FlareSolverr test - CloudFlare not bypassed")
 
     if not response['data']:
         response['data'] = ''
@@ -514,3 +717,129 @@ def fill_fields_post(info_dict, req, response, req_headers, inicio):
         logger.error(traceback.format_exc(1))
 
     return info_dict, response
+
+
+def flaresolve(url, referer=None):
+    """
+    Effettua una richiesta attraverso FlareSolverr per bypassare Cloudflare
+    Usa cache Window Properties per persistenza sessioni tra reload addon!
+    @param url: URL da richiedere
+    @param referer: Referer opzionale
+    @return: HTML della risposta
+    """
+    from core.flaresolverr import FlareSolverrManager
+    from platformcode import platformtools
+    
+    try:
+        # Ottiene l'URL di FlareSolverr dalle impostazioni
+        fs_host = config.get_setting('fs_host', default='http://localhost:8191/v1')
+        
+        # Aggiungi /v1 se manca (FlareSolverr richiede /v1 endpoint)
+        if fs_host and not fs_host.endswith('/v1'):
+            fs_host = fs_host.rstrip('/') + '/v1'
+            logger.info("FlareSolverr: Added /v1 to URL: %s" % fs_host)
+        
+        logger.info("FlareSolverr: Attempting to bypass Cloudflare for %s" % url)
+        
+        # CACHE WINDOW PROPERTIES: Cerca sessione esistente
+        cached_session_id, age_minutes = get_cached_flaresolverr_session()
+        
+        # Flag per tracciare se è un nuovo challenge (per notifica finale)
+        is_new_challenge = cached_session_id is None
+        
+        # Crea manager con o senza cache
+        if cached_session_id:
+            # Cache hit: nessuna notifica (veloce e silenzioso)
+            logger.info("FlareSolverr: Reusing cached session (age: %.1f min)" % age_minutes)
+            flaresolverr = FlareSolverrManager(
+                flaresolverr_url=fs_host,
+                session_id=cached_session_id
+            )
+        else:
+            # Nuovo challenge: notifica inizio + notifica fine successo
+            logger.info("FlareSolverr: Creating new session (no cache)")
+            
+            # Estrai dominio dall'URL per notifica
+            try:
+                from urllib.parse import urlparse
+            except ImportError:
+                from urlparse import urlparse
+            domain = urlparse(url).netloc or 'sito'
+            
+            # Notifica che sta iniziando challenge (SOLO per nuovo challenge!)
+            platformtools.dialog_notification(
+                'FlareSolverr',
+                'Bypassando CloudFlare per %s...' % domain,
+                time=3000,
+                sound=False
+            )
+            
+            flaresolverr = FlareSolverrManager(flaresolverr_url=fs_host)
+            
+            # SALVA in cache per prossimi utilizzi
+            if flaresolverr.flaresolverr_session:
+                save_cached_flaresolverr_session(flaresolverr.flaresolverr_session)
+        
+        # Effettua la richiesta
+        listjson = flaresolverr.request(url).json()
+        solution = listjson.get('solution', {})
+        
+        if solution.get('status') != 200:
+            logger.error("FlareSolverr: Request failed with status %s" % solution.get('status'))
+            platformtools.dialog_notification('FlareSolverr', 'Errore: status %s' % solution.get('status'), time=3000, sound=False)
+            raise Exception("FlareSolverr request failed")
+        
+        # Ottiene l'HTML
+        listhtml = solution.get('response', '')
+        
+        # Salva i cookies
+        savecookies_flare(listjson)
+        
+        logger.info("FlareSolverr: Successfully bypassed Cloudflare")
+        
+        # Notifica successo SOLO per nuovo challenge (prima volta)
+        if is_new_challenge:
+            platformtools.dialog_notification('FlareSolverr', 'Cloudflare bypassato con successo', time=2000, sound=False)
+        
+        return listhtml
+    except Exception as e:
+        logger.error("FlareSolverr: Error - %s" % str(e))
+        platformtools.dialog_notification('FlareSolverr', 'Errore: %s' % str(e), time=3000, sound=False)
+        return ''
+
+
+def savecookies_flare(flarejson):
+    """
+    Salva i cookies ricevuti da FlareSolverr
+    @param flarejson: JSON di risposta da FlareSolverr
+    """
+    try:
+        solution = flarejson.get('solution', {})
+        cookies = solution.get('cookies', [])
+        
+        for cookie in cookies:
+            ck = cookielib.Cookie(
+                version=0,
+                name=cookie.get('name', ''),
+                value=cookie.get('value', ''),
+                port=None,
+                port_specified=False,
+                domain=cookie.get('domain', ''),
+                domain_specified=True,
+                domain_initial_dot=cookie.get('domain', '').startswith('.'),
+                path=cookie.get('path', '/'),
+                path_specified=True,
+                secure=cookie.get('secure', False),
+                expires=cookie.get('expires', None),
+                discard=False,
+                comment=None,
+                comment_url=None,
+                rest={'HttpOnly': cookie.get('httpOnly', False)},
+                rfc2109=False
+            )
+            cj.set_cookie(ck)
+        
+        save_cookies()
+        logger.info("FlareSolverr: Cookies saved successfully")
+    except Exception as e:
+        logger.error("FlareSolverr: Error saving cookies - %s" % str(e))

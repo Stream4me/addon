@@ -22,7 +22,7 @@ addonname = addon.getAddonInfo('name')
 
 _hdr_pat = re.compile("^@@ -(\d+),?(\d+)? \+(\d+),?(\d+)? @@.*")
 
-branch = 'master'
+branch = 'stable'
 user = 'stream4me'
 repo = 'addon'
 addonDir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
