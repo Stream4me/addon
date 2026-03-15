@@ -77,16 +77,36 @@ def genres(item):
 
 def search(item, text):
     logger.debug(text)
-    post = {'page':0, 'pagesize': 1000, 'param':text}
+
+    url = host + "/atomatic/raiplay-search-service/api/v1/msearch"
+
+    payload = {
+        "templateIn": "6470a982e4e0301afe1f81f1",
+        "templateOut": "6516ac5d40da6c377b151642",
+        "params": {
+            "param": text,
+            "from": 0,
+            "sort": "relevance",
+            "size": 40,
+            "additionalSize": 24,
+            "onlyVideoQuery": False,
+            "onlyProgramsQuery": False
+        }
+    }
+
+    headers = {
+        "User-Agent": httptools.get_user_agent(),
+        "Referer": host + "/",
+        "Content-Type": "application/json"
+    }
 
     try:
-        item.data = requests.post(host + '/atomatic/raiplay-search-service/api/v3/search', json=post).json()['agg']['titoli']['cards']
-        return peliculas(item)
-    # Continua la ricerca in caso di errore
-    except:
-        import sys
-        for line in sys.exc_info():
-            support.logger.error("%s" % line)
+        res = requests.post(url, json=payload, headers=headers).json()
+        item.data = res.get("agg", {}).get("titoli", {}).get("cards", [])
+        return addinfo(item.data, item)
+
+    except Exception as e:
+        support.logger.error("Errore ricerca RaiPlay: %s" % e)
         return []
 
 
