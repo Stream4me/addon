@@ -19,12 +19,20 @@ LIST_SITE = ['https://www.ansa.it/', 'https://www.google.com']
 LST_SITE_CHCK_DNS = ['https://cb01official.uno/']
 
 
+def is_valid_dns(value):
+    if not value:
+        return False
+    if "." in value or ":" in value:
+        return True
+    return False
+
+
 def get_dns_labels(max_wait=3):
     dns1 = xbmc.getInfoLabel('Network.DNS1Address')
     dns2 = xbmc.getInfoLabel('Network.DNS2Address')
 
     for _ in range(max_wait * 5):
-        if dns1 not in ('', 'Attendi') and dns2 not in ('', 'Attendi'):
+        if is_valid_dns(dns1) and is_valid_dns(dns2):
             return [dns1, dns2]
         xbmc.sleep(200)
         dns1 = xbmc.getInfoLabel('Network.DNS1Address')
