@@ -24,8 +24,39 @@ from platformcode import config, logger
 # COSTANTI E PERCORSI CONDIVISI
 # ============================================================================
 
-# Percorso base condiviso (identico nell'app Android)
-SHARED_BASE_PATH = "/storage/emulated/0/Download/S4MEAssistant"
+# Percorsi base condivisi (speculari all'app Android)
+# Primario: /sdcard/data/com.s4meapp/ (fuori Android/data, leggibile senza permessi)
+# Fallback: /sdcard/Download/S4MEAssistant/
+# Supporto multi-utente: /storage/emulated/0 per utente principale, /1 per secondario ecc.
+
+def _get_android_user_id():
+    """Ottiene l'ID utente Android corrente.
+    Android assegna UID = user_id * 100000 + app_id
+    Utente principale = 0, secondario = 1, ecc.
+    """
+    try:
+        uid = os.getuid()
+        return uid // 100000
+    except Exception:
+        return 0
+
+_ANDROID_USER_ID = _get_android_user_id()
+
+_SHARED_PATHS = [
+    "/sdcard/data/com.s4meapp",
+    "/storage/emulated/%d/data/com.s4meapp" % _ANDROID_USER_ID,
+    "/sdcard/Download/S4MEAssistant",
+    "/storage/emulated/%d/Download/S4MEAssistant" % _ANDROID_USER_ID,
+]
+
+def _get_shared_base_path():
+    """Trova il path base condiviso con l'app (cerca in ordine di priorita)."""
+    for path in _SHARED_PATHS:
+        if os.path.isdir(path):
+            return path
+    return _SHARED_PATHS[0]
+
+SHARED_BASE_PATH = _get_shared_base_path()
 
 # File heartbeat - scritto dall'app ogni 30 secondi
 HEARTBEAT_FILE_PATH = os.path.join(SHARED_BASE_PATH, "s4me_running.flag")
@@ -799,12 +830,14 @@ def _ensure_server_running():
             _server_confirmed_time = time.time()
             return True
         
-        logger.info("S4Me: server non attivo, tento avvio automatico...")
+        logger.info("S4Me: server non attivo su %s" % get_base_url())
         
-        if _is_android():
+        # Avvio automatico solo se l'app e sullo stesso dispositivo (IP locale)
+        # Se l'IP e remoto (es. telefono -> Fire Stick), non avviare app localmente
+        if _is_android() and is_local():
             try:
                 import xbmc
-                logger.info("S4Me: lancio app S4Me Assistant...")
+                logger.info("S4Me: lancio app S4Me Assistant (locale)...")
                 xbmc.executebuiltin('StartAndroidActivity("com.s4me.assistant","","","com.s4me.assistant.MainActivity")')
                 
                 for wait in range(10):
@@ -824,7 +857,7 @@ def _ensure_server_running():
                 logger.error("S4Me: errore avvio app: %s" % str(e))
                 return False
         else:
-            logger.error("S4Me: server remoto non raggiungibile. Aprire l'app manualmente.")
+            logger.error("S4Me: server remoto non raggiungibile (%s). Aprire l'app manualmente." % get_base_url())
             _notify_app_not_running()
             return False
 
