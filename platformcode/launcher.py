@@ -10,6 +10,14 @@ from platformcode import config, logger, platformtools
 from platformcode.logger import WebErrorException
 from six.moves import urllib
 
+
+def _close_addon_settings():
+    """Chiude la finestra impostazioni addon."""
+    try:
+        xbmc.executebuiltin('Dialog.Close(addonsettings)')
+    except Exception:
+        pass
+
 def start():
     '''
     First function that is executed when entering the plugin.
@@ -143,6 +151,38 @@ def run(item=None):
             from core import tmdb
             tmdb.clean_cache()
             platformtools.dialog_notification(config.get_localized_string(20000), config.get_localized_string(60011), time=2000, sound=False)
+
+        # S4Me Assistant: apri l'app
+        elif item.action == "s4me_open_app":
+            import xbmc
+            xbmc.executebuiltin('Dialog.Close(addonsettings)')
+            try:
+                xbmc.executebuiltin('StartAndroidActivity("com.s4me.assistant","","","com.s4me.assistant.MainActivity")')
+                platformtools.dialog_notification("S4Me Assistant", "Apertura app...", time=2000, sound=False)
+            except Exception:
+                platformtools.dialog_notification("S4Me Assistant", "Impossibile aprire l'app", time=3000, sound=False)
+
+        # S4Me Assistant: elimina cookie
+        elif item.action == "s4me_clear_cookies":
+            import xbmc
+            xbmc.executebuiltin('Dialog.Close(addonsettings)')
+            try:
+                from core import s4me_assistant
+                removed, msg = s4me_assistant.clear_all_cookies()
+                platformtools.dialog_notification("S4Me Assistant", msg, time=4000, sound=False)
+            except Exception as e:
+                platformtools.dialog_notification("S4Me Assistant", "Errore: " + str(e), time=4000, sound=False)
+
+        # S4Me Assistant: test connessione
+        elif item.action == "s4me_test":
+            import xbmc
+            xbmc.executebuiltin('Dialog.Close(addonsettings)')
+            from core import s4me_assistant
+            success, message = s4me_assistant.test_connection()
+            if success:
+                platformtools.dialog_notification("S4Me Assistant", message, time=5000, sound=False)
+            else:
+                platformtools.dialog_notification("S4Me Assistant", "Fallito: " + message, time=5000, sound=False)
 
         elif item.action == "migrate":
             from platformcode import xbmc_videolibrary

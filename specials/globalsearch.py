@@ -340,6 +340,23 @@ class SearchWindow(xbmcgui.WindowXML):
         self.LOADING.setVisible(True)
         Thread(target=self.timer).start()
 
+        # --- S4Me Assistant: pre-risoluzione domini ---
+        try:
+            from core import s4me_assistant
+            if s4me_assistant.is_enabled():
+                # Attendi che la lista canali sia pronta
+                self.thActions.join()
+                # Estrai i nomi dei canali dalle searchActions caricate
+                channel_names = list(set(a.channel for a in self.searchActions))
+                if channel_names:
+                    logger.info("S4Me: avvio pre-risoluzione per %d canali" % len(channel_names))
+                    s4me_assistant.pre_resolve_domains(channel_names)
+        except ImportError:
+            pass
+        except Exception as e:
+            logger.error("S4Me pre-resolve error: %s" % str(e))
+        # --- Fine S4Me Assistant ---
+
         try:
             with futures.ThreadPoolExecutor(max_workers=set_workers()) as executor:
                 for searchAction in self.getActions():

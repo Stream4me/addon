@@ -75,10 +75,6 @@
 
         <setting id="servers_config" type="action" label="60538" action="RunPlugin(plugin://plugin.video.s4me/?ew0KICAgICJhY3Rpb24iOiAic2VydmVyc19tZW51IiwNCiAgICAiY2hhbm5lbCI6ICJzaG9ydGN1dHMiDQp9==)"/>
         <setting id="debriders_config" type="action" label="60552" action="RunPlugin(plugin://plugin.video.s4me/?ew0KICAgICJhY3Rpb24iOiAic2VydmVyc19tZW51IiwNCiAgICAiY2hhbm5lbCI6ICJzaG9ydGN1dHMiLA0KCSJ0eXBlIjogImRlYnJpZGVycyINCn0==)"/>
-        <setting label="FlareSolverr (Bypass Cloudflare)" type="lsep"/>
-        <setting id="fs_enable" type="bool" label="Abilita FlareSolverr" default="false"/>
-        <setting id="fs_host" enable="eq(-1,true)" type="text" label="FlareSolverr URL" default="http://localhost:8191/v1"/>
-        <setting id="fs_timeout" enable="eq(-2,true)" type="slider" option="int" range="30,10,120" label="FlareSolverr Timeout (sec)" default="60"/>
         <setting label="70578" type="lsep"/>
         <!-- <setting id="torrent_config" type="action" label="70253" action="RunPlugin(plugin://plugin.video.s4me/?ew0KICAgICJhY3Rpb24iOiJzZXR0aW5nX3RvcnJlbnQiLA0KICAgICJjaGFubmVsIjoic2V0dGluZyINCn0=)"/> -->
         <setting id="elementum_on_seed" type="bool" label="70805" default="false"/>
@@ -175,5 +171,15 @@
         <setting id="enable_custom_theme" type="bool" label="70564" default="false"/>
         <setting id="custom_theme" type="folder" label="70565" default="" visible="eq(-1,true)"/>
         <setting id="video_thumbnail_type" type="select" label="70131" lvalues="70132|70133" default="1"/>
+    </category>
+
+    <category label="S4Me Assistant">
+        <setting label="S4Me Assistant" type="lsep"/>
+        <setting id="s4me_enabled" type="bool" label="Abilita S4Me Assistant" default="false"/>
+        <setting id="s4me_remote_ip" type="text" label="IP server S4Me Assistant" default="127.0.0.1" visible="eq(-1,true)"/>
+        <setting id="s4me_remote_port" type="number" label="Porta server" default="8787" visible="eq(-2,true)"/>
+        <setting id="s4me_open_app" type="action" label="Apri S4Me Assistant" action="RunPlugin(plugin://plugin.video.s4me/?eyJhY3Rpb24iOiJzNG1lX29wZW5fYXBwIiwiY2hhbm5lbCI6InNldHRpbmcifQ==)" visible="eq(-3,true)"/>
+        <setting id="s4me_test" type="action" label="Test connessione" action="RunPlugin(plugin://plugin.video.s4me/?eyJhY3Rpb24iOiJzNG1lX3Rlc3QiLCJjaGFubmVsIjoic2V0dGluZyJ9)" visible="eq(-4,true)"/>
+        <setting id="s4me_clear_cookies" type="action" label="Elimina cookie S4Me" action="RunPlugin(plugin://plugin.video.s4me/?eyJhY3Rpb24iOiJzNG1lX2NsZWFyX2Nvb2tpZXMiLCJjaGFubmVsIjoic2V0dGluZyJ9)" visible="eq(-5,true)"/>
     </category>
 </settings>
