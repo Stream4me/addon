@@ -1121,8 +1121,7 @@ def play_video(item, strm=False, force_direct=False, autoplay=False):
         set_infolabels(xlistitem, item, True)
 
         # if it is a video in mpd format, the listitem is configured to play it ith the inpustreamaddon addon implemented in Kodi 17
-        kodi_version = config.get_platform(True)['num_version']
-
+        
         if mpd or item.manifest =='mpd':
             if not install_inputstream():
                 return
@@ -1133,7 +1132,7 @@ def play_video(item, strm=False, force_direct=False, autoplay=False):
                 xlistitem.setProperty("inputstream.adaptive.license_type", item.drm)
                 xlistitem.setProperty("inputstream.adaptive.license_key", item.license)
                 xlistitem.setMimeType('application/dash+xml')
-            if kodi_version >= 22:
+            if config.get_platform(True)['num_version'] >= 22:
                 xlistitem.setProperty('inputstream.adaptive.common_headers', urllib.urlencode(headers))
             else:
                 xlistitem.setProperty('inputstream.adaptive.stream_headers', urllib.urlencode(headers))
@@ -1145,7 +1144,7 @@ def play_video(item, strm=False, force_direct=False, autoplay=False):
             xlistitem.setProperty('inputstream' if PY3 else 'inputstreamaddon', 'inputstream.adaptive')
             xlistitem.setProperty('inputstream.adaptive.manifest_type', 'hls')
             xlistitem.setMimeType('application/x-mpegURL')
-            if kodi_version >= 22:
+            if config.get_platform(True)['num_version'] >= 22:
                 xlistitem.setProperty('inputstream.adaptive.common_headers', urllib.urlencode(headers))
             else:
                 xlistitem.setProperty('inputstream.adaptive.stream_headers', urllib.urlencode(headers))
