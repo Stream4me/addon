@@ -7,6 +7,7 @@ import sys
 from core import support, httptools
 from platformcode import logger
 from datetime import datetime, timezone, timedelta
+from urllib.parse import quote_plus
 import html
 import json
 import ssl
@@ -78,7 +79,7 @@ def replay_channels(item):
 @support.scrape
 def replay_menu(item):
     action = 'replay'
-    patron = r'href="(?P<url>[^"]+)"><div class="giorno-text">\s*(?P<day>[^>]+)</div><[^>]+>\s*(?P<num>[^<]+)</div><[^>]+>\s*(?P<month>[^<]+)<'
+    patron = r'href="(?P<url>[^"]+)">\s*<div class="giorno-text">\s*(?P<day>[^<]+)</div>\s*<div class="giorno-numero">\s*(?P<num>[^<]+)</div>\s*<div class="giorno-mese">\s*(?P<month>[^<]+)</div>'
     def itemHook(item):
         item.title = support.typo(item.day + ' ' + item.num + ' ' + item.month,'bold')
         return item
@@ -88,7 +89,7 @@ def replay_menu(item):
 @support.scrape
 def replay(item):
     action = 'findvideos'
-    patron = r'guida-tv"><[^>]+><[^>]+>(?P<hour>[^<]+)<[^>]+><[^>]+><[^>]+>\s*<a href="(?P<url>[^"]+)"><[^>]+><div class="[^"]+" data-background-image="(?P<t>[^"]+)"><[^>]+><[^>]+><[^>]+><[^>]+>\s*(?P<name>[^<]+)<[^>]+><[^>]+><[^>]+>(?P<plot>[^<]+)<'
+    patron = r'<div class="orario">(?P<hour>[^<]+)</div>.*?<a href="(?P<url>[^"]+)">.*?data-background-image="(?P<t>[^"]+)".*?<h2>\s*(?P<name>[^<]+)\s*</h2>.*?<div class="occhiello">\s*(?P<plot>[^<]+)\s*</div>'
     def itemHook(item):
         item.title = support.typo(item.hour + ' - ' + item.name,'bold')
         item.contentTitle = item.fulltitle = item.show = item.name
@@ -98,16 +99,79 @@ def replay(item):
         return item
     return locals()
 
+
+def clean_title(t):
+    t = html.unescape(t)
+    t = t.replace("\xa0", " ")
+    t = " ".join(t.split())
+    return t
+
+
 def search(item, text):
-    item.url = host + '/tutti-i-programmi'
-    item.search = text
-    try:
-        return peliculas(item)
-    except:
-        import sys
-        for line in sys.exc_info():
-            support.info('search log:', line)
+    if hasattr(item, "search") and item.search:
+        text = item.search
+
+    query = str(text).strip()
+    if not query:
         return []
+
+    raw_page = getattr(item, "page", 0)
+    try:
+        page = int(raw_page)
+    except:
+        page = 0
+
+    encoded = quote_plus(query)
+    url = f"{host}/ricerca?query={encoded}&page={page}"
+    html_data = httptools.downloadpage(url).data
+
+    if '<div class="view-content">' in html_data:
+        html_results = html_data.split('<div class="view-content">')[-1]
+        html_results = html_results.split('<div class="pager pagerBottom"', 1)[0]
+    else:
+        html_results = html_data
+
+    patron = r'<a href="(?P<url>/[^"]+)"[^>]*>\s*<div class="holder-bg">.*?data-background-image="(?P<thumb>[^"]+)".*?<div class="title[^"]*">\s*(?P<title>[^<]+)\s*</div>'
+    match = support.match(html_results, patron=patron)
+    results = match.matches
+
+    itemlist = []
+    seen = set()
+
+    for url, thumb, title in results:
+        if url in seen:
+            continue
+        seen.add(url)
+
+        title = clean_title(title)
+        fullurl = host + url
+        if thumb.startswith("//"):
+            thumb = "https:" + thumb
+
+        it = item.clone(
+            title=support.typo(title, 'bold'),
+            fulltitle=title,
+            show=title,
+            url=fullurl,
+            thumbnail=thumb,
+            fanart=thumb,
+            action="episodios"
+        )
+        itemlist.append(it)
+
+    if f'query={encoded}&amp;page={page+1}' in html_data:
+        next_item = item.clone(
+            search=query,
+            page=page+1,
+            url=host
+        )
+        support.nextPage(itemlist, next_item, function_or_level='search_page')
+
+    return itemlist
+
+
+def search_page(item):
+    return search(item, item.search)
 
 
 def peliculas(item):
