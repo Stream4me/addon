@@ -175,7 +175,7 @@ def peliculas(item):
                 path, data = future.result()
                 if data:
                     program_details[path] = data
-        patron = r'<a href="(?P<url>[^"]+)"[^>]+><div class="[^"]+" data-background-image="(?P<thumb>[^"]+)"'
+        patron = r'<a href="(?P<url>[^"]+)"[^>]*>\s*<div class="[^"]+" data-background-image="(?P<thumb>[^"]+)"'
 
     match = support.match(html_content, patron=patron)
     matches = match.matches
