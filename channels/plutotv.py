@@ -367,7 +367,9 @@ def findvideos(item):
     item.drm = "com.widevine.alpha"
     item.license = (
         lic_url +
-        "|Origin=https://pluto.tv&Referer=https://pluto.tv/|R{SSM}|"
+        "|Content-Type=application/octet-stream&Origin=https://pluto.tv&Referer=https://pluto.tv&User-Agent=" +
+        HEADERS["User-Agent"] +
+        "|R{SSM}|"
     )
 
     return support.server(item, itemlist=[item], Download=False, Videolibrary=False)
