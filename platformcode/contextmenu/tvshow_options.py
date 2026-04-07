@@ -151,6 +151,10 @@ def get_menu_items():
             else:
                 items.append((config.get_localized_string(80049), lambda: xbmc.executebuiltin("RunPlugin(plugin://plugin.video.s4me/?{}&action=remove_local_episodes&channel=videolibrary&path={})".format(item_url, path))))
 
+            # Context menu: Set preferred audio language and subtitle for this series
+            items.append((config.get_localized_string(80051),
+                          lambda: xbmc.executebuiltin("RunPlugin(plugin://plugin.video.s4me/?{}&action=set_tvshow_media_prefs&channel=videolibrary)".format(item_url))))
+
             # Context menu: Delete series / channel
             channels_num = len(item.library_urls)
             if channels_num > 1:

@@ -6501,6 +6501,38 @@ msgctxt "#80050"
 msgid "Downloading..."
 msgstr "Download in corso..."
 
+msgctxt "#80051"
+msgid "Set Audio/Subtitles"
+msgstr "Imposta Audio/Sottotitoli"
+
+msgctxt "#80052"
+msgid "No preference (Kodi default)"
+msgstr "Nessuna preferenza (default Kodi)"
+
+msgctxt "#80053"
+msgid "Disabled (force off)"
+msgstr "Disabilitati (forza spenti)"
+
+msgctxt "#80054"
+msgid "Always enabled (default language)"
+msgstr "Sempre abilitati (lingua predefinita)"
+
+msgctxt "#80055"
+msgid "Preferred AUDIO for \"%s\""
+msgstr "AUDIO preferito per \"%s\""
+
+msgctxt "#80056"
+msgid "Preferred SUBTITLES for \"%s\""
+msgstr "SOTTOTITOLI preferiti per \"%s\""
+
+msgctxt "#80057"
+msgid "Preferences saved"
+msgstr "Preferenze salvate"
+
+msgctxt "#80058"
+msgid "Cannot read series information"
+msgstr "Impossibile leggere le informazioni della serie"
+
 msgctxt "#90001"
 msgid "S4Me options"
 msgstr "Opzioni di S4Me..."

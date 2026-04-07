@@ -136,7 +136,8 @@ def get_results(nfo_path, root, Type, local=False):
             else: delete_text = config.get_localized_string(60019)
 
             item.context = [{"title": seen_text, "action": "mark_content_as_watched", "channel": "videolibrary",  "playcount": counter},
-                            {"title": delete_text, "action": "delete", "channel": "videolibrary", "multichannel": multichannel}]
+                            {"title": delete_text, "action": "delete", "channel": "videolibrary", "multichannel": multichannel},
+                            {"title": config.get_localized_string(80051), "action": "set_tvshow_media_prefs", "channel": "videolibrary"}]
         else:
             folder = "folder_tvshows"
             try:
@@ -182,6 +183,7 @@ def get_results(nfo_path, root, Type, local=False):
                             {"title": config.get_localized_string(70269), "action": "update_tvshow", "channel": "videolibrary"}]
             if item.local_episodes_path == "": item.context.append({"title": config.get_localized_string(80048), "action": "add_local_episodes", "channel": "videolibrary"})
             else: item.context.append({"title": config.get_localized_string(80049), "action": "remove_local_episodes", "channel": "videolibrary"})
+            item.context.append({"title": config.get_localized_string(80051), "action": "set_tvshow_media_prefs", "channel": "videolibrary"})
     else: item = Item()
     return item, value
 
@@ -997,6 +999,92 @@ def mark_tvshow_as_updatable(item, silent=False):
 
     if not silent:
         platformtools.itemlist_refresh()
+
+
+def set_tvshow_media_prefs(item):
+    """
+    Apre un dialogo per impostare la lingua audio preferita e la preferenza
+    dei sottotitoli per una serie TV. Le scelte vengono salvate nel tvshow.nfo
+    e applicate automaticamente ad ogni episodio durante la riproduzione.
+    """
+    logger.debug()
+
+    nfo_path = item.nfo
+    if not nfo_path:
+        nfo_path = filetools.join(item.path, "tvshow.nfo")
+
+    head_nfo, tvshow_item = videolibrarytools.read_nfo(nfo_path)
+    if not tvshow_item:
+        platformtools.dialog_notification(
+            config.get_localized_string(60010), config.get_localized_string(80058),
+            time=4000, sound=False)
+        return
+
+    title = tvshow_item.contentSerieName or tvshow_item.contentTitle or ""
+    prefs = getattr(tvshow_item, 'tvshow_media_prefs', None) or {}
+
+    # --- Passo 1: Lingua audio ---
+    no_pref = config.get_localized_string(80052)
+    audio_labels = [
+        no_pref,
+        "Italian", "English", "Spanish",
+        "French", "German", "Portuguese", "Japanese",
+    ]
+    audio_keys = ["", "ita", "eng", "spa", "fra", "deu", "por", "jpn"]
+
+    current_audio = prefs.get('audio_lang', '')
+    preselect_audio = audio_keys.index(current_audio) if current_audio in audio_keys else 0
+
+    audio_title = config.get_localized_string(80055) % title if title else config.get_localized_string(80055) % "?"
+    audio_idx = platformtools.dialog_select(
+        audio_title,
+        audio_labels,
+        preselect=preselect_audio
+    )
+    if audio_idx < 0:
+        return  # Utente ha premuto Annulla
+
+    # --- Passo 2: Preferenza sottotitoli ---
+    # __on__  = sempre abilitati senza forzare una lingua
+    # __off__ = sempre disabilitati
+    # ""      = nessuna preferenza (Kodi decide)
+    sub_labels = [
+        no_pref,
+        config.get_localized_string(80053),
+        config.get_localized_string(80054),
+        "Italian", "English", "Spanish",
+        "French", "German", "Portuguese",
+    ]
+    sub_keys = ["", "__off__", "__on__", "ita", "eng", "spa", "fra", "deu", "por"]
+
+    current_sub = prefs.get('sub_lang', '__on__')
+    preselect_sub = sub_keys.index(current_sub) if current_sub in sub_keys else 2  # default: __on__
+
+    sub_title = config.get_localized_string(80056) % title if title else config.get_localized_string(80056) % "?"
+    sub_idx = platformtools.dialog_select(
+        sub_title,
+        sub_labels,
+        preselect=preselect_sub
+    )
+    if sub_idx < 0:
+        return  # Utente ha premuto Annulla
+
+    # --- Salvataggio nel tvshow.nfo ---
+    tvshow_item.tvshow_media_prefs = {
+        'audio_lang': audio_keys[audio_idx],
+        'sub_lang':   sub_keys[sub_idx],
+    }
+    filetools.write(nfo_path, head_nfo + tvshow_item.tojson())
+
+    platformtools.dialog_notification(
+        config.get_localized_string(80057),
+        u"%s: %s | %s: %s" % (
+            "Audio", audio_labels[audio_idx],
+            "Subs",  sub_labels[sub_idx]
+        ),
+        time=4000, sound=False
+    )
+    platformtools.itemlist_refresh()
 
 
 def delete(item):

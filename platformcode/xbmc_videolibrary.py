@@ -20,6 +20,140 @@ from core import scrapertools
 from xml.dom import minidom
 
 
+# Mappa di alias linguistici per il riconoscimento delle tracce audio/sottotitoli.
+# Le chiavi corrispondono ai valori salvati in tvshow_media_prefs.
+_LANG_ALIASES = {
+    'ita': ['ita', 'italiano', 'italian', 'it'],
+    'eng': ['eng', 'english', 'en'],
+    'spa': ['spa', 'espanol', 'spanish', 'es'],
+    'fra': ['fra', 'francais', 'french', 'fr'],
+    'deu': ['deu', 'deutsch', 'german', 'de'],
+    'por': ['por', 'portugues', 'portuguese', 'pt'],
+    'jpn': ['jpn', 'japanese', 'ja'],
+}
+
+
+def _apply_media_prefs(item):
+    """
+    Applica le preferenze audio/sottotitoli salvate in tvshow.nfo dopo l'avvio
+    della riproduzione. Chiamata da mark_as_watched_subThread().
+    """
+    try:
+        nfo = item.nfo
+        if not nfo or not str(nfo).endswith('tvshow.nfo'):
+            return
+        if not filetools.exists(nfo):
+            return
+
+        from core import videolibrarytools
+        head_nfo, tvshow_item = videolibrarytools.read_nfo(nfo)
+        prefs = getattr(tvshow_item, 'tvshow_media_prefs', None)
+        if not prefs:
+            return
+
+        audio_lang = prefs.get('audio_lang', '')
+        sub_lang   = prefs.get('sub_lang',   '__on__')
+        if not audio_lang and not sub_lang:
+            return
+
+        # Attende che le tracce siano disponibili (1.5 secondi dopo l'avvio)
+        for _ in range(3):
+            if not platformtools.is_playing():
+                return
+            time.sleep(0.5)
+
+        if not platformtools.is_playing():
+            return
+
+        player = xbmc.Player()
+
+        # Imposta la traccia audio
+        if audio_lang:
+            try:
+                streams = player.getAvailableAudioStreams()
+                aliases = _LANG_ALIASES.get(audio_lang, [audio_lang])
+                # Prima passa: cerca tracce non-FORCED
+                found = False
+                for i, label in enumerate(streams):
+                    s = label.lower()
+                    if 'forced' in s:
+                        continue
+                    for alias in aliases:
+                        if alias.lower() in s:
+                            player.setAudioStream(i)
+                            logger.debug("_apply_media_prefs: audio stream %d selezionato: %s" % (i, label))
+                            found = True
+                            break
+                    if found:
+                        break
+                # Seconda passa: accetta anche FORCED se non trovato nulla
+                if not found:
+                    for i, label in enumerate(streams):
+                        s = label.lower()
+                        for alias in aliases:
+                            if alias.lower() in s:
+                                player.setAudioStream(i)
+                                logger.debug("_apply_media_prefs: audio stream (forced) %d selezionato: %s" % (i, label))
+                                found = True
+                                break
+                        if found:
+                            break
+                if not found:
+                    logger.debug("_apply_media_prefs: nessuna traccia audio corrisponde a '%s'" % audio_lang)
+            except Exception as e:
+                logger.error("_apply_media_prefs: errore impostando audio: %s" % str(e))
+
+        # Imposta i sottotitoli
+        if sub_lang:
+            try:
+                if sub_lang == '__off__':
+                    # Forza sottotitoli spenti
+                    player.showSubtitles(False)
+                    logger.debug("_apply_media_prefs: sottotitoli disabilitati")
+                elif sub_lang == '__on__':
+                    # Abilita sottotitoli senza cambiare la traccia
+                    player.showSubtitles(True)
+                    logger.debug("_apply_media_prefs: sottotitoli abilitati (lingua default)")
+                else:
+                    streams = player.getAvailableSubtitleStreams()
+                    aliases = _LANG_ALIASES.get(sub_lang, [sub_lang])
+                    # Prima passa: cerca tracce non-FORCED
+                    found = False
+                    for i, label in enumerate(streams):
+                        s = label.lower()
+                        if 'forced' in s:
+                            continue
+                        for alias in aliases:
+                            if alias.lower() in s:
+                                player.setSubtitleStream(i)
+                                player.showSubtitles(True)
+                                logger.debug("_apply_media_prefs: sottotitolo stream %d selezionato: %s" % (i, label))
+                                found = True
+                                break
+                        if found:
+                            break
+                    # Seconda passa: accetta anche FORCED se non trovato nulla
+                    if not found:
+                        for i, label in enumerate(streams):
+                            s = label.lower()
+                            for alias in aliases:
+                                if alias.lower() in s:
+                                    player.setSubtitleStream(i)
+                                    player.showSubtitles(True)
+                                    logger.debug("_apply_media_prefs: sottotitolo stream (forced) %d selezionato: %s" % (i, label))
+                                    found = True
+                                    break
+                            if found:
+                                break
+                    if not found:
+                        logger.debug("_apply_media_prefs: nessun sottotitolo corrisponde a '%s'" % sub_lang)
+            except Exception as e:
+                logger.error("_apply_media_prefs: errore impostando sottotitoli: %s" % str(e))
+
+    except Exception as e:
+        logger.error("_apply_media_prefs: errore generale: %s" % str(e))
+
+
 def mark_auto_as_watched(item):
     def mark_as_watched_subThread(item):
         logger.debug()
@@ -29,6 +163,8 @@ def mark_auto_as_watched(item):
         time_limit = time.time() + 10
         while not platformtools.is_playing() and time.time() < time_limit:
             time.sleep(1)
+
+        _apply_media_prefs(item)
 
         marked = False
         sync = False

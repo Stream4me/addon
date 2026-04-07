@@ -6500,6 +6500,38 @@ msgctxt "#80050"
 msgid "Downloading..."
 msgstr ""
 
+msgctxt "#80051"
+msgid "Set Audio/Subtitles"
+msgstr ""
+
+msgctxt "#80052"
+msgid "No preference (Kodi default)"
+msgstr ""
+
+msgctxt "#80053"
+msgid "Disabled (force off)"
+msgstr ""
+
+msgctxt "#80054"
+msgid "Always enabled (default language)"
+msgstr ""
+
+msgctxt "#80055"
+msgid "Preferred AUDIO for \"%s\""
+msgstr ""
+
+msgctxt "#80056"
+msgid "Preferred SUBTITLES for \"%s\""
+msgstr ""
+
+msgctxt "#80057"
+msgid "Preferences saved"
+msgstr ""
+
+msgctxt "#80058"
+msgid "Cannot read series information"
+msgstr ""
+
 msgctxt "#90001"
 msgid "S4Me options"
 msgstr "S4Me options..."
