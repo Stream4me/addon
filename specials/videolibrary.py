@@ -1057,8 +1057,8 @@ def set_tvshow_media_prefs(item):
     ]
     sub_keys = ["", "__off__", "__on__", "ita", "eng", "spa", "fra", "deu", "por"]
 
-    current_sub = prefs.get('sub_lang', '__on__')
-    preselect_sub = sub_keys.index(current_sub) if current_sub in sub_keys else 2  # default: __on__
+    current_sub = prefs.get('sub_lang', '')
+    preselect_sub = sub_keys.index(current_sub) if current_sub in sub_keys else 0  # default: nessuna preferenza
 
     sub_title = config.get_localized_string(80056) % title if title else config.get_localized_string(80056) % "?"
     sub_idx = platformtools.dialog_select(
