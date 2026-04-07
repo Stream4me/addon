@@ -1530,6 +1530,9 @@ def set_player(item, xlistitem, mediaurl, view, strm):
             playlist = xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
             playlist.clear()
             playlist.add(mediaurl, xlistitem)
+            # Imposta lingua audio/sottotitoli di Kodi PRIMA del play
+            from platformcode import xbmc_videolibrary as _xvl
+            item._original_lang_prefs = _xvl._set_kodi_lang_prefs(item)
             # Reproduce
             xbmc_player.play(playlist, xlistitem)
             add_next_to_playlist(item)

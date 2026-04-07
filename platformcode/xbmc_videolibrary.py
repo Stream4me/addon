@@ -20,138 +20,169 @@ from core import scrapertools
 from xml.dom import minidom
 
 
-# Mappa di alias linguistici per il riconoscimento delle tracce audio/sottotitoli.
-# Le chiavi corrispondono ai valori salvati in tvshow_media_prefs.
-_LANG_ALIASES = {
-    'ita': ['ita', 'italiano', 'italian', 'it'],
-    'eng': ['eng', 'english', 'en'],
-    'spa': ['spa', 'espanol', 'spanish', 'es'],
-    'fra': ['fra', 'francais', 'french', 'fr'],
-    'deu': ['deu', 'deutsch', 'german', 'de'],
-    'por': ['por', 'portugues', 'portuguese', 'pt'],
-    'jpn': ['jpn', 'japanese', 'ja'],
+# Mappa codici lingua -> nome ISO 639-1 / BCP47 che Kodi accetta in locale settings
+_LANG_KODI = {
+    'ita': 'Italian',
+    'eng': 'English',
+    'spa': 'Spanish',
+    'fra': 'French',
+    'deu': 'German',
+    'por': 'Portuguese',
+    'jpn': 'Japanese',
 }
 
 
-def _apply_media_prefs(item):
+def _set_kodi_lang_prefs(item):
     """
-    Applica le preferenze audio/sottotitoli salvate in tvshow.nfo dopo l'avvio
-    della riproduzione. Chiamata da mark_as_watched_subThread().
+    Imposta temporaneamente la lingua audio/sottotitoli di Kodi tramite JSON-RPC
+    PRIMA dell'avvio della riproduzione, in modo che Kodi scelga la traccia
+    giusta fin dall'inizio senza alcun cambio visibile.
+    Ritorna un dict con i valori originali da ripristinare dopo la riproduzione.
     """
     try:
         nfo = item.nfo
         if not nfo or not str(nfo).endswith('tvshow.nfo'):
-            return
+            return None
         if not filetools.exists(nfo):
-            return
+            return None
 
         from core import videolibrarytools
         head_nfo, tvshow_item = videolibrarytools.read_nfo(nfo)
         prefs = getattr(tvshow_item, 'tvshow_media_prefs', None)
         if not prefs:
-            return
+            return None
 
         audio_lang = prefs.get('audio_lang', '')
         sub_lang   = prefs.get('sub_lang',   '__on__')
         if not audio_lang and not sub_lang:
-            return
+            return None
 
-        # Attende che le tracce siano disponibili (1.5 secondi dopo l'avvio)
-        for _ in range(3):
-            if not platformtools.is_playing():
-                return
-            time.sleep(0.5)
+        import json as _json
+
+        def _json_rpc(method, params=None):
+            req = _json.dumps({'jsonrpc': '2.0', 'method': method,
+                               'params': params or {}, 'id': 1})
+            resp = xbmc.executeJSONRPC(req)
+            return _json.loads(resp)
+
+        # Leggi valori correnti per ripristino
+        original = {}
+        res = _json_rpc('Settings.GetSettingValue', {'setting': 'locale.audiolanguage'})
+        original['locale.audiolanguage'] = res.get('result', {}).get('value', '')
+        res = _json_rpc('Settings.GetSettingValue', {'setting': 'locale.subtitlelanguage'})
+        original['locale.subtitlelanguage'] = res.get('result', {}).get('value', '')
+        res = _json_rpc('Settings.GetSettingValue', {'setting': 'subtitles.languages'})
+        original['subtitles.languages'] = res.get('result', {}).get('value', '')
+
+        # Imposta lingua audio
+        if audio_lang and audio_lang in _LANG_KODI:
+            _json_rpc('Settings.SetSettingValue', {
+                'setting': 'locale.audiolanguage',
+                'value': _LANG_KODI[audio_lang]
+            })
+            logger.debug("_set_kodi_lang_prefs: audio -> %s" % _LANG_KODI[audio_lang])
+
+        # Imposta lingua sottotitoli
+        if sub_lang == '__off__':
+            # Kodi non ha un "forza spento" pre-play, gestiamo post-play
+            pass
+        elif sub_lang == '__on__':
+            pass  # Usa la lingua sottotitoli già impostata dall'utente
+        elif sub_lang in _LANG_KODI:
+            _json_rpc('Settings.SetSettingValue', {
+                'setting': 'locale.subtitlelanguage',
+                'value': _LANG_KODI[sub_lang]
+            })
+            logger.debug("_set_kodi_lang_prefs: subtitle lang -> %s" % _LANG_KODI[sub_lang])
+
+        return original
+
+    except Exception as e:
+        logger.error("_set_kodi_lang_prefs: errore: %s" % str(e))
+        return None
+
+
+def _restore_kodi_lang_prefs(original):
+    """Ripristina i valori di lingua Kodi salvati da _set_kodi_lang_prefs."""
+    if not original:
+        return
+    try:
+        import json as _json
+
+        def _json_rpc(method, params=None):
+            req = _json.dumps({'jsonrpc': '2.0', 'method': method,
+                               'params': params or {}, 'id': 1})
+            xbmc.executeJSONRPC(req)
+
+        for setting, value in original.items():
+            if value:
+                _json_rpc('Settings.SetSettingValue', {'setting': setting, 'value': value})
+                logger.debug("_restore_kodi_lang_prefs: %s -> %s" % (setting, value))
+    except Exception as e:
+        logger.error("_restore_kodi_lang_prefs: errore: %s" % str(e))
+
+
+def _apply_media_prefs(item, original_lang_prefs=None):
+    """
+    Applicata dopo onAVStarted:
+    - Ripristina le impostazioni lingua Kodi originali (dopo che Kodi ha già
+      selezionato le tracce con i valori temporanei impostati da _set_kodi_lang_prefs)
+    - Gestisce __on__/__off__ per la visualizzazione sottotitoli
+    """
+    try:
+        nfo = getattr(item, 'nfo', '') or ''
+        sub_lang = None  # None = nessuna preferenza esplicita
+        if nfo and str(nfo).endswith('tvshow.nfo') and filetools.exists(nfo):
+            from core import videolibrarytools
+            head_nfo, tvshow_item = videolibrarytools.read_nfo(nfo)
+            prefs = getattr(tvshow_item, 'tvshow_media_prefs', None)
+            if prefs:
+                sub_lang = prefs.get('sub_lang', '__on__')
+
+        # Se non c'è nulla da fare, esci subito
+        needs_av = (sub_lang in ('__on__', '__off__')) or (original_lang_prefs is not None)
+        if not needs_av:
+            return
 
         if not platformtools.is_playing():
             return
 
+        # Aspetta onAVStarted: a quel punto Kodi ha già selezionato le tracce
+        # usando le impostazioni temporanee che abbiamo impostato prima del play
+        class _AVMonitor(xbmc.Monitor):
+            def __init__(self):
+                xbmc.Monitor.__init__(self)
+                self.av_started = False
+            def onAVStarted(self):
+                self.av_started = True
+
+        monitor = _AVMonitor()
+        deadline = time.time() + 15
+        while not monitor.av_started and time.time() < deadline:
+            if monitor.abortRequested():
+                _restore_kodi_lang_prefs(original_lang_prefs)
+                return
+            time.sleep(0.1)
+
+        if not platformtools.is_playing():
+            _restore_kodi_lang_prefs(original_lang_prefs)
+            return
+
+        # Ora Kodi ha selezionato le tracce: ripristina le impostazioni originali
+        _restore_kodi_lang_prefs(original_lang_prefs)
+
+        # Gestisci __on__/__off__ sottotitoli
         player = xbmc.Player()
-
-        # Imposta la traccia audio
-        if audio_lang:
-            try:
-                streams = player.getAvailableAudioStreams()
-                aliases = _LANG_ALIASES.get(audio_lang, [audio_lang])
-                # Prima passa: cerca tracce non-FORCED
-                found = False
-                for i, label in enumerate(streams):
-                    s = label.lower()
-                    if 'forced' in s:
-                        continue
-                    for alias in aliases:
-                        if alias.lower() in s:
-                            player.setAudioStream(i)
-                            logger.debug("_apply_media_prefs: audio stream %d selezionato: %s" % (i, label))
-                            found = True
-                            break
-                    if found:
-                        break
-                # Seconda passa: accetta anche FORCED se non trovato nulla
-                if not found:
-                    for i, label in enumerate(streams):
-                        s = label.lower()
-                        for alias in aliases:
-                            if alias.lower() in s:
-                                player.setAudioStream(i)
-                                logger.debug("_apply_media_prefs: audio stream (forced) %d selezionato: %s" % (i, label))
-                                found = True
-                                break
-                        if found:
-                            break
-                if not found:
-                    logger.debug("_apply_media_prefs: nessuna traccia audio corrisponde a '%s'" % audio_lang)
-            except Exception as e:
-                logger.error("_apply_media_prefs: errore impostando audio: %s" % str(e))
-
-        # Imposta i sottotitoli
-        if sub_lang:
-            try:
-                if sub_lang == '__off__':
-                    # Forza sottotitoli spenti
-                    player.showSubtitles(False)
-                    logger.debug("_apply_media_prefs: sottotitoli disabilitati")
-                elif sub_lang == '__on__':
-                    # Abilita sottotitoli senza cambiare la traccia
-                    player.showSubtitles(True)
-                    logger.debug("_apply_media_prefs: sottotitoli abilitati (lingua default)")
-                else:
-                    streams = player.getAvailableSubtitleStreams()
-                    aliases = _LANG_ALIASES.get(sub_lang, [sub_lang])
-                    # Prima passa: cerca tracce non-FORCED
-                    found = False
-                    for i, label in enumerate(streams):
-                        s = label.lower()
-                        if 'forced' in s:
-                            continue
-                        for alias in aliases:
-                            if alias.lower() in s:
-                                player.setSubtitleStream(i)
-                                player.showSubtitles(True)
-                                logger.debug("_apply_media_prefs: sottotitolo stream %d selezionato: %s" % (i, label))
-                                found = True
-                                break
-                        if found:
-                            break
-                    # Seconda passa: accetta anche FORCED se non trovato nulla
-                    if not found:
-                        for i, label in enumerate(streams):
-                            s = label.lower()
-                            for alias in aliases:
-                                if alias.lower() in s:
-                                    player.setSubtitleStream(i)
-                                    player.showSubtitles(True)
-                                    logger.debug("_apply_media_prefs: sottotitolo stream (forced) %d selezionato: %s" % (i, label))
-                                    found = True
-                                    break
-                            if found:
-                                break
-                    if not found:
-                        logger.debug("_apply_media_prefs: nessun sottotitolo corrisponde a '%s'" % sub_lang)
-            except Exception as e:
-                logger.error("_apply_media_prefs: errore impostando sottotitoli: %s" % str(e))
+        if sub_lang == '__off__':
+            player.showSubtitles(False)
+            logger.debug("_apply_media_prefs: sottotitoli disabilitati")
+        elif sub_lang == '__on__':
+            player.showSubtitles(True)
+            logger.debug("_apply_media_prefs: sottotitoli abilitati (lingua default)")
 
     except Exception as e:
         logger.error("_apply_media_prefs: errore generale: %s" % str(e))
+        _restore_kodi_lang_prefs(original_lang_prefs)
 
 
 def mark_auto_as_watched(item):
@@ -164,7 +195,9 @@ def mark_auto_as_watched(item):
         while not platformtools.is_playing() and time.time() < time_limit:
             time.sleep(1)
 
-        _apply_media_prefs(item)
+        # Applica preferenze post-play e ripristina le impostazioni lingua
+        # DOPO onAVStarted (quando Kodi ha già selezionato le tracce)
+        _apply_media_prefs(item, getattr(item, '_original_lang_prefs', None))
 
         marked = False
         sync = False
