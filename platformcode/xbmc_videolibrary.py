@@ -75,26 +75,29 @@ def _set_kodi_lang_prefs(item):
         original['subtitles.languages'] = res.get('result', {}).get('value', '')
 
         # Imposta lingua audio
+        changed = False
         if audio_lang and audio_lang in _LANG_KODI:
             _json_rpc('Settings.SetSettingValue', {
                 'setting': 'locale.audiolanguage',
                 'value': _LANG_KODI[audio_lang]
             })
             logger.debug("_set_kodi_lang_prefs: audio -> %s" % _LANG_KODI[audio_lang])
+            changed = True
 
         # Imposta lingua sottotitoli
         if sub_lang == '__off__':
             # Kodi non ha un "forza spento" pre-play, gestiamo post-play
             pass
-        elif sub_lang == '__on__':
-            pass  # Usa la lingua sottotitoli già impostata dall'utente
         elif sub_lang in _LANG_KODI:
             _json_rpc('Settings.SetSettingValue', {
                 'setting': 'locale.subtitlelanguage',
                 'value': _LANG_KODI[sub_lang]
             })
             logger.debug("_set_kodi_lang_prefs: subtitle lang -> %s" % _LANG_KODI[sub_lang])
+            changed = True
 
+        if not changed:
+            return None
         return original
 
     except Exception as e:
@@ -137,10 +140,10 @@ def _apply_media_prefs(item, original_lang_prefs=None):
             head_nfo, tvshow_item = videolibrarytools.read_nfo(nfo)
             prefs = getattr(tvshow_item, 'tvshow_media_prefs', None)
             if prefs:
-                sub_lang = prefs.get('sub_lang', '__on__')
+                sub_lang = prefs.get('sub_lang', '')
 
         # Se non c'è nulla da fare, esci subito
-        needs_av = (sub_lang in ('__on__', '__off__')) or (original_lang_prefs is not None)
+        needs_av = (sub_lang == '__off__') or (original_lang_prefs is not None)
         if not needs_av:
             return
 
@@ -171,14 +174,11 @@ def _apply_media_prefs(item, original_lang_prefs=None):
         # Ora Kodi ha selezionato le tracce: ripristina le impostazioni originali
         _restore_kodi_lang_prefs(original_lang_prefs)
 
-        # Gestisci __on__/__off__ sottotitoli
+        # Gestisci __off__ sottotitoli
         player = xbmc.Player()
         if sub_lang == '__off__':
             player.showSubtitles(False)
             logger.debug("_apply_media_prefs: sottotitoli disabilitati")
-        elif sub_lang == '__on__':
-            player.showSubtitles(True)
-            logger.debug("_apply_media_prefs: sottotitoli abilitati (lingua default)")
 
     except Exception as e:
         logger.error("_apply_media_prefs: errore generale: %s" % str(e))

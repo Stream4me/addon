@@ -1045,17 +1045,16 @@ def set_tvshow_media_prefs(item):
         return  # Utente ha premuto Annulla
 
     # --- Passo 2: Preferenza sottotitoli ---
-    # __on__  = sempre abilitati senza forzare una lingua
     # __off__ = sempre disabilitati
     # ""      = nessuna preferenza (Kodi decide)
+    # lingua specifica = imposta la traccia sottotitoli
     sub_labels = [
         no_pref,
         config.get_localized_string(80053),
-        config.get_localized_string(80054),
         "Italian", "English", "Spanish",
         "French", "German", "Portuguese",
     ]
-    sub_keys = ["", "__off__", "__on__", "ita", "eng", "spa", "fra", "deu", "por"]
+    sub_keys = ["", "__off__", "ita", "eng", "spa", "fra", "deu", "por"]
 
     current_sub = prefs.get('sub_lang', '')
     preselect_sub = sub_keys.index(current_sub) if current_sub in sub_keys else 0  # default: nessuna preferenza
