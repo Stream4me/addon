@@ -17,9 +17,6 @@ host = "https://www.superguidatv.it"
 TIMEOUT_TOTAL = 60
 
 TMDB_BLACKLIST = ['Notizie', 'Sport', 'Rubrica', 'Musica', 'Attualita', 'Mondo e Tendenze', 'Intrattenimento']
-MOVIE_CHANNELS = ['rai movie', 'sky cinema', 'iris', 'cielo', 'la7 cinema', 'cine34', 
-                  'rai 4', '20', 'tv8', 'rai 1', 'rai 2', 'canale 5', 'italia 1', 
-                  'rete 4', 'la7', 'nove', 'cielo']
 
 _films_cache = None
 _films_cache_time = 0
@@ -254,8 +251,6 @@ def _determine_content_type(link_match, channel, scrapedtype, title, films_db):
         if '/dettaglio-programma/' in link_match.group(1):
             return 'tvshow'
     
-    if any(ch in channel.lower() for ch in MOVIE_CHANNELS):
-        return 'movie'
     if 'Film' in scrapedtype:
         return 'movie'
     if re.search(r'\b(19|20)\d{2}\b', title):
