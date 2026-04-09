@@ -16,7 +16,7 @@ from platformcode import config, platformtools, logger
 host = "https://www.superguidatv.it"
 TIMEOUT_TOTAL = 60
 
-TMDB_BLACKLIST = ['Notizie', 'Sport', 'Rubrica', 'Musica', 'Attualita', 'Mondo e Tendenze', 'Intrattenimento']
+TMDB_BLACKLIST = ['Notizie', 'Sport', 'Rubrica', 'Musica']
 
 _films_cache = None
 _films_cache_time = 0
