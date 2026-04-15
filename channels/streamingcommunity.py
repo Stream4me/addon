@@ -189,8 +189,10 @@ def makeItem(n, it, item):
     itm = item.clone(title=support.typo(title,'bold') + support.typo(lang,'_ [] color std bold'))
     itm.contentType = it['type'].replace('tv', 'tvshow')
     itm.language = lang
-    if it['last_air_date']:
-        itm.year = it['last_air_date'].split('-')[0]
+    
+    # FIX ANNO - usa release_date invece di last_air_date
+    if it.get('release_date'):
+        itm.year = it['release_date'].split('-')[0]
 
     if itm.contentType == 'movie':
         # itm.contentType = 'movie'
@@ -254,4 +256,3 @@ def findvideos(item):
     itemlist = [item.clone(title=channeltools.get_channel_parameters(item.channel)['title'],
                            url=item.url.replace('/watch/', '/iframe/'), server='streamingcommunityws')]
     return support.server(item, itemlist=itemlist, referer=False)
-
