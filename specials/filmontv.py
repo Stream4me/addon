@@ -22,12 +22,11 @@ RE_CARD_SPLIT = re.compile(
     r'(?=<div class="sgtv-group sgtv-flex sgtv-flex-col sgtv-rounded-md sgtv-border sgtv-border-neutral-300 sgtv-bg-stone-100 sgtv-shadow-item")'
 )
 RE_FIRST_PROGRAM_SPLIT = re.compile(r'<hr class="sgtv-ml-2[^"]*"[^>]*>')
-RE_NOW_CHANNEL  = re.compile(r'<img alt="([^"]*)"[^>]*src="([^"]*channels/\d+/logo[^"]*)"')
+RE_CHANNEL      = re.compile(r'<img alt="([^"]*)"[^>]*src="([^"]*channels/\d+/logo[^"]*)"')
 RE_NOW_TIME     = re.compile(r'<p class="sgtv-text-lg sgtv-font-bold">([^<]+)</p>')
 RE_NOW_TITLE    = re.compile(r'<p class="sgtv-max-w-full sgtv-truncate sgtv-text-lg[^"]*">([^<]+)</p>')
 RE_NOW_TYPE     = re.compile(r'<p class="sgtv-max-w-full sgtv-truncate sgtv-border-l-8[^"]*">([^<]+)</p>')
 RE_NOW_BACKDROP = re.compile(r'src="(https://api\.superguidatv\.it/v1/(?:programs|series|movies)/\d+/backdrops/\d+\?[^"]*)"')
-RE_FILM_CHANNEL = re.compile(r'<img alt="([^"]*)"[^>]*src="([^"]*channels/\d+/logo[^"]*)"')
 RE_FILM_ORARIO  = re.compile(r'<p class="sgtv-max-w-full sgtv-truncate sgtv-leading-6">([^<]+)</p>')
 RE_FILM_TITLE   = re.compile(r'<a href="/dettaglio-film/[^"]+"[^>]*class="[^"]*sgtv-block[^"]*"[^>]*>\s*([^<]+)\s*</a>')
 RE_FILM_GENRE   = re.compile(r'<p class="sgtv-row-span-1 sgtv-truncate">([^<]+)</p>')
@@ -174,7 +173,6 @@ def normalize_title_for_tmdb(title):
 
 def create_search_item(title, search_text, content_type, thumbnail="", year="", genre="", plot="", event_type=""):
     use_new_search = config.get_setting('new_search')
-    
     clean_text = normalize_title_for_tmdb(search_text).replace("+", " ").strip()
 
     infoLabels = {
@@ -229,8 +227,7 @@ def create_search_item(title, search_text, content_type, thumbnail="", year="", 
 
 
 def _split_cards(data):
-    parts = RE_CARD_SPLIT.split(data)
-    return [p for p in parts if 'sgtv-shadow-item' in p]
+    return [p for p in RE_CARD_SPLIT.split(data) if 'sgtv-shadow-item' in p]
 
 
 def _parse_film_card(card):
@@ -238,7 +235,7 @@ def _parse_film_card(card):
     if not title_match:
         return None
 
-    channel_match  = RE_FILM_CHANNEL.search(card)
+    channel_match  = RE_CHANNEL.search(card)
     orario_matches = RE_FILM_ORARIO.findall(card)
     genre_matches  = RE_FILM_GENRE.findall(card)
     cover_match    = RE_FILM_COVER.search(card)
@@ -260,7 +257,7 @@ def _parse_film_card(card):
 
 
 def _parse_now_card(card):
-    channel_match  = RE_NOW_CHANNEL.search(card)
+    channel_match  = RE_CHANNEL.search(card)
     scrapedchannel = scrapertools.decodeHtmlentities(channel_match.group(1)).strip() if channel_match else ""
     channel_logo   = channel_match.group(2) if channel_match else ""
     first_block    = RE_FIRST_PROGRAM_SPLIT.split(card, maxsplit=1)[0]
@@ -291,7 +288,8 @@ def get_films_database():
         logger.error("[FILMONTV] Errore fetch prima pagina: %s" % e)
         return _film_cache.get() or {}
 
-    current_hash = hashlib.md5(first_data.encode('utf-8', errors='replace')).hexdigest()
+    raw = first_data if isinstance(first_data, bytes) else first_data.encode('utf-8', errors='replace')
+    current_hash = hashlib.md5(raw).hexdigest()
     cached = _film_cache.get(current_hash=current_hash)
     if cached is not None:
         return cached
