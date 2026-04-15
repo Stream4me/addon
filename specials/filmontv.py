@@ -166,7 +166,6 @@ def normalize_title_for_tmdb(title):
     title = title.replace("'", "'").replace("`", "'")
     title = title.replace('\u201c', '"').replace('\u201d', '"')
     title = re.sub(r'\s+', ' ', title)
-    title = title.replace('&', 'e')
 
     return title.strip()
 
