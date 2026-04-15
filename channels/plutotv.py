@@ -3,26 +3,28 @@
 # Canale per Pluto TV
 # ------------------------------------------------------------
 
-import uuid, datetime, six
+import uuid
+import datetime
+import six
 from platformcode import logger, config
 from core.item import Item
-from core import jsontools, support, httptools
+from core import support, httptools
 
 host = support.config.get_channel_url()
 api = 'https://api.pluto.tv'
 
-_SID       = str(uuid.uuid1())
+_SID = str(uuid.uuid1())
 _DEVICE_ID = str(uuid.uuid4())
 
 _jwt_cache = {
-    'token'   : None,
-    'expires' : None,
-    'country' : 'IT',
-    'lat'     : '0.0000',
-    'lon'     : '0.0000',
+    'token': None,
+    'expires': None,
+    'country': 'IT',
+    'lat': '0.0000',
+    'lon': '0.0000',
 }
 
-UUID    = 'sid={}&deviceId={}'.format(_SID, _DEVICE_ID)
+UUID = 'sid={}&deviceId={}'.format(_SID, _DEVICE_ID)
 vod_url = '{}/v3/vod/categories?includeItems=true&deviceType=web&{}'.format(api, UUID)
 
 APP_VERSION = '9.20.0-89258290264838515e264f5b051b7c1602a58482'
@@ -57,8 +59,8 @@ VOD_STITCH = (
 ).format(sid=_SID, did=_DEVICE_ID)
 
 HEADERS = {
-    'Origin'    : 'https://pluto.tv',
-    'Referer'   : 'https://pluto.tv/',
+    'Origin': 'https://pluto.tv',
+    'Referer': 'https://pluto.tv/',
     'User-Agent': (
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
         'AppleWebKit/537.36 (KHTML, like Gecko) '
@@ -66,9 +68,8 @@ HEADERS = {
     ),
 }
 
-LIVE_URL  = '{}/v2/channels.json?{}'.format(api, UUID)
+LIVE_URL = '{}/v2/channels.json?{}'.format(api, UUID)
 GUIDE_URL = '{}/v2/channels?start={{}}&stop={{}}&{}'.format(api, UUID)
-
 
 def _get_jwt():
     now = datetime.datetime.utcnow()
@@ -94,61 +95,45 @@ def _get_jwt():
         return ''
 
     try:
-        import base64, json as _json
-        payload_b64  = token.split('.')[1]
+        import base64
+        import json as _json
+        payload_b64 = token.split('.')[1]
         payload_b64 += '=' * (-len(payload_b64) % 4)
-        payload      = _json.loads(base64.b64decode(payload_b64).decode('utf-8'))
+        payload = _json.loads(base64.b64decode(payload_b64).decode('utf-8'))
 
-        exp     = payload.get('exp')
-        expires = (datetime.datetime.utcfromtimestamp(exp)
-                   if exp else now + datetime.timedelta(hours=23))
+        exp = payload.get('exp')
+        expires = (datetime.datetime.utcfromtimestamp(exp) if exp else now + datetime.timedelta(hours=23))
 
-        _jwt_cache['country']    = payload.get('country', 'IT')
-        _jwt_cache['lat']        = '{:.4f}'.format(payload.get('deviceLat', 0.0))
-        _jwt_cache['lon']        = '{:.4f}'.format(payload.get('deviceLon', 0.0))
+        _jwt_cache['country'] = payload.get('country', 'IT')
+        _jwt_cache['lat'] = '{:.4f}'.format(payload.get('deviceLat', 0.0))
+        _jwt_cache['lon'] = '{:.4f}'.format(payload.get('deviceLon', 0.0))
         _jwt_cache['session_id'] = payload.get('sessionID', _SID)
-
     except:
         expires = now + datetime.timedelta(hours=23)
 
-    _jwt_cache['token']   = token
+    _jwt_cache['token'] = token
     _jwt_cache['expires'] = expires
     return token
-
 
 def _build_live_url(channel_id):
     jwt = _get_jwt()
     if not jwt:
         return ''
     sid = _jwt_cache.get('session_id', _SID)
-    return LIVE_STITCH.format(
-        channel_id = channel_id,
-        sid        = sid,
-        did        = _DEVICE_ID,
-        jwt        = jwt,
-    )
-
+    return LIVE_STITCH.format(channel_id=channel_id, sid=sid, did=_DEVICE_ID, jwt=jwt)
 
 def _build_vod_url(episode_id):
     jwt = _get_jwt()
     if not jwt:
         return ''
-    return VOD_STITCH.format(
-        episode_id = episode_id,
-        jwt        = jwt,
-        country    = _jwt_cache['country'],
-        lat        = _jwt_cache['lat'],
-        lon        = _jwt_cache['lon'],
-    )
-
+    return VOD_STITCH.format(episode_id=episode_id, jwt=jwt, country=_jwt_cache['country'], lat=_jwt_cache['lat'], lon=_jwt_cache['lon'])
 
 @support.menu
 def mainlist(item):
-    top    = [('Dirette {bold}', ['/it/live-tv/', 'live'])]
-    menu   = [('Categorie', ['', 'category'])]
+    top = [('Dirette {bold}', ['/it/live-tv/', 'live'])]
+    menu = [('Categorie', ['', 'category'])]
     search = ''
     return locals()
-
 
 @support.menu
 def category(item):
@@ -161,24 +146,26 @@ def category(item):
                        for it in httptools.downloadpage(vod_url).json['categories'][1:]])
     return locals()
 
-
 def live(item):
     if not _get_jwt():
         return []
 
-    now   = datetime.datetime.utcnow()
+    now = datetime.datetime.utcnow()
     start = now.strftime('%Y-%m-%dT%H:00:00Z')
-    stop  = (now + datetime.timedelta(hours=4)).strftime('%Y-%m-%dT%H:00:00Z')
+    stop = (now + datetime.timedelta(hours=4)).strftime('%Y-%m-%dT%H:00:00Z')
 
     guide_resp = httptools.downloadpage(GUIDE_URL.format(start, stop))
     guide_data = guide_resp.json if isinstance(guide_resp.json, list) else []
+    
     guide = {}
     for g in guide_data:
+        channel_id = g.get('_id', '')
         tl = g.get('timelines', [])
-        guide[g.get('number', 0)] = [
-            tl[0].get('title', '') if len(tl) > 0 else '',
-            tl[1].get('title', '') if len(tl) > 1 else '',
-        ]
+        if channel_id:
+            guide[channel_id] = [
+                tl[0].get('title', '') if len(tl) > 0 else '',
+                tl[1].get('title', '') if len(tl) > 1 else '',
+            ]
 
     channels_resp = httptools.downloadpage(LIVE_URL)
     channels_data = channels_resp.json if isinstance(channels_resp.json, list) else []
@@ -186,33 +173,31 @@ def live(item):
     itemlist = []
     for it in channels_data:
         try:
-            num        = it.get('number', 0)
-            guide_info = guide.get(num, ['', ''])
-            thumb      = (it.get('solidLogoPNG') or {}).get('path', '')
-            fanart     = (it.get('featuredImage') or {}).get('path', '')
-            stream_url = _build_live_url(it.get('_id', ''))
+            channel_id = it.get('_id', '')
+            guide_info = guide.get(channel_id, ['', ''])
+            thumb = (it.get('solidLogoPNG') or {}).get('path', '')
+            fanart = (it.get('featuredImage') or {}).get('path', '')
+            stream_url = _build_live_url(channel_id)
 
             if not stream_url:
                 continue
 
             itemlist.append(item.clone(
-                title        = '[B]{}[/B] | {}'.format(it['name'], guide_info[0]),
-                number       = num,
-                contentTitle = it['name'],
-                action       = 'findvideos',
-                thumbnail    = thumb,
-                fanart       = fanart,
-                plot         = '{}\n\n[B]A seguire:[/B]\n{}'.format(
-                                   it.get('summary', ''), guide_info[1]),
-                videourl     = stream_url,
-                forcethumb   = True,
+                title='[B]{}[/B] | {}'.format(it['name'], guide_info[0]),
+                number=it.get('number', 0),
+                contentTitle=it['name'],
+                action='findvideos',
+                thumbnail=thumb,
+                fanart=fanart,
+                plot='{}\n\n[B]A seguire:[/B]\n{}'.format(it.get('summary', ''), guide_info[1]),
+                videourl=stream_url,
+                forcethumb=True,
             ))
         except:
             pass
 
     itemlist.sort(key=lambda it: it.number)
     return itemlist
-
 
 def search(item, text):
     logger.debug('Search: {}'.format(text))
@@ -222,10 +207,10 @@ def search(item, text):
         return []
 
     query = text.replace(" ", "%20")
-    url = f"https://service-media-search.clusters.pluto.tv/v1/search?q={query}&limit=100"
+    url = "https://service-media-search.clusters.pluto.tv/v1/search?q={}&limit=100".format(query)
 
     headers = HEADERS.copy()
-    headers["Authorization"] = f"Bearer {jwt}"
+    headers["Authorization"] = "Bearer {}".format(jwt)
 
     resp = httptools.downloadpage(url, headers=headers)
     data = resp.json or {}
@@ -241,15 +226,15 @@ def search(item, text):
         if r.get("type") == "timeline":
             continue
 
-        rid   = r.get("id")
+        rid = r.get("id")
         rtype = r.get("type")
 
         if rtype == "movie":
-            thumb  = f"https://images.pluto.tv/episodes/{rid}/screenshot16_9.jpg?fill=blur&fit=fill&fm=jpg&w=224&h=124&q=75"
-            fanart = f"https://images.pluto.tv/episodes/{rid}/screenshot16_9.jpg?fill=blur&fit=fill&fm=jpg&w=1280&h=720&q=75"
+            thumb = "https://images.pluto.tv/episodes/{}/screenshot16_9.jpg?fill=blur&fit=fill&fm=jpg&w=224&h=124&q=75".format(rid)
+            fanart = "https://images.pluto.tv/episodes/{}/screenshot16_9.jpg?fill=blur&fit=fill&fm=jpg&w=1280&h=720&q=75".format(rid)
         else:
-            thumb  = f"https://images.pluto.tv/series/{rid}/featuredImage.jpg?fill=blur&fit=fill&fm=jpg&w=224&h=124&q=75"
-            fanart = f"https://images.pluto.tv/series/{rid}/featuredImage.jpg?fill=blur&fit=fill&fm=jpg&w=1280&h=720&q=75"
+            thumb = "https://images.pluto.tv/series/{}/featuredImage.jpg?fill=blur&fit=fill&fm=jpg&w=224&h=124&q=75".format(rid)
+            fanart = "https://images.pluto.tv/series/{}/featuredImage.jpg?fill=blur&fit=fill&fm=jpg&w=1280&h=720&q=75".format(rid)
 
         if rtype == "movie":
             itemlist.append(Item(
@@ -281,27 +266,26 @@ def search(item, text):
 
     return itemlist
 
-
 def peliculas(item):
-    itemlist   = []
+    itemlist = []
     recordlist = []
 
     for i, it in enumerate(item.args):
         if item.search in it['name'].lower():
             is_series = it['type'] == 'series'
             itm = Item(
-                channel          = item.channel,
-                url              = item.url,
-                title            = it['name'],
-                contentTitle     = it['name'],
-                contentSerieName = it['name'] if is_series else '',
-                plot             = it['description'],
-                contentType      = 'tvshow' if is_series else 'movie',
-                action           = 'episodios' if is_series else 'findvideos',
-                thumbnail        = it['covers'][0]['url'],
-                fanart           = it['covers'][2]['url'] if len(it['covers']) > 2 else '',
-                id               = it['_id'],
-                videourl         = '',
+                channel=item.channel,
+                url=item.url,
+                title=it['name'],
+                contentTitle=it['name'],
+                contentSerieName=it['name'] if is_series else '',
+                plot=it['description'],
+                contentType='tvshow' if is_series else 'movie',
+                action='episodios' if is_series else 'findvideos',
+                thumbnail=it['covers'][0]['url'],
+                fanart=it['covers'][2]['url'] if len(it['covers']) > 2 else '',
+                id=it['_id'],
+                videourl='',
             )
             if i < 20 or item.search:
                 itemlist.append(itm)
@@ -311,32 +295,29 @@ def peliculas(item):
     support.tmdb.set_infoLabels_itemlist(itemlist, seekTmdb=True)
     if recordlist and not item.search:
         itemlist.append(item.clone(
-            title     = support.typo(support.config.get_localized_string(30992), 'color std bold'),
-            thumbnail = support.thumb(),
-            args      = recordlist,
+            title=support.typo(support.config.get_localized_string(30992), 'color std bold'),
+            thumbnail=support.thumb(),
+            args=recordlist,
         ))
     return itemlist
 
-
 def episodios(item):
-    itemlist    = []
-    seasons_url = ('{}/v3/vod/series/{}/seasons'
-                   '?includeItems=true&deviceType=web&{}'.format(api, item.id, UUID))
+    itemlist = []
+    seasons_url = '{}/v3/vod/series/{}/seasons?includeItems=true&deviceType=web&{}'.format(api, item.id, UUID)
     seasons = httptools.downloadpage(seasons_url).json['seasons']
 
     for season in seasons:
         for episode in season['episodes']:
             itemlist.append(item.clone(
-                title                = '{}x{:02d} - {}'.format(
-                                           episode['season'], episode['number'], episode['name']),
-                contentTitle         = episode['name'],
-                contentSeason        = episode['season'],
-                contentEpisodeNumber = episode['number'],
-                plot                 = episode['description'],
-                thumbnail            = episode['covers'][1]['url'],
-                id                   = episode['_id'],
-                videourl             = '',
-                action               = 'findvideos',
+                title='{}x{:02d} - {}'.format(episode['season'], episode['number'], episode['name']),
+                contentTitle=episode['name'],
+                contentSeason=episode['season'],
+                contentEpisodeNumber=episode['number'],
+                plot=episode['description'],
+                thumbnail=episode['covers'][1]['url'],
+                id=episode['_id'],
+                videourl='',
+                action='findvideos',
             ))
 
     if config.get_setting('episode_info'):
@@ -344,32 +325,26 @@ def episodios(item):
     support.videolibrary(itemlist, item)
     return itemlist
 
-
 def findvideos(item):
     item.server = 'directo'
 
     if item.videourl and 'jwt=' in item.videourl:
-        item.manifest      = 'hls'
-        item.url           = item.videourl
+        item.manifest = 'hls'
+        item.url = item.videourl
         item.extra_headers = HEADERS
         return support.server(item, itemlist=[item], Download=False, Videolibrary=False)
 
     item.manifest = 'mpd'
-    item.url      = _build_vod_url(item.id)
+    item.url = _build_vod_url(item.id)
     if not item.url:
         return []
 
     item.extra_headers = HEADERS
 
     jwt = _get_jwt()
-    lic_url = f"https://service-concierge.clusters.pluto.tv/v1/wv/alt?jwt={jwt}"
+    lic_url = "https://service-concierge.clusters.pluto.tv/v1/wv/alt?jwt={}".format(jwt)
 
     item.drm = "com.widevine.alpha"
-    item.license = (
-        lic_url +
-        "|Content-Type=application/octet-stream&Origin=https://pluto.tv&Referer=https://pluto.tv&User-Agent=" +
-        HEADERS["User-Agent"] +
-        "|R{SSM}|"
-    )
+    item.license = lic_url + "|Content-Type=application/octet-stream&Origin=https://pluto.tv&Referer=https://pluto.tv&User-Agent=" + HEADERS["User-Agent"] + "|R{SSM}|"
 
     return support.server(item, itemlist=[item], Download=False, Videolibrary=False)
