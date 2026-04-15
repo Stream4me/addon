@@ -152,22 +152,8 @@ def server_config(item):
 
 def normalize_title_for_tmdb(title):
     title = scrapertools.decodeHtmlentities(title).strip()
-
-    if re.match(r'^\d+$', title) or re.match(r'^\d{4}\s', title):
-        return title
-
-    title = re.sub(r'\bnumero\s+(\d+)\b', r'n.\1', title, flags=re.IGNORECASE)
-    title = re.sub(r'\bnumero(\d+)\b',    r'n.\1', title, flags=re.IGNORECASE)
-    title = re.sub(r'\bn°\s*(\d+)\b',     r'n.\1', title, flags=re.IGNORECASE)
-    title = re.sub(r'\bn\s+(\d+)\b',      r'n.\1', title, flags=re.IGNORECASE)
-
-    title = re.sub(r'\s*-\s*', ' - ', title)
-    title = re.sub(r'\s*:\s*', ': ', title)
-    title = title.replace("'", "'").replace("`", "'")
-    title = title.replace('\u201c', '"').replace('\u201d', '"')
     title = re.sub(r'\s+', ' ', title)
-
-    return title.strip()
+    return title
 
 
 def create_search_item(title, search_text, content_type, thumbnail="", year="", genre="", plot="", event_type=""):
