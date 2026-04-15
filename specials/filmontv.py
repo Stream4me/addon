@@ -2,9 +2,9 @@
 # ------------------------------------------------------------
 # Canale film in tv
 # ------------------------------------------------------------
-
 import re
 import time
+import datetime
 try:
     import urllib.parse as urllib
 except ImportError:
@@ -16,11 +16,58 @@ from platformcode import config, platformtools, logger
 host = "https://www.superguidatv.it"
 TIMEOUT_TOTAL = 60
 
-TMDB_BLACKLIST = ['Notizie', 'Sport', 'Rubrica', 'Musica']
+RE_CARD_SPLIT = re.compile(
+    r'(?=<div class="sgtv-group sgtv-flex sgtv-flex-col sgtv-rounded-md sgtv-border sgtv-border-neutral-300 sgtv-bg-stone-100 sgtv-shadow-item")'
+)
+RE_FIRST_PROGRAM_SPLIT = re.compile(r'<hr class="sgtv-ml-2[^"]*"[^>]*>')
 
-_films_cache = None
-_films_cache_time = 0
-CACHE_DURATION = 1800
+# /ora-in-onda/
+RE_NOW_CHANNEL  = re.compile(r'<img alt="([^"]*)"[^>]*src="([^"]*channels/\d+/logo[^"]*)"')
+RE_NOW_TIME     = re.compile(r'<p class="sgtv-text-lg sgtv-font-bold">([^<]+)</p>')
+RE_NOW_TITLE    = re.compile(r'<p class="sgtv-max-w-full sgtv-truncate sgtv-text-lg[^"]*">([^<]+)</p>')
+RE_NOW_TYPE     = re.compile(r'<p class="sgtv-max-w-full sgtv-truncate sgtv-border-l-8[^"]*">([^<]+)</p>')
+RE_NOW_BACKDROP = re.compile(
+    r'src="(https://api\.superguidatv\.it/v1/(?:programs|series|movies)/\d+/backdrops/\d+\?[^"]*)"'
+)
+
+# /film-in-tv/
+RE_FILM_CHANNEL = re.compile(r'<img alt="([^"]*)"[^>]*src="([^"]*channels/\d+/logo[^"]*)"')
+RE_FILM_ORARIO  = re.compile(r'<p class="sgtv-max-w-full sgtv-truncate sgtv-leading-6">([^<]+)</p>')
+RE_FILM_TITLE   = re.compile(r'<a href="/dettaglio-film/[^"]+"[^>]*class="[^"]*sgtv-block[^"]*"[^>]*>\s*([^<]+)\s*</a>')
+RE_FILM_GENRE   = re.compile(r'<p class="sgtv-row-span-1 sgtv-truncate">([^<]+)</p>')
+RE_FILM_COVER   = re.compile(r'src="(https://api\.superguidatv\.it/v1/movies/\d+/cover\?[^"]*)"')
+RE_FILM_ANNO    = re.compile(r'<p class="sgtv-h-1/2 sgtv-break-words sgtv-leading-10">([^<]+)</p>')
+RE_YEAR         = re.compile(r'(\d{4})')
+
+_films_db_cache = None
+
+
+class FilmCache:
+    def __init__(self):
+        self._cache = None
+        self._expiry = None
+    
+    def _next_expiry(self):
+        now = datetime.datetime.now()
+        expiry = now.replace(hour=3, minute=0, second=0, microsecond=0)
+        if now >= expiry:
+            expiry += datetime.timedelta(days=1)
+        return expiry.timestamp()
+    
+    def get(self):
+        if self._cache is not None and self._expiry is not None and time.time() < self._expiry:
+            return self._cache
+        return None
+    
+    def set(self, value):
+        self._cache = value
+        self._expiry = self._next_expiry()
+    
+    def clear(self):
+        self._cache = None
+        self._expiry = None
+
+_film_cache = FilmCache()
 
 
 def mainlist(item):
@@ -102,45 +149,47 @@ def server_config(item):
 
 def normalize_title_for_tmdb(title):
     title = scrapertools.decodeHtmlentities(title).strip()
-    
-    if re.match(r'^\d+$', title) or re.match(r'^\d{4}\s', title):
+
+    if re.match(r'^\d+$', title):
         return title
-    
+    if re.match(r'^\d{4}\s', title):
+        return title
+
     title = re.sub(r'\bnumero\s+(\d+)\b', r'n.\1', title, flags=re.IGNORECASE)
     title = re.sub(r'\bnumero(\d+)\b', r'n.\1', title, flags=re.IGNORECASE)
     title = re.sub(r'\bn°\s*(\d+)\b', r'n.\1', title, flags=re.IGNORECASE)
     title = re.sub(r'\bn\s+(\d+)\b', r'n.\1', title, flags=re.IGNORECASE)
-    
+
     if not re.match(r'^[IVXLCDM]+$', title):
         roman_map = {
-            r'\bI$': '1', r'\bII$': '2', r'\bIII$': '3', r'\bIV$': '4',
-            r'\bV$': '5', r'\bVI$': '6', r'\bVII$': '7', r'\bVIII$': '8',
-            r'\bIX$': '9', r'\bX$': '10'
+            r'\bI\b': '1', r'\bII\b': '2', r'\bIII\b': '3', r'\bIV\b': '4',
+            r'\bV\b': '5', r'\bVI\b': '6', r'\bVII\b': '7', r'\bVIII\b': '8',
+            r'\bIX\b': '9', r'\bX\b': '10'
         }
         for roman, arabic in roman_map.items():
             title = re.sub(roman, arabic, title)
-    
+
     title = re.sub(r'\s*-\s*', ' - ', title)
     title = re.sub(r'\s*:\s*', ': ', title)
     title = title.replace("'", "'").replace("`", "'")
-    title = title.replace(""", '"').replace(""", '"')
+    title = title.replace('\u201c', '"').replace('\u201d', '"')
     title = re.sub(r'\s+', ' ', title)
     title = title.replace('&', 'e')
-    
+
     return title.strip()
 
 
 def create_search_item(title, search_text, content_type, thumbnail="", year="", genre="", plot="", event_type=""):
     use_new_search = config.get_setting('new_search')
+
     normalized_text = normalize_title_for_tmdb(search_text)
     clean_text = normalized_text.replace("+", " ").strip()
-    full_plot = plot if plot else ""
 
     infoLabels = {
         'year': year if year else "",
         'genre': genre if genre else "",
         'title': clean_text,
-        'plot': full_plot
+        'plot': plot if plot else ""
     }
 
     if content_type == 'tvshow':
@@ -165,11 +214,7 @@ def create_search_item(title, search_text, content_type, thumbnail="", year="", 
         elif content_type == 'tvshow':
             new_item.contentSerieName = clean_text
     else:
-        try:
-            quote_fn = urllib.quote_plus
-        except:
-            from urllib.parse import quote_plus as quote_fn
-
+        quote_fn = urllib.quote_plus
         extra_type = 'movie' if content_type == 'movie' else 'tvshow'
         new_item = Item(
             channel='search',
@@ -192,147 +237,177 @@ def create_search_item(title, search_text, content_type, thumbnail="", year="", 
     return new_item
 
 
-def get_films_database():
-    global _films_cache, _films_cache_time
-    now = time.time()
-    
-    if _films_cache is not None and (now - _films_cache_time) < CACHE_DURATION:
-        return _films_cache
-    
-    films_dict = {}
-    
-    urls_to_scrape = {
-        'Film in TV': f"{host}/film-in-tv/",
-        'Sky Intrattenimento': f"{host}/film-in-tv/oggi/sky-intrattenimento/",
-        'Sky Cinema': f"{host}/film-in-tv/oggi/sky-cinema/",
-        'Sky Doc e Lifestyle': f"{host}/film-in-tv/oggi/sky-doc-e-lifestyle/",
-        'Sky Bambini': f"{host}/film-in-tv/oggi/sky-bambini/"
+def _split_cards(data):
+    parts = RE_CARD_SPLIT.split(data)
+    return [p for p in parts if 'sgtv-shadow-item' in p]
+
+
+def _parse_film_card(card):
+    title_match = RE_FILM_TITLE.search(card)
+    if not title_match:
+        return None
+
+    channel_match  = RE_FILM_CHANNEL.search(card)
+    orario_matches = RE_FILM_ORARIO.findall(card)
+    genre_matches  = RE_FILM_GENRE.findall(card)
+    cover_match    = RE_FILM_COVER.search(card)
+    anno_match     = RE_FILM_ANNO.search(card)
+
+    anno_paese = scrapertools.decodeHtmlentities(anno_match.group(1)).strip() if anno_match else ""
+    year_match = RE_YEAR.search(anno_paese)
+    channel_logo = channel_match.group(2) if channel_match else ""
+    thumbnail = cover_match.group(1).replace("?width=320", "?width=480") if cover_match else channel_logo
+
+    return {
+        'title':     scrapertools.decodeHtmlentities(title_match.group(1)).strip(),
+        'channel':   scrapertools.decodeHtmlentities(channel_match.group(1)).strip() if channel_match else "",
+        'orario':    scrapertools.decodeHtmlentities(orario_matches[0]).strip() if orario_matches else "",
+        'genre':     scrapertools.decodeHtmlentities(genre_matches[1]).strip() if len(genre_matches) >= 2 else "",
+        'thumbnail': thumbnail,
+        'year':      year_match.group(1) if year_match else ""
     }
-    
-    patron = r'<a[^>]*href="/dettaglio-film/[^"]*"[^>]*class="[^"]*sgtv-font-bold[^"]*"[^>]*>([^<]+)</a>.*?'
-    patron += r'<img[^>]*src="([^"]+)"[^>]*class="[^"]*sgtv-object-cover[^"]*"[^>]*>.*?'
-    patron += r'<p class="[^"]*sgtv-h-1/2[^"]*sgtv-break-words[^"]*sgtv-leading-10[^"]*">[^<]*([0-9]{4})</p>'
-    
+
+
+def _parse_now_card(card):
+    channel_match  = RE_NOW_CHANNEL.search(card)
+    scrapedchannel = scrapertools.decodeHtmlentities(channel_match.group(1)).strip() if channel_match else ""
+    channel_logo   = channel_match.group(2) if channel_match else ""
+
+    first_block = RE_FIRST_PROGRAM_SPLIT.split(card, maxsplit=1)[0]
+
+    time_match  = RE_NOW_TIME.search(first_block)
+    title_match = RE_NOW_TITLE.search(first_block)
+    type_match  = RE_NOW_TYPE.search(first_block)
+
+    if not (time_match and title_match and type_match):
+        return None
+
+    backdrop_match = RE_NOW_BACKDROP.search(first_block)
+
+    return {
+        'channel':   scrapedchannel,
+        'time':      time_match.group(1).strip(),
+        'title':     scrapertools.decodeHtmlentities(title_match.group(1)).strip(),
+        'type':      scrapertools.decodeHtmlentities(type_match.group(1)).strip(),
+        'thumbnail': backdrop_match.group(1) if backdrop_match else channel_logo
+    }
+
+
+def get_films_database():
+    cached = _film_cache.get()
+    if cached is not None:
+        return cached
+
+    films_dict = {}
+    urls_to_scrape = {
+        'Film in TV':         f"{host}/film-in-tv/",
+        'Sky Intrattenimento': f"{host}/film-in-tv/oggi/sky-intrattenimento/",
+        'Sky Cinema':         f"{host}/film-in-tv/oggi/sky-cinema/",
+        'Sky Doc e Lifestyle': f"{host}/film-in-tv/oggi/sky-doc-e-lifestyle/",
+        'Sky Bambini':        f"{host}/film-in-tv/oggi/sky-bambini/"
+    }
+
     for section_name, url in urls_to_scrape.items():
         try:
             data = httptools.downloadpage(url, timeout=TIMEOUT_TOTAL).data.replace('\n', '')
-            matches = re.compile(patron, re.DOTALL).findall(data)
-            
-            for scrapedtitle, scrapedthumb, scrapedyear in matches:
-                title_clean = scrapertools.decodeHtmlentities(scrapedtitle).strip().lower()
-                
-                genre = ""
-                title_pos = data.find(scrapedtitle)
-                if title_pos > 0:
-                    context = data[title_pos:title_pos + 500]
-                    genre_match = re.search(r'(?:Genere|Categoria):\s*([^<]+)', context, re.IGNORECASE)
-                    if genre_match:
-                        genre = genre_match.group(1).strip()
-                
-                if title_clean not in films_dict or scrapedyear:
-                    films_dict[title_clean] = {
-                        'year': scrapedyear,
-                        'genre': genre,
-                        'thumbnail': scrapedthumb.replace("?width=240", "?width=480")
+            cards = _split_cards(data)
+            if not cards:
+                logger.error(f"[FILMONTV] Nessuna card trovata in {section_name} - struttura HTML cambiata?")
+                continue
+            for card in cards:
+                try:
+                    parsed = _parse_film_card(card)
+                    if not parsed:
+                        continue
+                    films_dict[parsed['title'].lower()] = {
+                        'year':      parsed['year'],
+                        'genre':     parsed['genre'],
+                        'thumbnail': parsed['thumbnail']
                     }
-                    
+                except Exception as e:
+                    logger.error(f"[FILMONTV] Errore parsing card in {section_name}: {e}")
         except Exception as e:
             logger.error(f"[FILMONTV] Errore caricamento {section_name}: {e}")
-    
-    _films_cache = films_dict
-    _films_cache_time = now
+
+    logger.info(f"[FILMONTV] Database creato con {len(films_dict)} film")
+    _film_cache.set(films_dict)
     return films_dict
-
-
-def _determine_content_type(link_match, channel, scrapedtype, title, films_db):
-    if link_match:
-        if '/dettaglio-film/' in link_match.group(1):
-            return 'movie'
-        if '/dettaglio-programma/' in link_match.group(1):
-            return 'tvshow'
-    
-    if 'Film' in scrapedtype:
-        return 'movie'
-    if re.search(r'\b(19|20)\d{2}\b', title):
-        return 'movie'
-    if title.lower() in films_db:
-        return 'movie'
-    
-    return 'tvshow'
 
 
 def now_on_misc(item):
     itemlist = []
     items_for_tmdb = []
-    
+    tmdb_blacklist = ['Notizie', 'Sport', 'Rubrica', 'Musica']
+
     films_db = get_films_database()
-    data = httptools.downloadpage(item.url).data.replace('\n', '')
-    
-    logo_pattern = r'<img alt="([^"]+)"[^>]*src="([^"]*)"[^>]*class="[^"]*sgtv-ml-\[10%\][^"]*"[^>]*>'
-    logo_matches = list(re.finditer(logo_pattern, data))
-    
-    for i, logo_match in enumerate(logo_matches):
-        scrapedchannel = scrapertools.decodeHtmlentities(logo_match.group(1)).strip()
-        logo_url = logo_match.group(2).strip()
-        
-        start_pos = logo_match.end()
-        end_pos = logo_matches[i + 1].start() if i + 1 < len(logo_matches) else len(data)
-        segmento = data[start_pos:end_pos]
-        
-        time_match = re.search(r'<p class="[^"]*sgtv-text-lg[^"]*sgtv-font-bold[^"]*">(\d{2}:\d{2})</p>', segmento)
-        title_match = re.search(r'<p class="[^"]*sgtv-max-w-full[^"]*sgtv-truncate[^"]*">([^<]+)</p>', segmento)
-        type_match = re.search(r'<p class="[^"]*sgtv-border-l-8[^"]*sgtv-pl-2\.5[^"]*sgtv-text-sm[^"]*">([^<]+)</p>', segmento)
-        link_match = re.search(r'href="(/dettaglio-(?:film|programma)/[^"]+)"', segmento)
-        
-        if not (time_match and title_match):
-            continue
-            
-        scrapedtime = time_match.group(1).strip()
-        scrapedtitle = scrapertools.decodeHtmlentities(title_match.group(1)).strip()
-        scrapedtype = scrapertools.decodeHtmlentities(type_match.group(1)).strip() if type_match else ""
-        full_thumbnail = logo_url
+    data = httptools.downloadpage(item.url, timeout=TIMEOUT_TOTAL).data.replace('\n', '')
+    cards = _split_cards(data)
 
-        skip_tmdb = any((
-            "qvc" in scrapedchannel.lower() and "replica" in scrapedtitle.lower(),
-            "donnatv" in scrapedchannel.lower() and "l'argonauta" in scrapedtitle.lower(),
-            "rai 1" in scrapedchannel.lower() and "l'eredità" in scrapedtitle.lower()
-        ))
+    if not cards:
+        logger.error(f"[FILMONTV] Nessuna card trovata in {item.url} - struttura HTML cambiata?")
+        return itemlist
 
-        tipo_base = scrapedtype.split(' (da')[0] if scrapedtype else ""
+    logger.info(f"[FILMONTV] Trovate {len(cards)} card in now_on_misc")
 
-        if skip_tmdb or tipo_base in TMDB_BLACKLIST:
-            itemlist.append(Item(
-                channel=item.channel,
-                title=f"[B]{scrapedtitle}[/B] - {scrapedchannel} - {scrapedtime}",
-                thumbnail=full_thumbnail,
-                fanart=full_thumbnail,
-                folder=False,
-                infoLabels={'title': scrapedtitle, 'plot': f"[COLOR gray][B]Tipo:[/B][/COLOR] {scrapedtype}"}
-            ))
-        else:
-            content_type = _determine_content_type(link_match, scrapedchannel, scrapedtype, scrapedtitle, films_db)
-            
-            year = ""
-            genre = ""
-            if content_type == 'movie':
-                title_lower = scrapedtitle.lower()
-                if title_lower in films_db:
-                    year = films_db[title_lower]['year']
-                    genre = films_db[title_lower].get('genre', '')
-                    if films_db[title_lower].get('thumbnail'):
-                        full_thumbnail = films_db[title_lower]['thumbnail']
-            
-            search_item = create_search_item(
-                title=f"[B]{scrapedtitle}[/B] - {scrapedchannel} - {scrapedtime}",
-                search_text=scrapedtitle,
-                content_type=content_type,
-                thumbnail=full_thumbnail,
-                year=year,
-                genre=genre,
-                event_type=scrapedtype
+    for card in cards:
+        try:
+            parsed = _parse_now_card(card)
+            if not parsed:
+                continue
+
+            scrapedchannel = parsed['channel']
+            scrapedtime    = parsed['time']
+            scrapedtitle   = parsed['title']
+            scrapedtype    = parsed['type']
+            full_thumbnail = parsed['thumbnail']
+            genre          = re.sub(r'\s*\(da\s*\d+\'?\)', '', scrapedtype).strip()
+
+            skip_tmdb = (
+                any(black in genre for black in tmdb_blacklist) or
+                ("qvc" in scrapedchannel.lower() and "replica" in scrapedtitle.lower()) or
+                ("donnatv" in scrapedchannel.lower() and "l'argonauta" in scrapedtitle.lower()) or
+                ("rai 1" in scrapedchannel.lower() and "l'eredità" in scrapedtitle.lower())
             )
-            itemlist.append(search_item)
-            items_for_tmdb.append(search_item)
+
+            formatted_title = f"[B]{scrapedtitle}[/B] - {scrapedchannel} - {scrapedtime}"
+
+            if skip_tmdb:
+                itemlist.append(Item(
+                    channel=item.channel,
+                    title=formatted_title,
+                    thumbnail=full_thumbnail,
+                    fanart=full_thumbnail,
+                    folder=False,
+                    infoLabels={'title': scrapedtitle, 'plot': f"[COLOR gray][B]Tipo:[/B][/COLOR] {scrapedtype}"}
+                ))
+            else:
+                content_type = 'movie' if genre == 'Film' else 'tvshow'
+                year = ""
+                if content_type == 'movie':
+                    title_lower = scrapedtitle.lower()
+                    if title_lower in films_db:
+                        year = films_db[title_lower].get('year', "")
+                        if films_db[title_lower].get('genre'):
+                            genre = films_db[title_lower]['genre']
+                        if films_db[title_lower].get('thumbnail'):
+                            full_thumbnail = films_db[title_lower]['thumbnail']
+
+                search_item = create_search_item(
+                    title=formatted_title,
+                    search_text=scrapedtitle,
+                    content_type=content_type,
+                    thumbnail=full_thumbnail,
+                    year=year,
+                    genre=genre,
+                    event_type=scrapedtype
+                )
+                search_item.fanart = full_thumbnail
+                itemlist.append(search_item)
+                items_for_tmdb.append(search_item)
+
+        except Exception as e:
+            logger.error(f"[FILMONTV] Errore card now_on_misc: {e}")
+            continue
 
     if items_for_tmdb:
         tmdb.set_infoLabels_itemlist(items_for_tmdb, seekTmdb=True)
@@ -348,59 +423,65 @@ def now_on_misc(item):
     return itemlist
 
 
+def now_on_misc_film(item):
+    itemlist = []
+    data = httptools.downloadpage(item.url, timeout=TIMEOUT_TOTAL).data.replace('\n', '')
+    cards = _split_cards(data)
+
+    if not cards:
+        logger.error(f"[FILMONTV] Nessuna card trovata in {item.url} - struttura HTML cambiata?")
+        return itemlist
+
+    for card in cards:
+        try:
+            parsed = _parse_now_card(card)
+            if not parsed or 'Film' not in parsed['type']:
+                continue
+            itemlist.append(create_search_item(
+                title=f"[B]{parsed['title']}[/B] - {parsed['channel']} - {parsed['time']}",
+                search_text=parsed['title'],
+                content_type='movie',
+                thumbnail=parsed['thumbnail'],
+                event_type='Film'
+            ))
+        except Exception as e:
+            logger.error(f"[FILMONTV] Errore card now_on_misc_film: {e}")
+            continue
+
+    if itemlist:
+        tmdb.set_infoLabels_itemlist(itemlist, seekTmdb=True)
+    return itemlist
+
+
 def now_on_tv(item):
     itemlist = []
-    films_db = get_films_database()
-    data = httptools.downloadpage(item.url).data
-    
-    patron = r'<div class="sgtv-group sgtv-flex sgtv-flex-col[^>]*>.*?'
-    patron += r'<img alt="([^"]+)"[^>]*src="([^"]+)"[^>]*>.*?'
-    patron += r'<p[^>]*class="[^"]*sgtv-leading-6[^"]*"[^>]*>([^<]+)</p>.*?'
-    patron += r'<a[^>]*href="/dettaglio-film/[^"]*"[^>]*class="[^"]*sgtv-font-bold[^"]*"[^>]*>([^<]+)</a>.*?'
-    patron += r'(?:<p[^>]*class="[^"]*sgtv-row-span-1[^"]*"[^>]*>Regia: ([^<]*)</p>.*?)?'
-    patron += r'(?:<p[^>]*class="[^"]*sgtv-row-span-1[^"]*"[^>]*>([^<]*)</p>.*?)?'
-    patron += r'(?:<img[^>]*src="([^"]+)"[^>]*class="[^"]*sgtv-object-cover[^"]*"[^>]*>.*?)?'
-    patron += r'<p class="[^"]*sgtv-h-1/2[^"]*sgtv-break-words[^"]*sgtv-leading-10[^"]*">([^<]*)</p>'
+    data = httptools.downloadpage(item.url, timeout=TIMEOUT_TOTAL).data.replace('\n', '')
+    cards = _split_cards(data)
 
-    matches = re.compile(patron, re.DOTALL).findall(data)
-    
-    for match in matches:
-        canale = scrapertools.decodeHtmlentities(match[0]).strip()
-        orario = match[2].strip()
-        titolo = scrapertools.decodeHtmlentities(match[3]).strip()
-        genere = scrapertools.decodeHtmlentities(match[5]).strip() if len(match) > 5 and match[5] else ""
-        copertina = match[6].strip() if len(match) > 6 and match[6] else ""
-        anno_testuale = match[7].strip() if len(match) > 7 and match[7] else ""
-        
-        if copertina and not copertina.startswith('http'):
-            copertina = host + copertina
-        
-        anno = ""
-        if anno_testuale:
-            anno_match = re.search(r'(\d{4})', anno_testuale)
-            if anno_match:
-                anno = anno_match.group(1)
-        
-        titolo_key = titolo.lower()
-        if titolo_key in films_db:
-            if films_db[titolo_key]['year']:
-                anno = films_db[titolo_key]['year']
-            if films_db[titolo_key].get('genre'):
-                genere = films_db[titolo_key]['genre']
-            if films_db[titolo_key].get('thumbnail'):
-                copertina = films_db[titolo_key]['thumbnail']
-        
-        it = create_search_item(
-            title=f"[B]{titolo}[/B] - {canale} - {orario}",
-            search_text=titolo,
-            content_type='movie',
-            thumbnail=copertina,
-            year=anno,
-            genre=genere
-        )
-        itemlist.append(it)
-    
-    tmdb.set_infoLabels_itemlist(itemlist, seekTmdb=True)
+    if not cards:
+        logger.error(f"[FILMONTV] Nessuna card trovata in {item.url} - struttura HTML cambiata?")
+        return itemlist
+
+    for card in cards:
+        try:
+            parsed = _parse_film_card(card)
+            if not parsed:
+                continue
+            itemlist.append(create_search_item(
+                title=f"[B]{parsed['title']}[/B] - {parsed['channel']} - {parsed['orario']}",
+                search_text=parsed['title'],
+                content_type='movie',
+                thumbnail=parsed['thumbnail'],
+                year=parsed['year'],
+                genre=parsed['genre']
+            ))
+        except Exception as e:
+            logger.error(f"[FILMONTV] Errore card now_on_tv: {e}")
+            continue
+
+    logger.info(f"[FILMONTV] Totale film trovati: {len(itemlist)}")
+    if itemlist:
+        tmdb.set_infoLabels_itemlist(itemlist, seekTmdb=True)
     return itemlist
 
 
@@ -444,6 +525,6 @@ def load_live(channel_name):
     try:
         channel = __import__(f'channels.{channel_name}', None, None, [f'channels.{channel_name}'])
         itemlist = channel.live(channel.mainlist(Item())[0])
-    except:
+    except Exception:
         itemlist = []
     return channel_name, itemlist
