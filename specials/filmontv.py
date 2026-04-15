@@ -21,7 +21,6 @@ RE_CARD_SPLIT = re.compile(
 )
 RE_FIRST_PROGRAM_SPLIT = re.compile(r'<hr class="sgtv-ml-2[^"]*"[^>]*>')
 
-# /ora-in-onda/
 RE_NOW_CHANNEL  = re.compile(r'<img alt="([^"]*)"[^>]*src="([^"]*channels/\d+/logo[^"]*)"')
 RE_NOW_TIME     = re.compile(r'<p class="sgtv-text-lg sgtv-font-bold">([^<]+)</p>')
 RE_NOW_TITLE    = re.compile(r'<p class="sgtv-max-w-full sgtv-truncate sgtv-text-lg[^"]*">([^<]+)</p>')
@@ -30,7 +29,6 @@ RE_NOW_BACKDROP = re.compile(
     r'src="(https://api\.superguidatv\.it/v1/(?:programs|series|movies)/\d+/backdrops/\d+\?[^"]*)"'
 )
 
-# /film-in-tv/
 RE_FILM_CHANNEL = re.compile(r'<img alt="([^"]*)"[^>]*src="([^"]*channels/\d+/logo[^"]*)"')
 RE_FILM_ORARIO  = re.compile(r'<p class="sgtv-max-w-full sgtv-truncate sgtv-leading-6">([^<]+)</p>')
 RE_FILM_TITLE   = re.compile(r'<a href="/dettaglio-film/[^"]+"[^>]*class="[^"]*sgtv-block[^"]*"[^>]*>\s*([^<]+)\s*</a>')
@@ -160,15 +158,6 @@ def normalize_title_for_tmdb(title):
     title = re.sub(r'\bn°\s*(\d+)\b', r'n.\1', title, flags=re.IGNORECASE)
     title = re.sub(r'\bn\s+(\d+)\b', r'n.\1', title, flags=re.IGNORECASE)
 
-    if not re.match(r'^[IVXLCDM]+$', title):
-        roman_map = {
-            r'\bI\b': '1', r'\bII\b': '2', r'\bIII\b': '3', r'\bIV\b': '4',
-            r'\bV\b': '5', r'\bVI\b': '6', r'\bVII\b': '7', r'\bVIII\b': '8',
-            r'\bIX\b': '9', r'\bX\b': '10'
-        }
-        for roman, arabic in roman_map.items():
-            title = re.sub(roman, arabic, title)
-
     title = re.sub(r'\s*-\s*', ' - ', title)
     title = re.sub(r'\s*:\s*', ': ', title)
     title = title.replace("'", "'").replace("`", "'")
@@ -184,15 +173,11 @@ def create_search_item(title, search_text, content_type, thumbnail="", year="", 
 
     normalized_text = normalize_title_for_tmdb(search_text)
     
-    # Rimuove il trattino e tutto ciò che segue per la ricerca TMDB
-    # Es: "I soliti idioti - Il film" -> "I soliti idioti"
     search_text_clean = re.sub(r'\s+-\s+[^-]+$', '', normalized_text).strip()
     if not search_text_clean:
         search_text_clean = normalized_text
     
     clean_text = search_text_clean.replace("+", " ").strip()
-    
-    logger.info("[FILMONTV] Titolo originale: %s -> Ricerca TMDB: %s" % (search_text, clean_text))
 
     infoLabels = {
         'year': year if year else "",
@@ -321,7 +306,6 @@ def get_films_database():
             data = httptools.downloadpage(url, timeout=TIMEOUT_TOTAL).data.replace('\n', '')
             cards = _split_cards(data)
             if not cards:
-                logger.error("[FILMONTV] Nessuna card trovata in %s - struttura HTML cambiata?" % section_name)
                 continue
             for card in cards:
                 try:
@@ -333,12 +317,11 @@ def get_films_database():
                         'genre':     parsed['genre'],
                         'thumbnail': parsed['thumbnail']
                     }
-                except Exception as e:
-                    logger.error("[FILMONTV] Errore parsing card in %s: %s" % (section_name, e))
-        except Exception as e:
-            logger.error("[FILMONTV] Errore caricamento %s: %s" % (section_name, e))
+                except Exception:
+                    continue
+        except Exception:
+            continue
 
-    logger.info("[FILMONTV] Database creato con %s film" % len(films_dict))
     _film_cache.set(films_dict)
     return films_dict
 
@@ -353,10 +336,7 @@ def now_on_misc(item):
     cards = _split_cards(data)
 
     if not cards:
-        logger.error("[FILMONTV] Nessuna card trovata in %s - struttura HTML cambiata?" % item.url)
         return itemlist
-
-    logger.info("[FILMONTV] Trovate %s card in now_on_misc" % len(cards))
 
     for card in cards:
         try:
@@ -414,8 +394,7 @@ def now_on_misc(item):
                 itemlist.append(search_item)
                 items_for_tmdb.append(search_item)
 
-        except Exception as e:
-            logger.error("[FILMONTV] Errore card now_on_misc: %s" % e)
+        except Exception:
             continue
 
     if items_for_tmdb:
@@ -438,7 +417,6 @@ def now_on_misc_film(item):
     cards = _split_cards(data)
 
     if not cards:
-        logger.error("[FILMONTV] Nessuna card trovata in %s - struttura HTML cambiata?" % item.url)
         return itemlist
 
     for card in cards:
@@ -453,8 +431,7 @@ def now_on_misc_film(item):
                 thumbnail=parsed['thumbnail'],
                 event_type='Film'
             ))
-        except Exception as e:
-            logger.error("[FILMONTV] Errore card now_on_misc_film: %s" % e)
+        except Exception:
             continue
 
     if itemlist:
@@ -468,7 +445,6 @@ def now_on_tv(item):
     cards = _split_cards(data)
 
     if not cards:
-        logger.error("[FILMONTV] Nessuna card trovata in %s - struttura HTML cambiata?" % item.url)
         return itemlist
 
     for card in cards:
@@ -484,11 +460,9 @@ def now_on_tv(item):
                 year=parsed['year'],
                 genre=parsed['genre']
             ))
-        except Exception as e:
-            logger.error("[FILMONTV] Errore card now_on_tv: %s" % e)
+        except Exception:
             continue
 
-    logger.info("[FILMONTV] Totale film trovati: %s" % len(itemlist))
     if itemlist:
         tmdb.set_infoLabels_itemlist(itemlist, seekTmdb=True)
     return itemlist
