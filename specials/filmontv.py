@@ -15,7 +15,7 @@ from core.item import Item
 from platformcode import config, platformtools, logger
 
 host = "https://www.superguidatv.it"
-TIMEOUT_TOTAL = 60
+TIMEOUT_TOTAL = 30
 
 RE_CARD_SPLIT = re.compile(
     r'(?=<div class="sgtv-group sgtv-flex sgtv-flex-col sgtv-rounded-md sgtv-border sgtv-border-neutral-300 sgtv-bg-stone-100 sgtv-shadow-item")'
@@ -35,6 +35,8 @@ RE_YEAR         = re.compile(r'(\d{4})')
 RE_DETAIL_LINK  = re.compile(r'<a href="(/dettaglio-film/[^"]+)"')
 RE_DETAIL_YEAR  = re.compile(r'<p class="sgtv-truncate">(?:[A-Z]{2}(?:,\s*[A-Z]{2})?\s*)?(\d{4})</p>')
 
+_MAX_CACHE_SIZE = 150
+_CACHE_DURATION = 21600
 
 class FilmCache:
     def __init__(self):
@@ -153,27 +155,35 @@ def get_year_from_detail_page(detail_url):
     
     now = time.time()
     
+    expired = [url for url, data in _persistent_years.items() if now >= data['expiry']]
+    for url in expired:
+        del _persistent_years[url]
+    
     if detail_url in _persistent_years:
-        if now < _persistent_years[detail_url]['expiry']:
-            return _persistent_years[detail_url]['year']
-        else:
-            del _persistent_years[detail_url]
+        return _persistent_years[detail_url]['year']
     
     try:
         full_url = host + detail_url if detail_url.startswith('/') else detail_url
-        data = httptools.downloadpage(full_url, timeout=10).data
+        data = httptools.downloadpage(full_url, timeout=TIMEOUT_TOTAL).data
         
         match = RE_DETAIL_YEAR.search(data)
         if match:
             year = match.group(1)
-            _persistent_years[detail_url] = {'year': year, 'expiry': now + 86400}
-            return year
+        else:
+            year_match = RE_YEAR.search(data)
+            if year_match:
+                year = year_match.group(1)
+            else:
+                return ""
         
-        year_match = RE_YEAR.search(data)
-        if year_match:
-            year = year_match.group(1)
-            _persistent_years[detail_url] = {'year': year, 'expiry': now + 86400}
-            return year
+        if len(_persistent_years) >= _MAX_CACHE_SIZE:
+            sorted_urls = sorted(_persistent_years.keys(), 
+                                key=lambda k: _persistent_years[k]['expiry'])
+            for url in sorted_urls[:_MAX_CACHE_SIZE // 5]:
+                del _persistent_years[url]
+        
+        _persistent_years[detail_url] = {'year': year, 'expiry': now + _CACHE_DURATION}
+        return year
         
     except Exception:
         pass
