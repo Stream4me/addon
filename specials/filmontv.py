@@ -5,7 +5,6 @@
 import re
 import time
 import hashlib
-import threading
 import datetime
 try:
     import urllib.parse as urllib
@@ -40,7 +39,6 @@ class FilmCache:
         self._cache = None
         self._expiry = None
         self._hash = None
-        self._lock = threading.Lock()
 
     def _next_expiry(self):
         now = datetime.datetime.now()
@@ -50,25 +48,22 @@ class FilmCache:
         return expiry.timestamp()
 
     def get(self, current_hash=None):
-        with self._lock:
-            if self._cache is None or self._expiry is None or time.time() >= self._expiry:
-                return None
-            if current_hash is not None and current_hash != self._hash:
-                logger.info("[FILMONTV] Hash cambiato, cache invalidata")
-                return None
-            return self._cache
+        if self._cache is None or self._expiry is None or time.time() >= self._expiry:
+            return None
+        if current_hash is not None and current_hash != self._hash:
+            logger.info("[FILMONTV] Hash cambiato, cache invalidata")
+            return None
+        return self._cache
 
     def set(self, value, current_hash=None):
-        with self._lock:
-            self._cache = value
-            self._expiry = self._next_expiry()
-            self._hash = current_hash
+        self._cache = value
+        self._expiry = self._next_expiry()
+        self._hash = current_hash
 
     def clear(self):
-        with self._lock:
-            self._cache = None
-            self._expiry = None
-            self._hash = None
+        self._cache = None
+        self._expiry = None
+        self._hash = None
 
 
 _film_cache = FilmCache()
