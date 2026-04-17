@@ -38,6 +38,15 @@ RE_DETAIL_YEAR  = re.compile(r'<p class="sgtv-truncate">(?:[A-Z]{2}(?:,\s*[A-Z]{
 _MAX_CACHE_SIZE = 150
 _CACHE_DURATION = 21600
 
+
+def clean_html(html):
+    if not html:
+        return ""
+    html = html.replace("\n", "").replace("\t", "").replace("\r", "")
+    html = re.sub(r"\s{2,}", " ", html)
+    return html
+
+
 class FilmCache:
     def __init__(self):
         self._cache = None
@@ -304,7 +313,8 @@ def get_films_database():
     first_url = "%s/film-in-tv/" % host
 
     try:
-        first_data = httptools.downloadpage(first_url, timeout=TIMEOUT_TOTAL).data.replace('\n', '')
+        first_data = httptools.downloadpage(first_url, timeout=TIMEOUT_TOTAL).data
+        first_data = clean_html(first_data)
     except Exception as e:
         logger.error("[FILMONTV] Errore fetch prima pagina: %s" % e)
         return _film_cache.get() or {}
@@ -326,7 +336,12 @@ def get_films_database():
 
     for section_name, (url, preloaded) in urls_to_scrape.items():
         try:
-            data = preloaded or httptools.downloadpage(url, timeout=TIMEOUT_TOTAL).data.replace('\n', '')
+            if preloaded is not None:
+                data = preloaded
+            else:
+                data = httptools.downloadpage(url, timeout=TIMEOUT_TOTAL).data
+                data = clean_html(data)
+            
             cards = _split_cards(data)
             if not cards:
                 continue
@@ -358,7 +373,8 @@ def now_on_misc(item):
     tmdb_blacklist = ['Notizie', 'Sport', 'Rubrica', 'Musica']
 
     films_db = get_films_database()
-    data = httptools.downloadpage(item.url, timeout=TIMEOUT_TOTAL).data.replace('\n', '')
+    data = httptools.downloadpage(item.url, timeout=TIMEOUT_TOTAL).data
+    data = clean_html(data)
     cards = _split_cards(data)
 
     if not cards:
@@ -445,7 +461,8 @@ def now_on_misc(item):
 
 def now_on_tv(item):
     itemlist = []
-    data = httptools.downloadpage(item.url, timeout=TIMEOUT_TOTAL).data.replace('\n', '')
+    data = httptools.downloadpage(item.url, timeout=TIMEOUT_TOTAL).data
+    data = clean_html(data)
     cards = _split_cards(data)
 
     if not cards:
