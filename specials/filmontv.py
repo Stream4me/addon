@@ -21,38 +21,22 @@ RE_CARD_SPLIT = re.compile(
     r'(?=<div class="sgtv-group sgtv-flex sgtv-flex-col sgtv-rounded-md sgtv-border sgtv-border-neutral-300 sgtv-bg-stone-100 sgtv-shadow-item")'
 )
 RE_FIRST_PROGRAM_SPLIT = re.compile(r'<hr class="sgtv-ml-2[^"]*"[^>]*>')
-RE_YEAR = re.compile(r'(\d{4})')
-RE_DETAIL_LINK = re.compile(r'<a href="(/dettaglio-film/[^"]+)"')
-RE_DETAIL_YEAR = re.compile(r'<p class="sgtv-truncate">(?:[A-Z]{2}(?:,\s*[A-Z]{2})?\s*)?(\d{4})</p>')
-
-RE_FILM_CARD = re.compile(
-    r'<a href="/dettaglio-film/[^"]+"[^>]*class="[^"]*sgtv-block[^"]*"[^>]*>\s*([^<]+)\s*</a>.*?'
-    r'<img alt="([^"]*)"[^>]*src="([^"]*channels/\d+/logo[^"]*)".*?'
-    r'<p class="sgtv-max-w-full sgtv-truncate sgtv-leading-6">([^<]+)</p>.*?'
-    r'<p class="sgtv-row-span-1 sgtv-truncate">(?:[^<]*</p>.*?<p class="sgtv-row-span-1 sgtv-truncate">)?([^<]*)</p>.*?'
-    r'<p class="sgtv-h-1/2 sgtv-break-words sgtv-leading-10">([^<]*)</p>.*?'
-    r'src="(https://api\.superguidatv\.it/v1/movies/\d+/cover\?[^"]*)"',
-    re.DOTALL
-)
-
-RE_NOW_CARD = re.compile(
-    r'<img alt="([^"]*)"[^>]*src="([^"]*channels/\d+/logo[^"]*)".*?'
-    r'<p class="sgtv-text-lg sgtv-font-bold">([^<]+)</p>.*?'
-    r'<p class="sgtv-max-w-full sgtv-truncate sgtv-text-lg[^"]*">([^<]+)</p>.*?'
-    r'<p class="sgtv-max-w-full sgtv-truncate sgtv-border-l-8[^"]*">([^<]+)</p>.*?'
-    r'src="(https://api\.superguidatv\.it/v1/(?:programs|series|movies)/\d+/backdrops/\d+\?[^"]*)"',
-    re.DOTALL
-)
+RE_CHANNEL      = re.compile(r'<img alt="([^"]*)"[^>]*src="([^"]*channels/\d+/logo[^"]*)"')
+RE_NOW_TIME     = re.compile(r'<p class="sgtv-text-lg sgtv-font-bold">([^<]+)</p>')
+RE_NOW_TITLE    = re.compile(r'<p class="sgtv-max-w-full sgtv-truncate sgtv-text-lg[^"]*">([^<]+)</p>')
+RE_NOW_TYPE     = re.compile(r'<p class="sgtv-max-w-full sgtv-truncate sgtv-border-l-8[^"]*">([^<]+)</p>')
+RE_NOW_BACKDROP = re.compile(r'src="(https://api\.superguidatv\.it/v1/(?:programs|series|movies)/\d+/backdrops/\d+\?[^"]*)"')
+RE_FILM_ORARIO  = re.compile(r'<p class="sgtv-max-w-full sgtv-truncate sgtv-leading-6">([^<]+)</p>')
+RE_FILM_TITLE   = re.compile(r'<a href="/dettaglio-film/[^"]+"[^>]*class="[^"]*sgtv-block[^"]*"[^>]*>\s*([^<]+)\s*</a>')
+RE_FILM_GENRE   = re.compile(r'<p class="sgtv-row-span-1 sgtv-truncate">([^<]+)</p>')
+RE_FILM_COVER   = re.compile(r'src="(https://api\.superguidatv\.it/v1/movies/\d+/cover\?[^"]*)"')
+RE_FILM_ANNO    = re.compile(r'<p class="sgtv-h-1/2 sgtv-break-words sgtv-leading-10">([^<]+)</p>')
+RE_YEAR         = re.compile(r'(\d{4})')
+RE_DETAIL_LINK  = re.compile(r'<a href="(/dettaglio-film/[^"]+)"')
+RE_DETAIL_YEAR  = re.compile(r'<p class="sgtv-truncate">(?:[A-Z]{2}(?:,\s*[A-Z]{2})?\s*)?(\d{4})</p>')
 
 _MAX_CACHE_SIZE = 150
 _CACHE_DURATION = 21600
-
-
-def clean_html(html):
-    html = html.replace("\n", "").replace("\t", "").replace("\r", "")
-    html = re.sub(r"\s{2,}", " ", html)
-    return html
-
 
 class FilmCache:
     def __init__(self):
@@ -267,40 +251,51 @@ def _split_cards(data):
 
 
 def _parse_film_card(card):
-    match = RE_FILM_CARD.search(card)
-    if not match:
+    title_match = RE_FILM_TITLE.search(card)
+    if not title_match:
         return None
-    
-    title, channel_name, channel_logo, orario, genre, anno_paese, thumbnail = match.groups()
-    
-    year_match = RE_YEAR.search(anno_paese) if anno_paese else None
-    thumbnail = thumbnail.replace("?width=320", "?width=480") if thumbnail else channel_logo
-    
+
+    channel_match = RE_CHANNEL.search(card)
+    orario_matches = RE_FILM_ORARIO.findall(card)
+    genre_matches = RE_FILM_GENRE.findall(card)
+    cover_match = RE_FILM_COVER.search(card)
+    anno_match = RE_FILM_ANNO.search(card)
+
+    anno_paese = scrapertools.decodeHtmlentities(anno_match.group(1)).strip() if anno_match else ""
+    year_match = RE_YEAR.search(anno_paese)
+    channel_logo = channel_match.group(2) if channel_match else ""
+    thumbnail = cover_match.group(1).replace("?width=320", "?width=480") if cover_match else channel_logo
+
     return {
-        'title': scrapertools.decodeHtmlentities(title).strip(),
-        'channel': scrapertools.decodeHtmlentities(channel_name).strip() if channel_name else "",
-        'orario': scrapertools.decodeHtmlentities(orario).strip() if orario else "",
-        'genre': scrapertools.decodeHtmlentities(genre).strip() if genre else "",
+        'title': scrapertools.decodeHtmlentities(title_match.group(1)).strip(),
+        'channel': scrapertools.decodeHtmlentities(channel_match.group(1)).strip() if channel_match else "",
+        'orario': scrapertools.decodeHtmlentities(orario_matches[0]).strip() if orario_matches else "",
+        'genre': scrapertools.decodeHtmlentities(genre_matches[1]).strip() if len(genre_matches) >= 2 else "",
         'thumbnail': thumbnail,
         'year': year_match.group(1) if year_match else ""
     }
 
 
 def _parse_now_card(card):
-    match = RE_NOW_CARD.search(card)
-    if not match:
+    channel_match = RE_CHANNEL.search(card)
+    scrapedchannel = scrapertools.decodeHtmlentities(channel_match.group(1)).strip() if channel_match else ""
+    channel_logo = channel_match.group(2) if channel_match else ""
+    first_block = RE_FIRST_PROGRAM_SPLIT.split(card, maxsplit=1)[0]
+    time_match = RE_NOW_TIME.search(first_block)
+    title_match = RE_NOW_TITLE.search(first_block)
+    type_match = RE_NOW_TYPE.search(first_block)
+
+    if not (time_match and title_match and type_match):
         return None
-    
-    channel_name, channel_logo, time, title, type_, backdrop = match.groups()
-    
-    thumbnail = backdrop if backdrop else channel_logo
-    
+
+    backdrop_match = RE_NOW_BACKDROP.search(first_block)
+
     return {
-        'channel': scrapertools.decodeHtmlentities(channel_name).strip() if channel_name else "",
-        'time': time.strip() if time else "",
-        'title': scrapertools.decodeHtmlentities(title).strip() if title else "",
-        'type': scrapertools.decodeHtmlentities(type_).strip() if type_ else "",
-        'thumbnail': thumbnail,
+        'channel': scrapedchannel,
+        'time': time_match.group(1).strip(),
+        'title': scrapertools.decodeHtmlentities(title_match.group(1)).strip(),
+        'type': scrapertools.decodeHtmlentities(type_match.group(1)).strip(),
+        'thumbnail': backdrop_match.group(1) if backdrop_match else channel_logo,
         'card': card
     }
 
@@ -309,9 +304,7 @@ def get_films_database():
     first_url = "%s/film-in-tv/" % host
 
     try:
-        first_data = httptools.downloadpage(first_url, timeout=TIMEOUT_TOTAL).data
-        first_data = clean_html(first_data)
-        first_data = first_data.replace('\n', '')
+        first_data = httptools.downloadpage(first_url, timeout=TIMEOUT_TOTAL).data.replace('\n', '')
     except Exception as e:
         logger.error("[FILMONTV] Errore fetch prima pagina: %s" % e)
         return _film_cache.get() or {}
@@ -333,12 +326,7 @@ def get_films_database():
 
     for section_name, (url, preloaded) in urls_to_scrape.items():
         try:
-            data = preloaded
-            if data is None:
-                data = httptools.downloadpage(url, timeout=TIMEOUT_TOTAL).data
-                data = clean_html(data)
-                data = data.replace('\n', '')
-            
+            data = preloaded or httptools.downloadpage(url, timeout=TIMEOUT_TOTAL).data.replace('\n', '')
             cards = _split_cards(data)
             if not cards:
                 continue
@@ -370,8 +358,7 @@ def now_on_misc(item):
     tmdb_blacklist = ['Notizie', 'Sport', 'Rubrica', 'Musica']
 
     films_db = get_films_database()
-    data = httptools.downloadpage(item.url, timeout=TIMEOUT_TOTAL).data
-    data = clean_html(data)
+    data = httptools.downloadpage(item.url, timeout=TIMEOUT_TOTAL).data.replace('\n', '')
     cards = _split_cards(data)
 
     if not cards:
@@ -458,8 +445,7 @@ def now_on_misc(item):
 
 def now_on_tv(item):
     itemlist = []
-    data = httptools.downloadpage(item.url, timeout=TIMEOUT_TOTAL).data
-    data = clean_html(data)
+    data = httptools.downloadpage(item.url, timeout=TIMEOUT_TOTAL).data.replace('\n', '')
     cards = _split_cards(data)
 
     if not cards:
