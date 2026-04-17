@@ -379,6 +379,7 @@ def now_on_misc(item):
 
             skip_tmdb = (
                 any(black in genre for black in tmdb_blacklist) or
+                ("porta a porta" in scrapedtitle.lower()) or
                 ("qvc" in scrapedchannel.lower() and "replica" in scrapedtitle.lower()) or
                 ("donnatv" in scrapedchannel.lower() and "l'argonauta" in scrapedtitle.lower()) or
                 ("rai 1" in scrapedchannel.lower() and "l'eredità" in scrapedtitle.lower())
