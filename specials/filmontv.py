@@ -173,17 +173,13 @@ def get_year_from_detail_page(detail_url):
     
     try:
         full_url = host + detail_url if detail_url.startswith('/') else detail_url
-        data = httptools.downloadpage(full_url, timeout=TIMEOUT_TOTAL).data
+        data = httptools.downloadpage(full_url).data
         
         match = RE_DETAIL_YEAR.search(data)
-        if match:
-            year = match.group(1)
-        else:
-            year_match = RE_YEAR.search(data)
-            if year_match:
-                year = year_match.group(1)
-            else:
-                return ""
+        if not match:
+            return ""
+        
+        year = match.group(1)
         
         if len(_persistent_years) >= _MAX_CACHE_SIZE:
             sorted_urls = sorted(_persistent_years.keys(), 
