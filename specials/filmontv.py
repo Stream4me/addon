@@ -251,6 +251,37 @@ def create_search_item(title, search_text, content_type, thumbnail="", year="", 
     return new_item
 
 
+def _split_cards_films(data):
+    cards = []
+    start_pattern = '<div class="sgtv-group sgtv-flex sgtv-flex-col sgtv-rounded-md sgtv-border sgtv-border-neutral-300 sgtv-bg-stone-100 sgtv-shadow-item"'
+    
+    i = 0
+    while i < len(data):
+        start = data.find(start_pattern, i)
+        if start == -1:
+            break
+        
+        pos = start + len(start_pattern)
+        div_count = 1
+        while pos < len(data) and div_count > 0:
+            if data[pos:pos+4] == '<div':
+                div_count += 1
+                pos += 4
+            elif data[pos:pos+6] == '</div>':
+                div_count -= 1
+                pos += 6
+            else:
+                pos += 1
+        
+        card = data[start:pos]
+        if RE_FILM_TITLE.search(card) and RE_CHANNEL.search(card):
+            cards.append(card)
+        
+        i = pos
+    
+    return cards
+
+
 def _split_cards(data):
     return [p for p in RE_CARD_SPLIT.split(data) if 'sgtv-shadow-item' in p]
 
@@ -338,7 +369,7 @@ def get_films_database():
                 data = httptools.downloadpage(url, timeout=TIMEOUT_TOTAL).data
                 data = clean_html(data)
             
-            cards = _split_cards(data)
+            cards = _split_cards_films(data)
             if not cards:
                 continue
             for card in cards:
@@ -391,10 +422,11 @@ def now_on_misc(item):
 
             skip_tmdb = (
                 any(black in genre for black in tmdb_blacklist) or
-                ("porta a porta" in scrapedtitle.lower()) or
+                ("rai 1" in scrapedchannel.lower() and "porta a porta" in scrapedtitle.lower()) or
                 ("qvc" in scrapedchannel.lower() and "replica" in scrapedtitle.lower()) or
                 ("donnatv" in scrapedchannel.lower() and "l'argonauta" in scrapedtitle.lower()) or
-                ("rai 1" in scrapedchannel.lower() and "l'eredità" in scrapedtitle.lower())
+                ("rai 1" in scrapedchannel.lower() and "l'eredità" in scrapedtitle.lower()) or
+                ("focus" in scrapedchannel.lower() and "dall'alba al tramonto" in scrapedtitle.lower())
             )
 
             formatted_title = "[B]%s[/B] - %s - %s" % (scrapedtitle, scrapedchannel, scrapedtime)
@@ -459,7 +491,7 @@ def now_on_tv(item):
     itemlist = []
     data = httptools.downloadpage(item.url, timeout=TIMEOUT_TOTAL).data
     data = clean_html(data)
-    cards = _split_cards(data)
+    cards = _split_cards_films(data)
 
     if not cards:
         return itemlist
