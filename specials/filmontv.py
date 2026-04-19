@@ -252,33 +252,14 @@ def create_search_item(title, search_text, content_type, thumbnail="", year="", 
 
 
 def _split_cards_films(data):
+    pattern = '<div class="sgtv-group sgtv-flex sgtv-flex-col sgtv-rounded-md sgtv-border sgtv-border-neutral-300 sgtv-bg-stone-100 sgtv-shadow-item"'
+    positions = [m.start() for m in re.finditer(re.escape(pattern), data)]
     cards = []
-    start_pattern = '<div class="sgtv-group sgtv-flex sgtv-flex-col sgtv-rounded-md sgtv-border sgtv-border-neutral-300 sgtv-bg-stone-100 sgtv-shadow-item"'
-    
-    i = 0
-    while i < len(data):
-        start = data.find(start_pattern, i)
-        if start == -1:
-            break
-        
-        pos = start + len(start_pattern)
-        div_count = 1
-        while pos < len(data) and div_count > 0:
-            if data[pos:pos+4] == '<div':
-                div_count += 1
-                pos += 4
-            elif data[pos:pos+6] == '</div>':
-                div_count -= 1
-                pos += 6
-            else:
-                pos += 1
-        
-        card = data[start:pos]
+    for i, start in enumerate(positions):
+        end = positions[i+1] if i+1 < len(positions) else len(data)
+        card = data[start:end]
         if RE_FILM_TITLE.search(card) and RE_CHANNEL.search(card):
             cards.append(card)
-        
-        i = pos
-    
     return cards
 
 
