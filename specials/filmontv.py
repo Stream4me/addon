@@ -21,19 +21,19 @@ RE_CARD_SPLIT = re.compile(
     r'(?=<div class="sgtv-group sgtv-flex sgtv-flex-col sgtv-rounded-md sgtv-border sgtv-border-neutral-300 sgtv-bg-stone-100 sgtv-shadow-item")'
 )
 RE_FIRST_PROGRAM_SPLIT = re.compile(r'<hr class="sgtv-ml-2[^"]*"[^>]*>')
-RE_CHANNEL      = re.compile(r'<img alt="([^"]*)"[^>]*src="([^"]*channels/\d+/logo[^"]*)"')
-RE_NOW_TIME     = re.compile(r'<p class="sgtv-text-lg sgtv-font-bold">([^<]+)</p>')
-RE_NOW_TITLE    = re.compile(r'<p class="sgtv-max-w-full sgtv-truncate sgtv-text-lg[^"]*">([^<]+)</p>')
-RE_NOW_TYPE     = re.compile(r'<p class="sgtv-max-w-full sgtv-truncate sgtv-border-l-8[^"]*">([^<]+)</p>')
+RE_CHANNEL = re.compile(r'<img alt="([^"]*)"[^>]*src="([^"]*channels/\d+/logo[^"]*)"')
+RE_NOW_TIME = re.compile(r'<p class="sgtv-text-lg sgtv-font-bold">([^<]+)</p>')
+RE_NOW_TITLE = re.compile(r'<p class="sgtv-max-w-full sgtv-truncate sgtv-text-lg[^"]*">([^<]+)</p>')
+RE_NOW_TYPE = re.compile(r'<p class="sgtv-max-w-full sgtv-truncate sgtv-border-l-8[^"]*">([^<]+)</p>')
 RE_NOW_BACKDROP = re.compile(r'src="(https://api\.superguidatv\.it/v1/(?:programs|series|movies)/\d+/backdrops/\d+\?[^"]*)"')
-RE_FILM_ORARIO  = re.compile(r'<p class="sgtv-max-w-full sgtv-truncate sgtv-leading-6">([^<]+)</p>')
-RE_FILM_TITLE   = re.compile(r'<a href="/dettaglio-film/[^"]+"[^>]*class="[^"]*sgtv-block[^"]*"[^>]*>\s*([^<]+)\s*</a>')
-RE_FILM_GENRE   = re.compile(r'<p class="sgtv-row-span-1 sgtv-truncate">([^<]+)</p>')
-RE_FILM_COVER   = re.compile(r'src="(https://api\.superguidatv\.it/v1/movies/\d+/cover\?[^"]*)"')
-RE_FILM_ANNO    = re.compile(r'<p class="sgtv-h-1/2 sgtv-break-words sgtv-leading-10">([^<]+)</p>')
-RE_YEAR         = re.compile(r'(\d{4})')
-RE_DETAIL_LINK  = re.compile(r'<a href="(/dettaglio-film/[^"]+)"')
-RE_DETAIL_YEAR  = re.compile(r'<p class="sgtv-truncate">(?:[A-Z]{2}(?:,\s*[A-Z]{2})?\s*)?(\d{4})</p>')
+RE_FILM_ORARIO = re.compile(r'<p class="sgtv-max-w-full sgtv-truncate sgtv-leading-6">([^<]+)</p>')
+RE_FILM_TITLE = re.compile(r'<a href="/dettaglio-film/[^"]+"[^>]*class="[^"]*sgtv-block[^"]*"[^>]*>\s*([^<]+)\s*</a>')
+RE_FILM_GENRE = re.compile(r'<p class="sgtv-row-span-1 sgtv-truncate">([^<]+)</p>')
+RE_FILM_COVER = re.compile(r'src="(https://api\.superguidatv\.it/v1/movies/\d+/cover\?[^"]*)"')
+RE_FILM_ANNO = re.compile(r'<p class="sgtv-h-1/2 sgtv-break-words sgtv-leading-10">([^<]+)</p>')
+RE_YEAR = re.compile(r'(\d{4})')
+RE_DETAIL_LINK = re.compile(r'<a href="(/dettaglio-film/[^"]+)"')
+RE_DETAIL_YEAR = re.compile(r'<p class="sgtv-truncate">(?:[A-Z]{2}(?:,\s*[A-Z]{2})?\s*)?(\d{4})</p>')
 
 _MAX_CACHE_SIZE = 150
 _CACHE_DURATION = 21600
@@ -79,71 +79,32 @@ _persistent_years = {}
 
 def mainlist(item):
     return [
-        Item(title=support.typo('Canali live', 'bold'),
-             channel=item.channel,
-             action='live',
+        Item(title=support.typo('Canali live', 'bold'), channel=item.channel, action='live',
              thumbnail=support.thumb('tvshow_on_the_air')),
-        Item(channel=item.channel,
-             title=config.get_setting("film1", channel="filmontv"),
-             action="now_on_tv",
-             url="%s/film-in-tv/" % host,
-             thumbnail=item.thumbnail),
-        Item(channel=item.channel,
-             title=config.get_setting("film3", channel="filmontv"),
-             action="now_on_tv",
-             url="%s/film-in-tv/oggi/sky-intrattenimento/" % host,
-             thumbnail=item.thumbnail),
-        Item(channel=item.channel,
-             title=config.get_setting("film4", channel="filmontv"),
-             action="now_on_tv",
-             url="%s/film-in-tv/oggi/sky-cinema/" % host,
-             thumbnail=item.thumbnail),
-        Item(channel=item.channel,
-             title=config.get_setting("film6", channel="filmontv"),
-             action="now_on_tv",
-             url="%s/film-in-tv/oggi/sky-doc-e-lifestyle/" % host,
-             thumbnail=item.thumbnail),
-        Item(channel=item.channel,
-             title=config.get_setting("film7", channel="filmontv"),
-             action="now_on_tv",
-             url="%s/film-in-tv/oggi/sky-bambini/" % host,
-             thumbnail=item.thumbnail),
-        Item(channel=item.channel,
-             title=config.get_setting("now1", channel="filmontv"),
-             action="now_on_misc",
-             url="%s/ora-in-onda/" % host,
-             thumbnail=item.thumbnail),
-        Item(channel=item.channel,
-             title=config.get_setting("now3", channel="filmontv"),
-             action="now_on_misc",
-             url="%s/ora-in-onda/sky-intrattenimento/" % host,
-             thumbnail=item.thumbnail),
-        Item(channel=item.channel,
-             title=config.get_setting("now4", channel="filmontv"),
-             action="now_on_misc",
-             url="%s/ora-in-onda/sky-cinema/" % host,
-             thumbnail=item.thumbnail),
-        Item(channel=item.channel,
-             title=config.get_setting("now5", channel="filmontv"),
-             action="now_on_misc",
-             url="%s/ora-in-onda/sky-doc-e-lifestyle/" % host,
-             thumbnail=item.thumbnail),
-        Item(channel=item.channel,
-             title=config.get_setting("now6", channel="filmontv"),
-             action="now_on_misc",
-             url="%s/ora-in-onda/sky-bambini/" % host,
-             thumbnail=item.thumbnail),
-        Item(channel=item.channel,
-             title=config.get_setting("now7", channel="filmontv"),
-             action="now_on_misc",
-             url="%s/ora-in-onda/rsi/" % host,
-             thumbnail=item.thumbnail),
-        Item(channel=item.channel,
-             title="Personalizza Oggi in TV",
-             action="server_config",
-             config="filmontv",
-             folder=False,
-             thumbnail=item.thumbnail)
+        Item(channel=item.channel, title=config.get_setting("film1", channel="filmontv"), action="now_on_tv",
+             url="%s/film-in-tv/" % host, thumbnail=item.thumbnail),
+        Item(channel=item.channel, title=config.get_setting("film3", channel="filmontv"), action="now_on_tv",
+             url="%s/film-in-tv/oggi/sky-intrattenimento/" % host, thumbnail=item.thumbnail),
+        Item(channel=item.channel, title=config.get_setting("film4", channel="filmontv"), action="now_on_tv",
+             url="%s/film-in-tv/oggi/sky-cinema/" % host, thumbnail=item.thumbnail),
+        Item(channel=item.channel, title=config.get_setting("film6", channel="filmontv"), action="now_on_tv",
+             url="%s/film-in-tv/oggi/sky-doc-e-lifestyle/" % host, thumbnail=item.thumbnail),
+        Item(channel=item.channel, title=config.get_setting("film7", channel="filmontv"), action="now_on_tv",
+             url="%s/film-in-tv/oggi/sky-bambini/" % host, thumbnail=item.thumbnail),
+        Item(channel=item.channel, title=config.get_setting("now1", channel="filmontv"), action="now_on_misc",
+             url="%s/ora-in-onda/" % host, thumbnail=item.thumbnail),
+        Item(channel=item.channel, title=config.get_setting("now3", channel="filmontv"), action="now_on_misc",
+             url="%s/ora-in-onda/sky-intrattenimento/" % host, thumbnail=item.thumbnail),
+        Item(channel=item.channel, title=config.get_setting("now4", channel="filmontv"), action="now_on_misc",
+             url="%s/ora-in-onda/sky-cinema/" % host, thumbnail=item.thumbnail),
+        Item(channel=item.channel, title=config.get_setting("now5", channel="filmontv"), action="now_on_misc",
+             url="%s/ora-in-onda/sky-doc-e-lifestyle/" % host, thumbnail=item.thumbnail),
+        Item(channel=item.channel, title=config.get_setting("now6", channel="filmontv"), action="now_on_misc",
+             url="%s/ora-in-onda/sky-bambini/" % host, thumbnail=item.thumbnail),
+        Item(channel=item.channel, title=config.get_setting("now7", channel="filmontv"), action="now_on_misc",
+             url="%s/ora-in-onda/rsi/" % host, thumbnail=item.thumbnail),
+        Item(channel=item.channel, title="Personalizza Oggi in TV", action="server_config", config="filmontv",
+             folder=False, thumbnail=item.thumbnail)
     ]
 
 
@@ -161,7 +122,6 @@ def normalize_title_for_tmdb(title):
 
 def get_year_from_detail_page(detail_url):
     global _persistent_years
-    
     now = time.time()
     
     expired = [url for url, data in _persistent_years.items() if now >= data['expiry']]
@@ -174,25 +134,20 @@ def get_year_from_detail_page(detail_url):
     try:
         full_url = host + detail_url if detail_url.startswith('/') else detail_url
         data = httptools.downloadpage(full_url).data
-        
         match = RE_DETAIL_YEAR.search(data)
         if not match:
             return ""
-        
         year = match.group(1)
         
         if len(_persistent_years) >= _MAX_CACHE_SIZE:
-            sorted_urls = sorted(_persistent_years.keys(), 
-                                key=lambda k: _persistent_years[k]['expiry'])
+            sorted_urls = sorted(_persistent_years.keys(), key=lambda k: _persistent_years[k]['expiry'])
             for url in sorted_urls[:_MAX_CACHE_SIZE // 5]:
                 del _persistent_years[url]
         
         _persistent_years[detail_url] = {'year': year, 'expiry': now + _CACHE_DURATION}
         return year
-        
     except Exception:
         pass
-    
     return ""
 
 
@@ -200,29 +155,15 @@ def create_search_item(title, search_text, content_type, thumbnail="", year="", 
     use_new_search = config.get_setting('new_search')
     clean_text = normalize_title_for_tmdb(search_text).replace("+", " ").strip()
 
-    infoLabels = {
-        'year': year if year else "",
-        'genre': genre if genre else "",
-        'title': clean_text,
-        'plot': plot if plot else ""
-    }
+    infoLabels = {'year': year if year else "", 'genre': genre if genre else "", 'title': clean_text, 'plot': plot if plot else ""}
     if content_type == 'tvshow':
         infoLabels['tvshowtitle'] = clean_text
 
     if use_new_search:
-        new_item = Item(
-            channel='globalsearch',
-            action='Search',
-            text=clean_text,
-            title=title,
-            thumbnail=thumbnail,
-            fanart=thumbnail,
-            mode='movie' if content_type == 'movie' else 'tvshow',
-            type='movie' if content_type == 'movie' else 'tvshow',
-            contentType=content_type,
-            infoLabels=infoLabels,
-            folder=False
-        )
+        new_item = Item(channel='globalsearch', action='Search', text=clean_text, title=title, thumbnail=thumbnail,
+                        fanart=thumbnail, mode='movie' if content_type == 'movie' else 'tvshow',
+                        type='movie' if content_type == 'movie' else 'tvshow', contentType=content_type,
+                        infoLabels=infoLabels, folder=False)
         if content_type == 'movie':
             new_item.contentTitle = clean_text
         else:
@@ -230,60 +171,55 @@ def create_search_item(title, search_text, content_type, thumbnail="", year="", 
     else:
         quote_fn = urllib.quote_plus
         extra_type = 'movie' if content_type == 'movie' else 'tvshow'
-        new_item = Item(
-            channel='search',
-            action="new_search",
-            extra=quote_fn(clean_text) + '{}' + extra_type,
-            title=title,
-            fulltitle=clean_text,
-            mode='all',
-            search_text=clean_text,
-            url="",
-            thumbnail=thumbnail,
-            contentTitle=clean_text,
-            contentYear=year if year else "",
-            contentType=content_type,
-            infoLabels=infoLabels,
-            folder=True
-        )
+        new_item = Item(channel='search', action="new_search", extra=quote_fn(clean_text) + '{}' + extra_type,
+                        title=title, fulltitle=clean_text, mode='all', search_text=clean_text, url="",
+                        thumbnail=thumbnail, contentTitle=clean_text, contentYear=year if year else "",
+                        contentType=content_type, infoLabels=infoLabels, folder=True)
 
     new_item.event_type = event_type
     return new_item
 
 
-def _split_cards_films(data):
-    cards = []
-    start_pattern = '<div class="sgtv-group sgtv-flex sgtv-flex-col sgtv-rounded-md sgtv-border sgtv-border-neutral-300 sgtv-bg-stone-100 sgtv-shadow-item"'
-    
-    i = 0
-    while i < len(data):
-        start = data.find(start_pattern, i)
-        if start == -1:
-            break
-        
-        pos = start + len(start_pattern)
-        div_count = 1
-        while pos < len(data) and div_count > 0:
-            if data[pos:pos+4] == '<div':
-                div_count += 1
-                pos += 4
-            elif data[pos:pos+6] == '</div>':
-                div_count -= 1
-                pos += 6
-            else:
-                pos += 1
-        
-        card = data[start:pos]
-        if RE_FILM_TITLE.search(card) and RE_CHANNEL.search(card):
-            cards.append(card)
-        
-        i = pos
-    
-    return cards
-
-
 def _split_cards(data):
     return [p for p in RE_CARD_SPLIT.split(data) if 'sgtv-shadow-item' in p]
+
+
+def _split_cards_films(data):
+    cards = []
+    start_pattern = re.compile(r'<div class="sgtv-group sgtv-flex sgtv-flex-col sgtv-rounded-md[^>]*>')
+    pos = 0
+    
+    while True:
+        match = start_pattern.search(data, pos)
+        if not match:
+            break
+        
+        start_pos = match.start()
+        div_count = 1
+        current_pos = match.end()
+        
+        while div_count > 0 and current_pos < len(data):
+            next_open = data.find('<div', current_pos)
+            next_close = data.find('</div>', current_pos)
+            
+            if next_close == -1:
+                break
+            
+            if next_open != -1 and next_open < next_close:
+                div_count += 1
+                current_pos = next_open + 4
+            else:
+                div_count -= 1
+                current_pos = next_close + 6
+        
+        if div_count == 0:
+            card = data[start_pos:current_pos]
+            if 'dettaglio-film' in card and 'sgtv-shadow-item' in card:
+                cards.append(card)
+        
+        pos = current_pos if current_pos > start_pos else start_pos + 1
+    
+    return cards
 
 
 def _parse_film_card(card):
@@ -369,7 +305,7 @@ def get_films_database():
                 data = httptools.downloadpage(url, timeout=TIMEOUT_TOTAL).data
                 data = clean_html(data)
             
-            cards = _split_cards_films(data)
+            cards = _split_cards(data)
             if not cards:
                 continue
             for card in cards:
@@ -432,14 +368,9 @@ def now_on_misc(item):
             formatted_title = "[B]%s[/B] - %s - %s" % (scrapedtitle, scrapedchannel, scrapedtime)
 
             if skip_tmdb:
-                itemlist.append(Item(
-                    channel=item.channel,
-                    title=formatted_title,
-                    thumbnail=full_thumbnail,
-                    fanart=full_thumbnail,
-                    folder=False,
-                    infoLabels={'title': scrapedtitle, 'plot': "[COLOR gray][B]Tipo:[/B][/COLOR] %s" % scrapedtype}
-                ))
+                itemlist.append(Item(channel=item.channel, title=formatted_title, thumbnail=full_thumbnail,
+                                     fanart=full_thumbnail, folder=False,
+                                     infoLabels={'title': scrapedtitle, 'plot': "[COLOR gray][B]Tipo:[/B][/COLOR] %s" % scrapedtype}))
             else:
                 content_type = 'movie' if genre == 'Film' else 'tvshow'
                 year = ""
@@ -457,19 +388,12 @@ def now_on_misc(item):
                         if detail_match:
                             year = get_year_from_detail_page(detail_match.group(1))
 
-                search_item = create_search_item(
-                    title=formatted_title,
-                    search_text=scrapedtitle,
-                    content_type=content_type,
-                    thumbnail=full_thumbnail,
-                    year=year,
-                    genre=genre,
-                    event_type=scrapedtype
-                )
+                search_item = create_search_item(title=formatted_title, search_text=scrapedtitle,
+                                                 content_type=content_type, thumbnail=full_thumbnail, year=year,
+                                                 genre=genre, event_type=scrapedtype)
                 search_item.fanart = full_thumbnail
                 itemlist.append(search_item)
                 items_for_tmdb.append(search_item)
-
         except Exception:
             continue
 
@@ -503,12 +427,8 @@ def now_on_tv(item):
                 continue
             itemlist.append(create_search_item(
                 title="[B]%s[/B] - %s - %s" % (parsed['title'], parsed['channel'], parsed['orario']),
-                search_text=parsed['title'],
-                content_type='movie',
-                thumbnail=parsed['thumbnail'],
-                year=parsed['year'],
-                genre=parsed['genre']
-            ))
+                search_text=parsed['title'], content_type='movie', thumbnail=parsed['thumbnail'],
+                year=parsed['year'], genre=parsed['genre']))
         except Exception:
             continue
 
