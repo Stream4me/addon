@@ -1,0 +1,28 @@
+{
+  "active": true,
+  "find_videos": {
+    "patterns": [
+      {
+        "pattern": "vixsrc\\.to/movie/([^\"'\\s?]+)",
+        "url": "https://vixsrc.to/movie/\\1"
+      },
+      {
+        "pattern": "vixsrc\\.to/tv/([^\"'\\s?]+)/(\\d+)/(\\d+)",
+        "url": "https://vixsrc.to/tv/\\1/\\2/\\3"
+      }
+    ]
+  },
+  "free": true,
+  "id": "vixsrc",
+  "name": "VixSrc",
+  "settings": [
+    {
+      "default": false,
+      "enabled": true,
+      "id": "black_list",
+      "label": "$ADDON[plugin.video.s4me 70708]",
+      "type": "bool",
+      "visible": true
+    }
+  ]
+}
