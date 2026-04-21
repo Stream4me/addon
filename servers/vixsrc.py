@@ -18,7 +18,7 @@ _INERTIA_RE = re.compile(r'data-page="({.+?})"', re.DOTALL)
 _M3U8_RE    = re.compile(r'(/playlist/[^/?#]+?)(?:\.m3u8)?(?=[?#]|$)')
 
 
-def _intestazioni(referer=_BASE + '/'):
+def _get_headers(referer=_BASE + '/'):
     return {
         'User-Agent': (
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
@@ -33,7 +33,7 @@ def _intestazioni(referer=_BASE + '/'):
     }
 
 
-def _scarica(url, headers):
+def _download(url, headers):
     resp = httptools.downloadpage(url, headers=headers)
     dati = resp.data
     if isinstance(dati, bytes):
@@ -41,7 +41,7 @@ def _scarica(url, headers):
     return resp.code, (dati or '')
 
 
-def _decodifica_url(raw):
+def _decode_url(raw):
     r"""Decodifica sequenze \uXXXX nell'URL grezzo estratto dalla pagina."""
     try:
         return json.loads('"' + raw.replace('"', '\\"') + '"')
@@ -49,7 +49,7 @@ def _decodifica_url(raw):
         return raw.replace('\\/', '/').replace('\\u0026', '&')
 
 
-def _versione_inertia(html):
+def _get_inertia_version(html):
     m = _INERTIA_RE.search(html)
     if not m:
         return None
@@ -61,8 +61,8 @@ def _versione_inertia(html):
         return None
 
 
-def _costruisci_hls(raw_url, token, wp_data, page_url):
-    url_pulita = _decodifica_url(raw_url)
+def _build_hls_url(raw_url, token, wp_data, page_url):
+    url_pulita = _decode_url(raw_url)
     url_pulita = _M3U8_RE.sub(r'\1.m3u8', url_pulita)
 
     if '?' in url_pulita:
@@ -100,14 +100,14 @@ def test_video_exists(page_url):
 def get_video_url(page_url, premium=False, user="", password="", video_password=""):
     logger.info("vixsrc get_video_url: %s" % page_url)
 
-    headers = _intestazioni()
+    headers = _get_headers()
 
     api_url          = page_url.replace('/tv/', '/api/tv/').replace('/movie/', '/api/movie/')
     url_da_scaricare = page_url
 
     if api_url != page_url:
         logger.debug("vixsrc: tentativo API -> %s" % api_url)
-        codice, dati_api = _scarica(api_url, headers)
+        codice, dati_api = _download(api_url, headers)
         if codice == 200 and dati_api:
             try:
                 risposta = json.loads(dati_api)
@@ -117,7 +117,7 @@ def get_video_url(page_url, premium=False, user="", password="", video_password=
             except Exception as e:
                 logger.debug("vixsrc: API parse error - %s" % e)
 
-    _, wp_data = _scarica(url_da_scaricare, headers)
+    _, wp_data = _download(url_da_scaricare, headers)
 
     token = None
     m = _TOKEN_RE.search(wp_data)
@@ -138,14 +138,14 @@ def get_video_url(page_url, premium=False, user="", password="", video_password=
             iframe_url = urljoin(url_corrente, m_iframe.group(1))
             logger.info("vixsrc: iframe livello %d -> %s" % (livello + 1, iframe_url))
 
-            hdrs     = _intestazioni(referer=url_corrente)
-            versione = _versione_inertia(html_corrente)
+            hdrs     = _get_headers(referer=url_corrente)
+            versione = _get_inertia_version(html_corrente)
             if versione:
                 hdrs['X-Inertia']         = 'true'
                 hdrs['X-Inertia-Version'] = versione
                 logger.debug("vixsrc: Inertia version %s" % versione)
 
-            _, html_iframe = _scarica(iframe_url, hdrs)
+            _, html_iframe = _download(iframe_url, hdrs)
 
             m = _TOKEN_RE.search(html_iframe)
             if m:
@@ -166,7 +166,7 @@ def get_video_url(page_url, premium=False, user="", password="", video_password=
         logger.error("vixsrc: URL playlist non trovato")
         return [['embed [VixSrc]', page_url]]
 
-    hls_url = _costruisci_hls(m.group(1), token, wp_data, page_url)
+    hls_url = _build_hls_url(m.group(1), token, wp_data, page_url)
     logger.info("vixsrc: HLS finale -> %s" % hls_url)
 
     return [['hls [VixSrc]', hls_url]]
