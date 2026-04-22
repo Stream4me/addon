@@ -6,10 +6,13 @@ import re
 import time
 import hashlib
 import datetime
+import threading
+
 try:
     import urllib.parse as urllib
 except ImportError:
     import urllib
+
 from core import httptools, scrapertools, support, tmdb, filetools
 from core.item import Item
 from platformcode import config, platformtools, logger
@@ -32,24 +35,35 @@ RE_CHANNEL      = re.compile(r'<img alt="([^"]*)"[^>]*src="([^"]*channels/\d+/lo
 RE_NOW_TIME     = re.compile(r'<p class="sgtv-text-lg sgtv-font-bold">([^<]+)</p>')
 RE_NOW_TITLE    = re.compile(r'<p class="sgtv-max-w-full sgtv-truncate sgtv-text-lg[^"]*">([^<]+)</p>')
 RE_NOW_TYPE     = re.compile(r'<p class="sgtv-max-w-full sgtv-truncate sgtv-border-l-8[^"]*">([^<]+)</p>')
-RE_NOW_BACKDROP = re.compile(r'src="(https://api\.superguidatv\.it/v1/(?:programs|series|movies)/\d+/backdrops/\d+\?[^"]*)"')
 RE_FILM_ORARIO  = re.compile(r'<p class="sgtv-max-w-full sgtv-truncate sgtv-leading-6">([^<]+)</p>')
 RE_FILM_TITLE   = re.compile(r'<a href="/dettaglio-film/[^"]+"[^>]*class="[^"]*sgtv-block[^"]*"[^>]*>\s*([^<]+)\s*</a>')
 RE_FILM_GENRE   = re.compile(r'<p class="sgtv-row-span-1 sgtv-truncate">([^<]+)</p>')
-RE_FILM_COVER   = re.compile(r'src="(https://api\.superguidatv\.it/v1/movies/\d+/cover\?[^"]*)"')
 RE_FILM_ANNO    = re.compile(r'<p class="sgtv-h-1/2 sgtv-break-words sgtv-leading-10">([^<]+)</p>')
 RE_YEAR         = re.compile(r'(\d{4})')
 RE_DETAIL_LINK  = re.compile(r'<a href="(/dettaglio-film/[^"]+)"')
 RE_DETAIL_YEAR  = re.compile(r'<p class="sgtv-truncate">(?:[A-Z]{2}(?:,\s*[A-Z]{2})*)?\s*(\d{4})</p>')
+RE_WHITESPACE   = re.compile(r'\s{2,}')
+RE_TIPO_DURATA  = re.compile(r'\s*\(da\s*\d+\'?\)')
 
 _MAX_CACHE_SIZE = 150
 _CACHE_DURATION = 21600
+
+_TMDB_BLACKLIST = frozenset(['Notizie', 'Sport', 'Rubrica', 'Musica'])
+
+_years_lock = threading.Lock()
+_cache_lock = threading.Lock()
 
 
 def clean_html(html):
     if not html:
         return ""
-    return re.sub(r"\s{2,}", " ", html.replace("\n", "").replace("\t", "").replace("\r", ""))
+    return RE_WHITESPACE.sub(" ", html.replace("\n", "").replace("\t", "").replace("\r", ""))
+
+
+def get_higher_res_logo(logo_url):
+    if not logo_url:
+        return ""
+    return logo_url.replace("?width=120", "?width=480")
 
 
 class FilmCache:
@@ -66,16 +80,18 @@ class FilmCache:
         return expiry.timestamp()
 
     def get(self, current_hash=None):
-        if self._cache is None or self._expiry is None or time.time() >= self._expiry:
-            return None
-        if current_hash is not None and current_hash != self._hash:
-            return None
-        return self._cache
+        with _cache_lock:
+            if self._cache is None or self._expiry is None or time.time() >= self._expiry:
+                return None
+            if current_hash is not None and current_hash != self._hash:
+                return None
+            return self._cache
 
     def set(self, value, current_hash=None):
-        self._cache = value
-        self._expiry = self._next_expiry()
-        self._hash = current_hash
+        with _cache_lock:
+            self._cache = value
+            self._expiry = self._next_expiry()
+            self._hash = current_hash
 
 
 _film_cache = FilmCache()
@@ -125,16 +141,17 @@ def normalize_title_for_tmdb(title):
 
 def get_year_from_detail_page(detail_url):
     global _persistent_years
-    
+
     now = time.time()
-    
-    expired = [url for url, data in _persistent_years.items() if now >= data['expiry']]
-    for url in expired:
-        del _persistent_years[url]
-    
-    if detail_url in _persistent_years:
-        return _persistent_years[detail_url]['year']
-    
+
+    with _years_lock:
+        if _persistent_years:
+            expired = [url for url, data in list(_persistent_years.items()) if now >= data['expiry']]
+            for url in expired:
+                _persistent_years.pop(url, None)
+        if detail_url in _persistent_years:
+            return _persistent_years[detail_url]['year']
+
     try:
         full_url = host + detail_url if detail_url.startswith('/') else detail_url
         data = httptools.downloadpage(full_url).data
@@ -142,13 +159,14 @@ def get_year_from_detail_page(detail_url):
         if not match:
             return ""
         year = match.group(1)
-        
-        if len(_persistent_years) >= _MAX_CACHE_SIZE:
-            sorted_urls = sorted(_persistent_years.keys(), key=lambda k: _persistent_years[k]['expiry'])
-            for url in sorted_urls[:_MAX_CACHE_SIZE // 5]:
-                del _persistent_years[url]
-        
-        _persistent_years[detail_url] = {'year': year, 'expiry': now + _CACHE_DURATION}
+
+        with _years_lock:
+            if len(_persistent_years) >= _MAX_CACHE_SIZE:
+                sorted_urls = sorted(_persistent_years.keys(), key=lambda k: _persistent_years[k]['expiry'])
+                for url in sorted_urls[:_MAX_CACHE_SIZE // 5]:
+                    _persistent_years.pop(url, None)
+            _persistent_years[detail_url] = {'year': year, 'expiry': now + _CACHE_DURATION}
+
         return year
     except Exception:
         return ""
@@ -195,19 +213,13 @@ def _parse_film_card(card):
     channel_match = RE_CHANNEL.search(card)
     orario_matches = RE_FILM_ORARIO.findall(card)
     genre_matches = RE_FILM_GENRE.findall(card)
-    cover_match = RE_FILM_COVER.search(card)
     anno_match = RE_FILM_ANNO.search(card)
 
     anno_paese = scrapertools.decodeHtmlentities(anno_match.group(1)).strip() if anno_match else ""
     year_match = RE_YEAR.search(anno_paese)
     channel_logo = channel_match.group(2) if channel_match else ""
-    
-    has_placeholder = 'cover-placeholder' in card or '/assets/f6sH4k6A' in card
-    
-    if has_placeholder:
-        thumbnail = channel_logo
-    else:
-        thumbnail = cover_match.group(1).replace("?width=320", "?width=480") if cover_match else channel_logo
+
+    thumbnail = get_higher_res_logo(channel_logo)
 
     genre = ""
     if len(genre_matches) >= 2:
@@ -237,14 +249,14 @@ def _parse_now_card(card):
     if not (time_match and title_match and type_match):
         return None
 
-    backdrop_match = RE_NOW_BACKDROP.search(first_block)
+    thumbnail = get_higher_res_logo(channel_logo)
 
     return {
         'channel': scrapedchannel,
         'time': time_match.group(1).strip(),
         'title': scrapertools.decodeHtmlentities(title_match.group(1)).strip(),
         'type': scrapertools.decodeHtmlentities(type_match.group(1)).strip(),
-        'thumbnail': backdrop_match.group(1) if backdrop_match else channel_logo,
+        'thumbnail': thumbnail,
         'card': card
     }
 
@@ -266,27 +278,25 @@ def get_films_database():
         return cached
 
     films_dict = {}
-    
+
     urls_to_fetch = [
         ("%s/film-in-tv/oggi/sky-intrattenimento/" % host, 'Sky Intrattenimento'),
         ("%s/film-in-tv/oggi/sky-cinema/" % host, 'Sky Cinema'),
         ("%s/film-in-tv/oggi/sky-doc-e-lifestyle/" % host, 'Sky Doc e Lifestyle'),
         ("%s/film-in-tv/oggi/sky-bambini/" % host, 'Sky Bambini'),
     ]
-    
+
     with futures.ThreadPoolExecutor(max_workers=set_workers()) as executor:
         future_to_url = {
             executor.submit(httptools.downloadpage, url, timeout=TIMEOUT_TOTAL): (url, name)
             for url, name in urls_to_fetch
         }
-        
         for future in futures.as_completed(future_to_url):
             url, section_name = future_to_url[future]
             try:
                 response = future.result()
                 data = clean_html(response.data)
                 cards = _split_cards(data)
-                
                 for card in cards:
                     try:
                         parsed = _parse_film_card(card)
@@ -302,7 +312,7 @@ def get_films_database():
             except Exception as e:
                 logger.error("[FILMONTV] Errore sezione %s: %s" % (section_name, e))
                 continue
-    
+
     cards = _split_cards(first_data)
     for card in cards:
         try:
@@ -327,7 +337,6 @@ def get_films_database():
 def now_on_misc(item):
     itemlist = []
     items_for_tmdb = []
-    tmdb_blacklist = ['Notizie', 'Sport', 'Rubrica', 'Musica']
 
     films_db = get_films_database()
     data = httptools.downloadpage(item.url, timeout=TIMEOUT_TOTAL).data
@@ -337,6 +346,8 @@ def now_on_misc(item):
     if not cards:
         return itemlist
 
+    missing_years = []
+
     for card in cards:
         try:
             parsed = _parse_now_card(card)
@@ -344,14 +355,14 @@ def now_on_misc(item):
                 continue
 
             scrapedchannel = parsed['channel']
-            scrapedtime = parsed['time']
-            scrapedtitle = parsed['title']
-            scrapedtype = parsed['type']
+            scrapedtime    = parsed['time']
+            scrapedtitle   = parsed['title']
+            scrapedtype    = parsed['type']
             full_thumbnail = parsed['thumbnail']
-            genre = re.sub(r'\s*\(da\s*\d+\'?\)', '', scrapedtype).strip()
+            genre = RE_TIPO_DURATA.sub('', scrapedtype).strip()
 
             skip_tmdb = (
-                any(black in genre for black in tmdb_blacklist) or
+                any(black in genre for black in _TMDB_BLACKLIST) or
                 ("porta a porta" in scrapedtitle.lower()) or
                 ("qvc" in scrapedchannel.lower() and "replica" in scrapedtitle.lower()) or
                 ("donnatv" in scrapedchannel.lower() and "l'argonauta" in scrapedtitle.lower()) or
@@ -368,7 +379,7 @@ def now_on_misc(item):
             else:
                 content_type = 'movie' if genre == 'Film' else 'tvshow'
                 year = ""
-                
+
                 if content_type == 'movie':
                     title_lower = scrapedtitle.lower()
                     if title_lower in films_db:
@@ -380,7 +391,21 @@ def now_on_misc(item):
                     else:
                         detail_match = RE_DETAIL_LINK.search(card)
                         if detail_match:
-                            year = get_year_from_detail_page(detail_match.group(1))
+                            idx = len(itemlist)
+                            itemlist.append(None)
+                            missing_years.append({
+                                'detail_url': detail_match.group(1),
+                                'idx': idx,
+                                'data': {
+                                    'scrapedtitle': scrapedtitle,
+                                    'scrapedtype': scrapedtype,
+                                    'full_thumbnail': full_thumbnail,
+                                    'genre': genre,
+                                    'content_type': content_type,
+                                    'formatted_title': formatted_title
+                                }
+                            })
+                            continue
 
                 search_item = create_search_item(
                     title=formatted_title,
@@ -397,6 +422,35 @@ def now_on_misc(item):
 
         except Exception:
             continue
+
+    if missing_years:
+        with futures.ThreadPoolExecutor(max_workers=set_workers()) as executor:
+            future_to_missing = {
+                executor.submit(get_year_from_detail_page, m['detail_url']): m
+                for m in missing_years
+            }
+            for future in futures.as_completed(future_to_missing):
+                m = future_to_missing[future]
+                d = m['data']
+                try:
+                    year = future.result()
+                except Exception:
+                    year = ""
+
+                search_item = create_search_item(
+                    title=d['formatted_title'],
+                    search_text=d['scrapedtitle'],
+                    content_type=d['content_type'],
+                    thumbnail=d['full_thumbnail'],
+                    year=year,
+                    genre=d['genre'],
+                    event_type=d['scrapedtype']
+                )
+                search_item.fanart = d['full_thumbnail']
+                itemlist[m['idx']] = search_item
+                items_for_tmdb.append(search_item)
+
+        itemlist = [it for it in itemlist if it is not None]
 
     if items_for_tmdb:
         tmdb.set_infoLabels_itemlist(items_for_tmdb, seekTmdb=True)
