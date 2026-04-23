@@ -60,7 +60,7 @@ _TMDB_BLACKLIST = frozenset(['Notizie', 'Sport', 'Rubrica', 'Musica'])
 _years_lock     = threading.Lock()
 _cache_lock     = threading.Lock()
 
-_MAINLIST_FILM = [
+_MAIN_MENU_ITEMS = [
     ("film1", "Film in TV",                "/film-in-tv/",                         "now_on_tv"),
     ("film3", "Sky Intrattenimento",        "/film-in-tv/oggi/sky-intrattenimento/","now_on_tv"),
     ("film4", "Sky Cinema",                "/film-in-tv/oggi/sky-cinema/",          "now_on_tv"),
@@ -74,7 +74,7 @@ _MAINLIST_FILM = [
     ("now7",  "RSI (ora)",                 "/ora-in-onda/rsi/",                     "now_on_misc"),
 ]
 
-_FILM_SECTIONS = [
+_FILM_SECTIONS_DATABASE = [
     ("/film-in-tv/oggi/sky-intrattenimento/", "Sky Intrattenimento"),
     ("/film-in-tv/oggi/sky-cinema/",          "Sky Cinema"),
     ("/film-in-tv/oggi/sky-doc-e-lifestyle/", "Sky Doc e Lifestyle"),
@@ -127,7 +127,7 @@ def mainlist(item):
         Item(title=support.typo('Canali live', 'bold'), channel=item.channel, action='live',
              thumbnail=support.thumb('tvshow_on_the_air')),
     ]
-    for key, default, path, action in _MAINLIST_FILM:
+    for key, default, path, action in _MAIN_MENU_ITEMS:
         itemlist.append(Item(
             channel=item.channel,
             title=config.get_setting(key, channel="filmontv") or default,
@@ -293,7 +293,7 @@ def get_films_database():
     with futures.ThreadPoolExecutor(max_workers=set_workers()) as executor:
         future_to_section = {
             executor.submit(httptools.downloadpage, host + path, alfa_s=True): name
-            for path, name in _FILM_SECTIONS
+            for path, name in _FILM_SECTIONS_DATABASE
         }
         for future in futures.as_completed(future_to_section):
             section_name = future_to_section[future]
