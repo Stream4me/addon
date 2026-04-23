@@ -74,7 +74,7 @@ _MAINLIST_FILM = [
     ("now7",  "RSI (ora)",                 "/ora-in-onda/rsi/",                     "now_on_misc"),
 ]
 
-_SKY_SECTIONS = [
+_FILM_SECTIONS = [
     ("/film-in-tv/oggi/sky-intrattenimento/", "Sky Intrattenimento"),
     ("/film-in-tv/oggi/sky-cinema/",          "Sky Cinema"),
     ("/film-in-tv/oggi/sky-doc-e-lifestyle/", "Sky Doc e Lifestyle"),
@@ -293,7 +293,7 @@ def get_films_database():
     with futures.ThreadPoolExecutor(max_workers=set_workers()) as executor:
         future_to_section = {
             executor.submit(httptools.downloadpage, host + path, alfa_s=True): name
-            for path, name in _SKY_SECTIONS
+            for path, name in _FILM_SECTIONS
         }
         for future in futures.as_completed(future_to_section):
             section_name = future_to_section[future]
