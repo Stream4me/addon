@@ -20,7 +20,7 @@ def mainlist(item):
 
 def search(item, text):
     item.contentType = 'undefined'
-    item.url = "{}/?{}".format(host, support.urlencode({"s": text}))
+    item.url = "{}/?s={}".format(host, text)
     support.info(item.url)
     try:
         return peliculas(item)
@@ -35,17 +35,19 @@ def peliculas(item):
     anime = True
     action = 'check'
     deflang = 'ITA' if ('sub' not in item.url and 'contatti' not in item.url) else 'Sub-ITA'
+    
     if item.args == 'list':
         pagination = 20
         patron = r'<li><a href="(?P<url>[^"]+)">(?P<title>[^<]+)'
     else:
         patronBlock = r'<main[^>]+>(?P<block>.*)</main>'
-        patron = r'<div class="entry-categories">(?P<categories>.*?)<!-- \.entry-categories -->.*?class="entry-title[^>]+><a href="(?P<url>[^"]+)">(?P<title>[^<]+)</a>.*?<p>(?P<plot>[^<]+)'
-        patronNext = r'<a class="next page-numbers" href="([^"]+)">'
+        patron = r'(?:<div class="entry-categories">(?P<categories>.*?)<!-- \.entry-categories -->.*?)?class="entry-title[^>]+><a href="(?P<url>[^"]+)"[^>]*>(?P<title>[^<]+)</a>'
+        patronNext = r'<a class="next page-numbers" href="([^"]+)"'
     
     def itemHook(item):
         support.info(item.title)
-        if 'sub-ita' in item.categories.lower():
+        item.title = item.title.strip('- ').strip()
+        if hasattr(item, 'categories') and item.categories and 'sub-ita' in item.categories.lower():
             item.title = item.title.replace('[ITA]', '[Sub-ITA]')
             item.contentLanguage = 'Sub-ITA'
         return item
@@ -83,9 +85,7 @@ def renumber_episodes(itemlist):
     for season_num in sorted(seasons.keys()):
         for index, item in enumerate(seasons[season_num], start=1):
             item.contentEpisodeNumber = index
-            # Rimuove la lettera dal titolo (1x01a -> 1x01)
             item.title = re.sub(r'(\d+x\d+)[a-z]\b', r'\g<1>', item.title)
-            # Rinumera l'episodio (corretto senza doppia 'x')
             item.title = re.sub(r'(\d+)x(\d+)', lambda m: '{}x{:02d}'.format(m.group(1), index), item.title, count=1)
             renumbered_list.append(item)
     
