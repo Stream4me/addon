@@ -40,6 +40,7 @@ def peliculas(item):
         pagination = 20
         patron = r'<li><a href="(?P<url>[^"]+)">(?P<title>[^<]+)'
     else:
+        pagination = 20
         patronBlock = r'<main[^>]+>(?P<block>.*)</main>'
         patron = r'(?:<div class="entry-categories">(?P<categories>.*?)<!-- \.entry-categories -->.*?)?class="entry-title[^>]+><a href="(?P<url>[^"]+)"[^>]*>(?P<title>[^<]+)</a>'
         patronNext = r'<a class="next page-numbers" href="([^"]+)"'
