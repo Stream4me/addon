@@ -20,6 +20,7 @@ def mainlist(item):
 
 def search(item, text):
     item.contentType = 'undefined'
+    item.args = 'search'
     item.url = "{}/?s={}".format(host, text)
     support.info(item.url)
     try:
@@ -39,6 +40,10 @@ def peliculas(item):
     if item.args == 'list':
         pagination = 20
         patron = r'<li><a href="(?P<url>[^"]+)">(?P<title>[^<]+)'
+    elif item.args == 'search':
+        patronBlock = r'<main[^>]+>(?P<block>.*)</main>'
+        patron = r'(?:<div class="entry-categories">(?P<categories>.*?)<!-- \.entry-categories -->.*?)?class="entry-title[^>]+><a href="(?P<url>[^"]+)"[^>]*>(?P<title>[^<]+)</a>'
+        patronNext = r'<a class="next page-numbers" href="([^"]+)"'
     else:
         pagination = 20
         patronBlock = r'<main[^>]+>(?P<block>.*)</main>'
