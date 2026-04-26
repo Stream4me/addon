@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 
-import os
 import sys
 import ctypes.util
 
@@ -22,21 +21,12 @@ class ChallengeInterpreter(JavaScriptInterpreter):
     # ------------------------------------------------------------------------------- #
 
     def eval(self, body, domain):
-        chakraCoreLibrary = None
-
-        # check current working directory.
-        for _libraryFile in ['libChakraCore.so', 'libChakraCore.dylib', 'ChakraCore.dll']:
-            if os.path.isfile(os.path.join(os.getcwd(), _libraryFile)):
-                chakraCoreLibrary = os.path.join(os.getcwd(), _libraryFile)
-                continue
-
-        if not chakraCoreLibrary:
-            chakraCoreLibrary = ctypes.util.find_library('ChakraCore')
+        chakraCoreLibrary = ctypes.util.find_library('ChakraCore')
 
         if not chakraCoreLibrary:
             sys.tracebacklimit = 0
             raise RuntimeError(
-                'ChakraCore library not found in current path or any of your system library paths, '
+                'ChakraCore library not found in any of your system library paths, '
                 'please download from https://www.github.com/VeNoMouS/cloudscraper/tree/ChakraCore/, '
                 'or https://github.com/Microsoft/ChakraCore/'
             )
