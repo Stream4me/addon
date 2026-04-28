@@ -877,7 +877,7 @@ def _notify_app_not_running():
         base_url = get_base_url()
         xbmcgui.Dialog().notification(
             "S4Me Assistant",
-            "App non raggiungibile! Avviala sul telefono (%s)" % (base_url or "IP non configurato"),
+            "App non raggiungibile! Verifica che sia stata avviata sul dispositivo (%s)" % (base_url or "IP non configurato"),
             xbmcgui.NOTIFICATION_WARNING,
             8000  # 8 secondi
         )
