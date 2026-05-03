@@ -18,8 +18,32 @@ if sys.version_info[0] >= 3:
 else:
     from concurrent_py2 import futures
 
+# def findhost(url):
+#     return 'https://' + support.match(url, patron='var domain\s*=\s*"([^"]+)').match
+
+
 host = support.config.get_channel_url()
 
+# def getHeaders(forced=False):
+#     global headers
+#     global host
+#     if not headers:
+#         # try:
+#         headers = {'User-Agent': 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.1.14) Gecko/20080404 Firefox/2.0.0.14'}
+#         response = httptools.downloadpage(host, headers=headers)
+#         # if not response.url.startswith(host):
+#         #     host = support.config.get_channel_url(findhost, forceFindhost=True)
+#         csrf_token = support.match(response.data, patron='name="csrf-token" content="([^"]+)"').match
+#         headers = {'User-Agent': 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.1.14) Gecko/20080404 Firefox/2.0.0.14',
+#                     # 'content-type': 'application/json;charset=UTF-8',
+#                     'Referer': host,
+#                     'x-csrf-token': csrf_token,
+#                     'Cookie': '; '.join([x.name + '=' + x.value for x in response.cookies])}
+        # except:
+        #     host = support.config.get_channel_url(findhost, forceFindhost=True)
+        #     if not forced: getHeaders(True)
+
+# getHeaders()
 
 @support.menu
 def mainlist(item):
@@ -50,6 +74,8 @@ def get_data(url):
 
 
 def genres(item):
+    # getHeaders()
+    # logger.debug()
     itemlist = []
     data_page = get_data(item.url)
     args = data_page['props']['genres']
@@ -67,6 +93,7 @@ def search(item, text):
 
     try:
         return peliculas(item)
+    # Continua la ricerca in caso di errore
     except:
         import sys
         for line in sys.exc_info():
@@ -92,6 +119,7 @@ def newest(category):
 
         if itemlist[-1].action == 'peliculas':
             itemlist.pop()
+    # Continua la ricerca in caso di errore
     except:
         import sys
         for line in sys.exc_info():
@@ -133,6 +161,8 @@ def peliculas(item):
         else:
             recordlist.append(it)
 
+    # itlist = [makeItem(i, it, item) for i, it in enumerate(items)]
+
     with futures.ThreadPoolExecutor() as executor:
         itlist = [executor.submit(makeItem, i, it, item) for i, it in enumerate(items)]
         for res in futures.as_completed(itlist):
@@ -149,10 +179,6 @@ def peliculas(item):
 
     support.tmdb.set_infoLabels_itemlist(itemlist, seekTmdb=True)
     support.check_trakt(itemlist)
-
-    for itm in itemlist:
-        itm.infoLabels['duration'] = 0
-
     return itemlist
 
 
@@ -163,22 +189,19 @@ def makeItem(n, it, item):
     itm = item.clone(title=support.typo(title,'bold') + support.typo(lang,'_ [] color std bold'))
     itm.contentType = it['type'].replace('tv', 'tvshow')
     itm.language = lang
-
-    if it.get('tmdb_id'):
-        itm.infoLabels['tmdb_id'] = it['tmdb_id']
-
+    
+    # FIX ANNO - usa release_date invece di last_air_date
     if it.get('release_date'):
-        year = it['release_date'].split('-')[0]
-        if year.isdigit():
-            itm.year = int(year)
-            itm.infoLabels['year'] = int(year)
-            itm.infoLabels['filtro'] = {'primary_release_year': year}
+        itm.year = it['release_date'].split('-')[0]
 
     if itm.contentType == 'movie':
+        # itm.contentType = 'movie'
         itm.fulltitle = itm.show = itm.contentTitle = title
         itm.action = 'findvideos'
         itm.url = host + '/it/watch/%s' % it['id']
+
     else:
+        # itm.contentType = 'tvshow'
         itm.contentTitle = ''
         itm.fulltitle = itm.show = itm.contentSerieName = title
         itm.action = 'episodios'
@@ -189,11 +212,14 @@ def makeItem(n, it, item):
 
 
 def episodios(item):
+    # getHeaders()
     logger.debug()
     itemlist = []
 
-    data_page = get_data(item.url)
+    data_page = get_data(item.url)    
     seasons = data_page['props']['title']['seasons']
+    # episodes = data_page['props']['loadedSeason']['episodes']
+    # support.dbg()
 
     for se in seasons:
         data_page = get_data(item.url + '/season-' + str(se['number']))
@@ -220,6 +246,7 @@ def episodios(item):
         support.tmdb.set_infoLabels_itemlist(itemlist, seekTmdb=True)
     support.check_trakt(itemlist)
     support.videolibrary(itemlist, item)
+    #support.download(itemlist, item)
     return itemlist
 
 
