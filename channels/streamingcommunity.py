@@ -178,24 +178,23 @@ def makeItem(n, it, item):
     itm.language = lang
 
     year = None
-    tmdb_id = None
+    tmdb_id = it.get('tmdb_id')
 
     if it.get('release_date'):
         year = it['release_date'].split('-')[0]
 
-    if not year:
+    if not year and not tmdb_id:
         release_date, tmdb_id = get_release_date_and_tmdb_id(it['id'], it['slug'])
         if release_date:
             year = release_date.split('-')[0]
 
     if tmdb_id:
-        itm.tmdb_id = tmdb_id
         itm.infoLabels['tmdb_id'] = tmdb_id
 
-    if year and year.isdigit():
+    if year and str(year).isdigit():
         itm.year = int(year)
         itm.infoLabels['year'] = int(year)
-        itm.infoLabels['filtro'] = {'primary_release_year': year}
+        itm.infoLabels['filtro'] = {'primary_release_year': str(year)}
 
     if itm.contentType == 'movie':
         itm.fulltitle = itm.show = itm.contentTitle = title
@@ -215,7 +214,7 @@ def episodios(item):
     logger.debug()
     itemlist = []
 
-    data_page = get_data(item.url)    
+    data_page = get_data(item.url)
     seasons = data_page['props']['title']['seasons']
 
     for se in seasons:
