@@ -101,19 +101,6 @@ def newest(category):
     return itemlist
 
 
-def get_release_date_and_tmdb_id(title_id, slug):
-    try:
-        url = f"{host}/it/titles/{title_id}-{slug}"
-        html = support.match(url, patron='data-page="([^"]+)', debug=False).match
-        if html:
-            data = jsontools.load(support.scrapertools.decodeHtmlentities(html))
-            title_data = data.get('props', {}).get('title', {})
-            return title_data.get('release_date'), title_data.get('tmdb_id')
-    except Exception as e:
-        logger.error(f"[StreamingCommunity] Errore get_release_date_and_tmdb_id: {e}")
-    return None, None
-
-
 def peliculas(item):
     logger.debug()
     if item.mainThumb: item.thumbnail = item.mainThumb
@@ -177,24 +164,15 @@ def makeItem(n, it, item):
     itm.contentType = it['type'].replace('tv', 'tvshow')
     itm.language = lang
 
-    year = None
-    tmdb_id = it.get('tmdb_id')
+    if it.get('tmdb_id'):
+        itm.infoLabels['tmdb_id'] = it['tmdb_id']
 
     if it.get('release_date'):
         year = it['release_date'].split('-')[0]
-
-    if not year and not tmdb_id:
-        release_date, tmdb_id = get_release_date_and_tmdb_id(it['id'], it['slug'])
-        if release_date:
-            year = release_date.split('-')[0]
-
-    if tmdb_id:
-        itm.infoLabels['tmdb_id'] = tmdb_id
-
-    if year and str(year).isdigit():
-        itm.year = int(year)
-        itm.infoLabels['year'] = int(year)
-        itm.infoLabels['filtro'] = {'primary_release_year': str(year)}
+        if year.isdigit():
+            itm.year = int(year)
+            itm.infoLabels['year'] = int(year)
+            itm.infoLabels['filtro'] = {'primary_release_year': year}
 
     if itm.contentType == 'movie':
         itm.fulltitle = itm.show = itm.contentTitle = title
