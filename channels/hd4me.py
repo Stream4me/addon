@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+# ------------------------------------------------------------
+# Canale per HD4ME
+# ------------------------------------------------------------
+
 from core import httptools, support
 import json, html, re
 
