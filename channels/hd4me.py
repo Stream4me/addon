@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-# ------------------------------------------------------------
-# Canale per HD4ME - API JSON
-# ------------------------------------------------------------
-
 from core import httptools, support
 import json, html, re
 
@@ -119,12 +115,13 @@ def _posts_to_itemlist(item, posts):
     return itemlist
 
 
+@support.menu
 def mainlist(item):
-    return [
-        item.clone(action='peliculas', title='Film', url='/index'),
-        item.clone(action='genre', title='Genere', url=host),
-        item.clone(action='search', title='Cerca Film', url=host),
+    film = ['/index',
+        ('Genere', ['', 'genre', 'genre']),
     ]
+    search = ''
+    return locals()
 
 
 def genre(item):
@@ -148,12 +145,17 @@ def genre(item):
             if url.startswith('https://hd4me.net'):
                 url = url.replace('https://hd4me.net', '')
             itemlist.append(item.clone(action='peliculas', title=title, url=url))
+    support.thumb(itemlist, genre=True)
     return itemlist
 
 
 def peliculas(item):
     page = getattr(item, 'page', 1) or 1
-    url_path = item.url.strip('/')
+    url = item.url
+    if url.startswith('http'):
+        from urllib.parse import urlparse
+        url = urlparse(url).path
+    url_path = url.strip('/')
 
     if url_path.rstrip('/') in ('studio-ghibli', 'pixar'):
         slug = url_path.rstrip('/').split('/')[-1]
