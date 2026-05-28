@@ -5,6 +5,7 @@
 # ----------------------------------------------------------
 
 from core import httptools, support, config, jsontools
+import re
 
 host = support.config.get_channel_url()
 __channel__ = 'animeworld'
@@ -20,7 +21,6 @@ def get_cookie(data):
 
 
 def get_data(item):
-    # support.dbg()
     url = httptools.downloadpage(item.url, headers=headers, follow_redirects=True, only_headers=True).url
     data = support.match(url, headers=headers, follow_redirects=True).data
     if 'SecurityAW' in data:
@@ -30,7 +30,6 @@ def get_data(item):
 
 
 def order():
-    # Seleziona l'ordinamento dei risultati
     return str(support.config.get_setting("order", __channel__))
 
 
@@ -76,7 +75,6 @@ def menu(item):
 def submenu(item):
     action = 'peliculas'
     data = item.other
-    # debug=True
     patronMenu = r'<input.*?name="(?P<name>[^"]+)" value="(?P<value>[^"]+)"\s*>[^>]+>(?P<title>[^<]+)<\/label>'
     def itemHook(item):
         item.url = '{}/filter?{}={}&{}{}'.format(host, item.name, item.value, item.args, ('&sort=' if item.name != 'sort' else ''))
@@ -93,7 +91,6 @@ def newest(categoria):
             item.url = host
             item.args = "updated"
             return peliculas(item)
-    # Continua la ricerca in caso di errore
     except:
         import sys
         for line in sys.exc_info():
@@ -108,10 +105,8 @@ def search(item, text):
     else:
         lang = ['?', '?dub=1&', '?dub=0&'][config.get_setting('lang', channel=item.channel)]
         item.url = '{}/filter{}&keyword={}&sort='.format(host, lang, text)
-    # item.contentType = 'tvshow'
     try:
         return peliculas(item)
-    # Continua la ricerca in caso di errore
     except:
         import sys
         for line in sys.exc_info():
@@ -123,7 +118,7 @@ def search(item, text):
 def peliculas(item):
     data = get_data(item)
     anime = True
-    if item.args not in ['noorder', 'updated'] and not item.url[-1].isdigit(): item.url += order() # usa l'ordinamento di configura canale
+    if item.args not in ['noorder', 'updated'] and not item.url[-1].isdigit(): item.url += order()
     data = get_data(item)
 
     if item.args == 'updated':
@@ -135,10 +130,7 @@ def peliculas(item):
         item.contentType='undefined'
         action='check'
 
-    # Controlla la lingua se assente
     patronNext=r'<a href="([^"]+)" class="[^"]+" id="go-next'
-    #typeContentDict={'movie':['movie', 'special']}
-    #typeActionDict={'findvideos':['movie', 'special']}
     def itemHook(item):
         if not item.contentLanguage:
             if 'dub=1' in item.url or item.l == 'dub':
@@ -176,10 +168,10 @@ def episodios(item):
 
 def findvideos(item):
     import time
+    import re
     support.info(item)
     itemlist = []
     urls = []
-    # resp = support.match(get_data(item), headers=headers, patron=r'data-name="(\d+)">([^<]+)<')
     resp = support.match(get_data(item), headers=headers, patron=r'data-name="(\d+)">([^<]+)<')
     data = resp.data
 
@@ -188,18 +180,12 @@ def findvideos(item):
         match = support.match(data, patronBlock=r'data-name="' + ID + r'"[^>]+>(.*?)(?:<div class="(?:server|download)|link)', patron=r'data-id="([^"]+)" data-episode-num="' + (item.number if item.number else '1') + '"' + r'.*?href="([^"]+)"').match
         if match:
             epID, epurl = match
-            # if 'vvvvid' in name.lower():
-            #     urls.append(support.match(host + '/api/episode/ugly/serverPlayerAnimeWorld?id=' + epID, headers=headers, patron=r'<a.*?href="([^"]+)"', debug=True).match)
-            if 'animeworld' in name.lower():
-                url = support.match(data, patron=r'href="([^"]+)"\s*id="alternativeDownloadLink"', headers=headers).match
-                title = support.match(url, patron=r'http[s]?://(?:www.)?([^.]+)', string=True).match
-                itemlist.append(item.clone(action="play", title=title, url=url, server='directo'))
+            dataJson = support.match(host + '/api/episode/serverPlayerAnimeWorld?id=' + epID, headers=headers).data
+            match_mp4 = re.search(r'<source\s+src="([^"]+\.mp4)"', dataJson)
+            if match_mp4:
+                mp4_url = match_mp4.group(1)
+                title = support.match(mp4_url, patron=r'http[s]?://(?:www.)?([^.]+)', string=True).match
+                itemlist.append(item.clone(action="play", title=title, url=mp4_url, server='directo'))
             else:
-                dataJson = support.match(host + '/api/episode/info?id=' + epID + '&alt=0', headers=headers).data
-                json = jsontools.load(dataJson)
-
-                title = support.match(json['grabber'], patron=r'server\d+.([^.]+)', string=True).match
-                if title: itemlist.append(item.clone(action="play", title=title, url=json['grabber'].split('=')[-1], server='directo'))
-                else: urls.append(json['grabber'])
-    # support.info(urls)
+                urls.append(epurl)
     return support.server(item, urls, itemlist)
