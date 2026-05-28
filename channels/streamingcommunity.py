@@ -63,7 +63,7 @@ def genres(item):
 def search(item, text):
     logger.debug('search', text)
     item.search = True
-    item.url = host + '/it/search?q=' + text
+    item.url = host + '/it/search?q=' + urllib_parse.quote_plus(text)
 
     try:
         return peliculas(item)
@@ -187,7 +187,7 @@ def episodios(item):
     logger.debug()
     itemlist = []
 
-    data_page = get_data(item.url)    
+    data_page = get_data(item.url)
     seasons = data_page['props']['title']['seasons']
 
     for se in seasons:
