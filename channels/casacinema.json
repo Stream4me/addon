@@ -2,7 +2,7 @@
     "id": "casacinema",
     "name": "Casacinema",
     "language": ["ita", "sub-ita"],
-    "active": true,
+    "active": false,
     "thumbnail": "casacinema.png",
     "banner": "casacinema.png",
     "categories": ["tvshow", "movie"],

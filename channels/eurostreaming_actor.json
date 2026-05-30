@@ -1,7 +1,7 @@
 {
     "id": "eurostreaming_actor",
     "name": "Eurostreaming Actor",
-    "active": true,
+    "active": false,
     "language": ["ita","sub-ita"],
     "thumbnail": "eurostreaming.png",
     "banner": "eurostreaming.png",

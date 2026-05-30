@@ -2,7 +2,7 @@
     "id": "tantifilm",
     "name": "Tantifilm",
     "language": ["ita"],
-    "active": true,
+    "active": false,
     "thumbnail": "tantifilm.png",
     "banner": "tantifilm.png",
     "categories": ["tvshow", "movie"],

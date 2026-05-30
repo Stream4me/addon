@@ -1,7 +1,7 @@
 {
     "id": "ilgeniodellostreaming_cam",
     "name": "IlGenioDelloStreaming CAM",
-    "active": true,
+    "active": false,
     "language": ["ita"],
     "thumbnail": "ilgeniodellostreaming.png",
     "banner": "ilgeniodellostreaming.png",
