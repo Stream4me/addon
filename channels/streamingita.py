@@ -12,7 +12,6 @@ headers = [['Referer', host]]
 
 @support.menu
 def mainlist(item):
-
     film = ['/film']
     top = [('Generi', ['/film', 'menu', 'genres']),
             ('Anno', ['/film', 'menu', 'releases'])]
@@ -47,7 +46,8 @@ def findvideos(item):
     data = []
     for link in support.dooplay_get_links(item, host):
         url = httptools.downloadpage(link['url'], only_headers=True, headers=headers).url
-        data.append(url)
+        if url:
+            data.append(url)
     return support.server(item, data)
 
 
@@ -57,7 +57,7 @@ def menu(item):
     item.contentType = 'undefined'
     if item.args in ['genres', 'releases']:
         patronBlock = r'<nav class="' + item.args + r'">(?P<block>.*?)</nav'
-        patronMenu= r'<a href="(?P<url>[^"]+)"[^>]*>(?P<title>[^<]+)<'
+        patronMenu = r'<a href="(?P<url>[^"]+)"[^>]*>(?P<title>[^<]+)<'
     else:
         patronBlock = r'class="main-header">(?P<block>.*?)headitems'
         patronMenu = r'(?P<url>' + host + r'quality/[^/]+/\?post_type=movies)">(?P<title>[^<]+)'
