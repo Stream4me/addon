@@ -541,27 +541,9 @@ def get_nfo(item, search_groups=False):
     return info_nfo + '\n'
 
 def get_groups(item):
-    valid_groups = []
-
     url = '{}/tv/{}/episode_groups?api_key={}&language={}'.format(host, item.infoLabels['tmdb_id'], api, def_lang)
-    groups = requests.get(url).json().get('results',[])
-
-    for g in groups:
-        seasons = []
-        add = False
-        Id = g.get('id','')
-        group = get_group(Id)
-        for gr in group:
-            if gr['episodes']:
-                season = gr['episodes'][0]['season_number']
-                if season not in seasons:
-                    seasons.append(season)
-                    add = True
-                else:
-                    add = False
-                    break
-        if add: valid_groups.append(g)
-    return valid_groups
+    groups = requests.get(url).json().get('results', [])
+    return groups
 
 def select_group(groups, item):
     selected = -1
