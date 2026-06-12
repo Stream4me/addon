@@ -160,9 +160,10 @@ def makeItem(n, it, item):
     itm.contentType = it['type'].replace('tv', 'tvshow')
     itm.language = lang
 
-    year_str = (it.get('release_date') or it.get('last_air_date') or
+    year_str = (it.get('release_date') or
                 next((tr['value'] for tr in it.get('translations', [])
-                      if tr.get('key') in ('release_date', 'last_air_date') and tr.get('value')), None))
+                      if tr.get('key') == 'release_date' and tr.get('value')), None))
+
     if year_str:
         try:
             itm.year = int(str(year_str)[:4])
