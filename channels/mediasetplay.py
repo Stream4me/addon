@@ -46,7 +46,8 @@ feedBase = 'https://feed.entertainment.tv.theplatform.eu/f/PR1GhC/mediaset-prod-
 
 @support.menu
 def mainlist(item):
-    top = [('Dirette {bold}', ['', 'live'])]
+    top = [('Dirette {bold}', ['', 'live']),
+           ('Replay {bold}', ['', 'restart'])]
 
     menu = [('Film ultimi arrivi {submenu}', ['/cinema', 'peliculas', {'uxReference':'filmUltimiArrivi'}, 'movie']),
             ('Film più visti del giorno {submenu}', ['/cinema', 'peliculas', {'uxReference':'filmPiuVisti24H'}, 'movie']),
@@ -109,15 +110,23 @@ def live(item):
 
         if it['callSign'] in allguide:
             guide = allguide[it['callSign']]
+            currentListing = guide.get('currentListing', {})
+            programId = currentListing.get('programId', '')
+            restart_contentId = programId.split('/')[-1] if programId else ''
+            restart_title = currentListing.get('mediasetlisting$epgTitle', '')
+            startTime = currentListing.get('startTime', '')
+            endTime = currentListing.get('endTime', '')
+            
             plot = '[B]{}[/B]\n{}'.format(
-                guide.get('currentListing', {}).get('mediasetlisting$epgTitle', ''),
-                guide.get('currentListing', {}).get('description', '')
+                currentListing.get('mediasetlisting$epgTitle', ''),
+                currentListing.get('description', '')
             )
             if 'nextListing' in guide.keys():
                 plot += '\n\nA Seguire:\n[B]{}[/B]\n{}'.format(
                     guide.get('nextListing', {}).get('mediasetlisting$epgTitle', ''),
                     guide.get('nextListing', {}).get('description', '')
                 )
+            
             itemlist.append(item.clone(
                 title=support.typo(title, 'bold'),
                 fulltitle=title,
@@ -129,9 +138,38 @@ def live(item):
                 fanart=it.get('fanart', ''),
                 forcethumb=True
             ))
+            
+            if restart_contentId and restart_title and startTime and endTime:
+                itemlist.append(item.clone(
+                    title=support.typo('{} - {}'.format(title, restart_title), 'bold'),
+                    fulltitle='{} - {}'.format(title, restart_title),
+                    plot=plot,
+                    url=url + '?restart',
+                    action='findvideos',
+                    thumbnail=thumb,
+                    fanart=it.get('fanart', ''),
+                    forcethumb=True,
+                    restart=True,
+                    restart_contentId=restart_contentId,
+                    restart_startTime=str(startTime),
+                    restart_endTime=str(endTime),
+                    callSign=it['callSign']
+                ))
 
     itemlist.sort(key=lambda it: support.channels_order.get(it.fulltitle, 999))
     support.thumb(itemlist, live=True)
+    return itemlist
+
+
+def restart(item):
+    itemlist = []
+    live_items = live(item)
+    for it in live_items:
+        try:
+            if it.restart_contentId:
+                itemlist.append(it)
+        except:
+            pass
     return itemlist
 
 
@@ -330,7 +368,52 @@ def findvideos(item):
     
     lic_url = 'https://widevine.entitlement.theplatform.eu/wv/web/ModularDrm/getRawWidevineLicense?releasePid={pid}&account=http://access.auth.theplatform.com/data/Account/2702976343&schema=1.0&token={token}|Accept=*/*&Content-Type=&User-Agent={ua}|R{{SSM}}|'
 
-    if item.video_id:
+    is_restart = getattr(item, 'restart', False)
+    callSign = getattr(item, 'callSign', None)
+    restart_startTime = getattr(item, 'restart_startTime', None)
+    restart_endTime = getattr(item, 'restart_endTime', None)
+    
+    if is_restart and callSign:
+        payload = {
+            "channelCode": callSign,
+            "streamType": "RESTART",
+            "delivery": "Streaming",
+            "createDevice": "true",
+            "overrideAppName": "web//mediasetplay-web/5.2.4-6ad16a4"
+        }
+        
+        if restart_startTime and restart_endTime:
+            payload["startTime"] = int(restart_startTime)
+            payload["endTime"] = int(restart_endTime)
+        
+        try:
+            res = session.post(
+                f'https://api-ott-prod-fe.mediaset.net/PROD/play/playback/check/v2.0?sid={sid}',
+                json=payload
+            ).json()
+            
+            if 'response' in res:
+                mediaSelector = res['response']['mediaSelector']
+                url = mediaSelector['url']
+                is_mpd = 'dash' in mediaSelector['formats'].lower()
+                
+                sec_data = support.match(url + '?' + urlencode(mediaSelector)).data
+                item.url = support.match(sec_data, patron=r'<video src="([^"]+)').match + '|User-Agent=' + support.httptools.get_user_agent()
+                pid = support.match(sec_data, patron=r'pid=([^|]+)').match
+                
+                if is_mpd and pid:
+                    item.manifest = 'mpd'
+                    item.drm = 'com.widevine.alpha'
+                    item.license = lic_url.format(pid=pid, token=Token, ua=support.httptools.get_user_agent())
+                else:
+                    item.manifest = 'hls'
+                
+                return support.server(item, itemlist=[item], Download=False, Videolibrary=False)
+        except:
+            pass
+        return []
+    
+    if getattr(item, 'video_id', None):
         payload = {
             "contentId": item.video_id,
             "streamType": "VOD",
@@ -342,9 +425,9 @@ def findvideos(item):
             f'https://api-ott-prod-fe.mediaset.net/PROD/play/playback/check/v2.0?sid={sid}',
             json=payload
         ).json()['response']['mediaSelector']
-    elif item.callSign:
+    elif callSign:
         payload = {
-            "channelCode": item.callSign,
+            "channelCode": callSign,
             "streamType": "LIVE",
             "delivery": "Streaming",
             "createDevice": "true",
