@@ -2,7 +2,7 @@
 	"id": "streamingita",
 	"name": "StreamingITA",
 	"language": ["ita"],
-	"active": true,
+	"active": false,
 	"thumbnail": "streamingita.png",
 	"banner": "streamingita.png",
 	"categories": ["tvshow", "movie"],
