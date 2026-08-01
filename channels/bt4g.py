@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # ------------------------------------------------------------
-# Canale per ilcorsaronero
+# Canale per BT4G
 # ------------------------------------------------------------
 
 from core import support, httptools
