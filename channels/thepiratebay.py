@@ -23,7 +23,12 @@ def search(item, text):
     logger.info("text=" + text)
     itemlist = []
     
-    api_url = "https://apibay.org/q.php?q=%s" % urllib.parse.quote(text)
+    page = item.page if hasattr(item, 'page') and item.page else 0
+    
+    if page > 0:
+        api_url = "https://apibay.org/q.php?q=%s:%s" % (urllib.parse.quote(text), page)
+    else:
+        api_url = "https://apibay.org/q.php?q=%s" % urllib.parse.quote(text)
     
     data = httptools.downloadpage(api_url).data
     
@@ -49,10 +54,28 @@ def search(item, text):
             title=title_formatted,
             url=magnet,
             action="findvideos",
-            server="torrent"
+            server="torrent",
+            folder=False
         )
         
         itemlist.append(new_item)
+    
+    # Controlla se esiste la pagina successiva
+    next_page = page + 1
+    check_url = "https://apibay.org/q.php?q=%s:%s" % (urllib.parse.quote(text), next_page)
+    check_data = httptools.downloadpage(check_url).data
+    
+    if check_data:
+        check_torrents = json.loads(check_data)
+        if len(check_torrents) > 0:
+            next_item = item.clone(
+                title="Pagina successiva >>",
+                page=next_page,
+                action="search",
+                folder=True
+            )
+            next_item.text = text
+            itemlist.append(next_item)
     
     return itemlist
 
