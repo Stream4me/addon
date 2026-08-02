@@ -1,7 +1,7 @@
 {
     "id": "bt4g",
     "name": "BT4G",
-    "active": true,
+    "active": false,
     "language": ["ita", "sub-ita", "eng"],
     "thumbnail": "bt4g.png",
     "banner": "bt4g.png",
