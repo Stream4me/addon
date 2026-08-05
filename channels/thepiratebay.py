@@ -23,11 +23,10 @@ def search(item, text):
     logger.info("text=" + text)
     itemlist = []
     
-    page = int(item.page) if hasattr(item, 'page') and item.page else 0
+    page = item.page if hasattr(item, 'page') and item.page else 0
     
-    # Usa l'API di The Pirate Bay
     if page > 0:
-        api_url = "https://apibay.org/q.php?q=%s&page=%s" % (urllib.parse.quote(text), page)
+        api_url = "https://apibay.org/q.php?q=%s:%s" % (urllib.parse.quote(text), page)
     else:
         api_url = "https://apibay.org/q.php?q=%s" % urllib.parse.quote(text)
     
@@ -36,18 +35,17 @@ def search(item, text):
     data = httptools.downloadpage(api_url).data
     
     if not data:
-        logger.error("Nessun dato ricevuto dall'API")
+        logger.error("Nessun dato ricevuto")
         return itemlist
     
     try:
         torrents = json.loads(data)
         logger.info("Torrents trovati: %s" % len(torrents))
     except Exception as e:
-        logger.error("Errore nel parsing del JSON: %s" % str(e))
+        logger.error("Errore parsing JSON: %s" % str(e))
         return itemlist
     
     if not isinstance(torrents, list):
-        logger.error("Risposta API non valida")
         return itemlist
     
     for torrent in torrents:
@@ -63,7 +61,6 @@ def search(item, text):
         magnet = "magnet:?xt=urn:btih:%s&dn=%s" % (info_hash, urllib.parse.quote(title))
         size = format_size(size_bytes)
         
-        # Colore seeders
         if seeds >= 100:
             seed_color = '[COLOR green]%s[/COLOR]' % seeds
         elif seeds >= 50:
@@ -90,14 +87,27 @@ def search(item, text):
         
         itemlist.append(new_item)
     
-    # Ordina per seeders
     itemlist.sort(key=lambda x: int(x.seeders) if hasattr(x, 'seeders') else 0, reverse=True)
     
-    # Paginazione S4Me con support.nextPage
-    if len(itemlist) > 0:
-        next_page = page + 1
-        next_url = "https://apibay.org/q.php?q=%s&page=%s" % (urllib.parse.quote(text), next_page)
-        support.nextPage(itemlist, item, next_page=next_url, function_or_level='search')
+    next_page = page + 1
+    check_url = "https://apibay.org/q.php?q=%s:%s" % (urllib.parse.quote(text), next_page)
+    check_data = httptools.downloadpage(check_url).data
+    
+    if check_data:
+        try:
+            check_torrents = json.loads(check_data)
+            if len(check_torrents) > 0:
+                next_item = item.clone(
+                    title="[COLOR blue]>> Pagina successiva[/COLOR]",
+                    page=next_page,
+                    action="search",
+                    folder=True
+                )
+                next_item.text = text
+                itemlist.append(next_item)
+                logger.info("Aggiunta pagina successiva: %s" % next_page)
+        except:
+            pass
     
     return itemlist
 
