@@ -53,8 +53,12 @@ def mainlist(item):
             ('Film più visti del giorno {submenu}', ['/cinema', 'peliculas', {'uxReference':'filmPiuVisti24H'}, 'movie']),
             ('Film da non perdere {submenu}', ['/cinema', 'peliculas', {'uxReference':'filmClustering'}, 'movie']),
             ('Fiction e Serie Tv del momento {submenu}', ['/fiction', 'peliculas', {'uxReference':'fictionSerieTvDelMomento'}, 'tvshow']),
+            ('Le serie di Mediaset Infinity {submenu}', ['/fiction', 'peliculas', {'uxReference':'fictionOriginals'}, 'tvshow']),
             ('Soap del momento {submenu}', ['/cinema', 'peliculas', {'uxReference':'fictionSerieTvParamsGenre', 'params': 'genre≈Soap opera'}, 'tvshow']),
+            ('TV Movie italiani {submenu}', ['/fiction', 'peliculas', {'uxReference':'tvMovieFiction'}, 'tvshow']),
+            ('Animazione Made in Japan {submenu}', ['/fiction', 'peliculas', {'uxReference':'kidsSerieAnimate'}, 'tvshow']),
             ('Serie TV Piu Viste {submenu}', ['/fiction', 'peliculas', {'uxReference':'serieTvPiuViste24H'}, 'tvshow']),
+            ('Serie Turche {submenu}', ['/fiction', 'peliculas', {'uxReference':'currentSeasonTurchia'}, 'tvshow']),
             ('Programmi TV Prima serata{ submenu}', ['/programmitv', 'peliculas', {'uxReference':'stagioniPrimaSerata'}, 'tvshow']),
             ('Programmi TV Daytime{ submenu}', ['/programmitv', 'peliculas', {'uxReference':'stagioniDaytime'}, 'tvshow']),
             ('Talent e reality {submenu}', ['/talent', 'peliculas', {'uxReference':'multipleBlockProgrammiTv', 'userContext' :'iwiAeyJwbGF0Zm9ybSI6IndlYiJ9Aw'}, 'tvshow']),
@@ -62,6 +66,7 @@ def mainlist(item):
             ('Kids Cartoonito {submenu}', ['/kids', 'peliculas', {'uxReference':'kidsCartoonito' }, 'undefined']),
             ('Kids Evergreen {submenu}', ['/kids', 'peliculas', {'uxReference':'kidsMediaset' }, 'undefined']),
             ('Documentari più visti {submenu}', ['/documentari', 'peliculas', {'uxReference': 'documentariPiuVisti24H'}, 'undefined']),
+            ('Film Documentari di Focus {submenu}', ['/documentari', 'peliculas', {'uxReference': 'filmDocumentari'}, 'undefined']),
             ]
 
     search = ''
