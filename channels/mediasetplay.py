@@ -49,9 +49,11 @@ def mainlist(item):
     top = [('Dirette {bold}', ['', 'live']),
            ('Replay {bold}', ['', 'restart'])]
 
-    menu = [('Film ultimi arrivi {submenu}', ['/cinema', 'peliculas', {'uxReference':'filmUltimiArrivi'}, 'movie']),
+    menu = [('Tutti i Film {submenu}', ['/cinema', 'peliculas', {'uxReference':'multipleBlockFilm'}, 'movie']),
+            ('Film ultimi arrivi {submenu}', ['/cinema', 'peliculas', {'uxReference':'filmUltimiArrivi'}, 'movie']),
             ('Film più visti del giorno {submenu}', ['/cinema', 'peliculas', {'uxReference':'filmPiuVisti24H'}, 'movie']),
             ('Film da non perdere {submenu}', ['/cinema', 'peliculas', {'uxReference':'filmClustering'}, 'movie']),
+            ('Tutte le Serie TV {submenu}', ['/fiction', 'peliculas', {'uxReference':'fictionSerieTvLibrary'}, 'tvshow']),
             ('Fiction e Serie Tv del momento {submenu}', ['/fiction', 'peliculas', {'uxReference':'fictionSerieTvDelMomento'}, 'tvshow']),
             ('Le serie di Mediaset Infinity {submenu}', ['/fiction', 'peliculas', {'uxReference':'fictionOriginals'}, 'tvshow']),
             ('Soap del momento {submenu}', ['/cinema', 'peliculas', {'uxReference':'fictionSerieTvParamsGenre', 'params': 'genre≈Soap opera'}, 'tvshow']),
@@ -65,6 +67,7 @@ def mainlist(item):
             ('Kids Boing {submenu}', ['/kids', 'peliculas', {'uxReference':'kidsBoing' }, 'undefined']),
             ('Kids Cartoonito {submenu}', ['/kids', 'peliculas', {'uxReference':'kidsCartoonito' }, 'undefined']),
             ('Kids Evergreen {submenu}', ['/kids', 'peliculas', {'uxReference':'kidsMediaset' }, 'undefined']),
+            ('Tutti i Documentari {submenu}', ['/documentari', 'peliculas', {'uxReference': 'multipleBlockDocumentari'}, 'undefined']),
             ('Documentari più visti {submenu}', ['/documentari', 'peliculas', {'uxReference': 'documentariPiuVisti24H'}, 'undefined']),
             ('Film Documentari di Focus {submenu}', ['/documentari', 'peliculas', {'uxReference': 'filmDocumentari'}, 'undefined']),
             ]
