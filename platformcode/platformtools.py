@@ -1120,6 +1120,12 @@ def play_video(item, strm=False, force_direct=False, autoplay=False):
         xlistitem.setArt({"thumb": item.contentThumbnail if item.contentThumbnail else item.thumbnail})
         set_infolabels(xlistitem, item, True)
 
+        # Per inputstream.adaptive escludiamo Accept-Encoding: ISA inoltra l'header
+        # ma non decomprime la risposta, quindi con i server che rispondono gzip (es.
+        # vixcloud) il manifest arriva compresso e fallisce con
+        # "Non-compliant HLS manifest, #EXTM3U tag not found".
+        isa_headers = {k: v for k, v in headers.items() if k.lower() != 'accept-encoding'}
+
         # if it is a video in mpd format, the listitem is configured to play it ith the inpustreamaddon addon implemented in Kodi 17
         
         if mpd or item.manifest =='mpd':
@@ -1133,10 +1139,10 @@ def play_video(item, strm=False, force_direct=False, autoplay=False):
                 xlistitem.setProperty("inputstream.adaptive.license_key", item.license)
                 xlistitem.setMimeType('application/dash+xml')
             if config.get_platform(True)['num_version'] >= 22:
-                xlistitem.setProperty('inputstream.adaptive.common_headers', urllib.urlencode(headers))
+                xlistitem.setProperty('inputstream.adaptive.common_headers', urllib.urlencode(isa_headers))
             else:
-                xlistitem.setProperty('inputstream.adaptive.stream_headers', urllib.urlencode(headers))
-                xlistitem.setProperty('inputstream.adaptive.manifest_headers', urllib.urlencode(headers))
+                xlistitem.setProperty('inputstream.adaptive.stream_headers', urllib.urlencode(isa_headers))
+                xlistitem.setProperty('inputstream.adaptive.manifest_headers', urllib.urlencode(isa_headers))
 
         elif hls or item.manifest == 'hls':# or (mediaurl.split('|')[0].endswith('m3u8') and mediaurl.startswith('http')):
             if not install_inputstream():
@@ -1145,11 +1151,11 @@ def play_video(item, strm=False, force_direct=False, autoplay=False):
             xlistitem.setProperty('inputstream.adaptive.manifest_type', 'hls')
             xlistitem.setMimeType('application/x-mpegURL')
             if config.get_platform(True)['num_version'] >= 22:
-                xlistitem.setProperty('inputstream.adaptive.common_headers', urllib.urlencode(headers))
+                xlistitem.setProperty('inputstream.adaptive.common_headers', urllib.urlencode(isa_headers))
             else:
-                xlistitem.setProperty('inputstream.adaptive.stream_headers', urllib.urlencode(headers))
-                xlistitem.setProperty('inputstream.adaptive.manifest_headers', urllib.urlencode(headers))
-                xlistitem.setProperty('inputstream.adaptive.license_key', '|' + urllib.urlencode(headers) +'|')
+                xlistitem.setProperty('inputstream.adaptive.stream_headers', urllib.urlencode(isa_headers))
+                xlistitem.setProperty('inputstream.adaptive.manifest_headers', urllib.urlencode(isa_headers))
+                xlistitem.setProperty('inputstream.adaptive.license_key', '|' + urllib.urlencode(isa_headers) +'|')
 
         if force_direct: item.play_from = 'window'
 
