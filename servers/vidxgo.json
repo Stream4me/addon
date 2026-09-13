@@ -1,0 +1,30 @@
+{
+  "active": true,
+  "find_videos": {
+    "ignore_urls": [],
+    "patterns": [
+      {
+        "pattern": "https?://(?:[a-z0-9-]+\\.)?vidxgo\\.co/([A-Za-z0-9]+)/(\\d+)/(\\d+)(?:\\?[^\\s<]*)?(?:[\\s<\"']|$)",
+        "url": "https://v.vidxgo.co/\\1/\\2/\\3"
+      },
+      {
+        "pattern": "https?://(?:[a-z0-9-]+\\.)?vidxgo\\.co/([A-Za-z0-9]+)(?:\\?[^\\s<]*)?(?:[\\s<\"']|$|\\.html)",
+        "url": "https://v.vidxgo.co/\\1"
+      }
+    ]
+  },
+  "free": true,
+  "id": "vidxgo",
+  "name": "Vidxgo",
+  "settings": [
+    {
+      "default": false,
+      "enabled": true,
+      "id": "black_list",
+      "label": "$ADDON[plugin.video.s4me 70708]",
+      "type": "bool",
+      "visible": true
+    }
+  ],
+  "cloudflare": true
+}
