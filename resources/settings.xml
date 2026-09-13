@@ -10,7 +10,7 @@
         <setting id="addon_update_timer" type="slider" option="int" range="1,1,24" label="707416" visible="eq(-2,true)" default="1"/>
         <setting label="70787" type="lsep"/>
         <setting id="resolver_dns" type="bool" label="707408" default="true" enable="true" visible="true"/>
-        <setting id="resolver_dns_provider" type="select" label="707409" default="Cloudflare" values="Cloudflare|Google" visible="eq(-1,true)"/>
+        <setting id="resolver_dns_provider" type="select" label="707409" default="Cloudflare" values="Cloudflare|Google|LibreDNS" visible="eq(-1,true)"/>
         <setting id="checkdns" type="bool" default="true" visible="false"/>
         <setting label="70788" type="lsep"/>
         <setting id="debug" type="bool" label="30003" default="false"/>
