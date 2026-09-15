@@ -1,7 +1,7 @@
 {
     "id": "altadefinizioneclick",
     "name": "AltadefinizioneClick",
-    "active": false,
+    "active": true,
     "language": ["ita","sub-ita"],
     "thumbnail": "altadefinizioneclick.png",
     "bannermenu": "altadefinizioneciclk.png",
