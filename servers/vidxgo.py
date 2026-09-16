@@ -3,21 +3,22 @@
 # ------------------------------------------------------------
 # [PORT-RANDOM]  porta effimera ad ogni play: nessuna collisione possibile.
 #                TRADEOFF NOTO: l'URL di playback cambia a ogni play -> il
-#                resume point di Kodi NON viene ritrovato. (Per il resume:
-#                blocchi bind in cascata su porte fisse, vedi git history.)
+#                resume point di Kodi NON viene ritrovato.
 # [RATE-FIX]     rate-limit CDN solo sulle playlist: i segmenti non throttlati
 #                (era la causa degli "stream stalled" periodici).
 # [BG-MAINT]     heartbeat e refresh token in background, fuori dal thread
 #                richiesta (latenza fuori dalla risposta a Kodi).
-# [NET-FIX]      blackout DNS/rete: lock reale sul refresh (niente storm di
-#                thread concorrenti), cooldown 10s sui fallimenti di rete,
-#                log compatti (1 riga invece di 50) per heartbeat e refresh.
-# [HEAL]         un host CDN puo' andare in 403 a META' flusso (media-619
-#                visto su 2 piattaforme): prima di arrendersi in DIRECT mode
-#                si riesegue /t/ -- nuovo token e, se l'endpoint assegna un
-#                ALTRO host CDN, switch del base a CALDO senza chiudere il
-#                player (che continua a chiedere lo stesso percorso locale:
-#                e' il relay a girare). Rate-limited a 1 tentativo/30s.
+# [NET-FIX v2]   blackout rete/DNS e blocchi Cloudflare sull'IP di uscita:
+#                riconosciuti anche i ReadTimeout, backoff ESPONENZIALE
+#                10->20->40->80->160s (martellare un edge che flagga prolunga
+#                il blocco), lock reale sul refresh, log compatti (1 riga).
+# [HEAL-BG]      host CDN in 403 a meta' flusso -> hot re-resolve /t/ in
+#                BACKGROUND (il thread della richiesta NON deve restare
+#                appeso per minuti su uno sweep TLS a edge bloccato: era la
+#                causa della GUI congelata dopo lo stop). Kodi ritenta la
+#                playlist (503): la richiesta successiva trova lo stato
+#                healato. Switch del base a caldo se /t/ assegna un altro
+#                host CDN. Rate-limited 1/30s, skip se la rete e' giu'.
 # ------------------------------------------------------------
 
 import base64, json, os, re, ssl, tempfile, threading, time, traceback, uuid
@@ -51,6 +52,10 @@ REFRESH_GRACE = 60
 # [RATE-FIX] intervallo minimo tra richieste "di controllo" (playlist/rotazioni)
 CDN_MIN_INTERVAL = 1.0
 
+# [HEAL-BG] timeout relay: il worst-case dell'handler scende da minuti a ~70s
+RELAY_CONNECT_TIMEOUT = 10
+RELAY_READ_TIMEOUT = 30
+
 _PROXY = {'server': None, 'port': 0, 'base': '',
           't_url': '', 'imdb': '', 'fresh_query': '', 'dur': 0,
           't0': 0.0, 'last_hb': 0.0, 'last_mint': 0.0, 'expire_ms': 0,
@@ -69,32 +74,53 @@ _BG_MAINT = [0.0]     # [BG-MAINT] un solo worker di manutenzione per volta
 _PLCACHE = {}
 _PLCACHE_TTL = 120
 
-# [NET-FIX] stato blackout rete
-_NET_FAIL = [0.0]                       # ultimo fallimento di rete (DNS/conn.)
+# [NET-FIX v2] stato blackout rete
+_NET_FAIL = [0.0, 0]                    # [ultimo fallimento, errori consecutivi]
 _REFRESH_LOCK = threading.Lock()        # un solo refresh per volta, davvero
 
-# [HEAL] hot re-resolve: il CDN assegnato va in 403 a meta' flusso ->
-# riesegue /t/ e sposta il proxy su un host CDN sano a caldo
-_HEAL = {'t': 0.0}          # rate-limit: max 1 tentativo / 30s
-_PATH_MAP = ['', '']        # mappa dir locale -> dir upstream dopo heal
+# [HEAL-BG] hot re-resolve in background
+_HEAL = {'t': 0.0, 'busy': False}       # rate-limit 30s + flag worker in corso
+_PATH_MAP = ['', '']                    # mappa dir locale -> dir upstream dopo heal
 
 
 _RATELIMIT_FILE = os.path.join(tempfile.gettempdir(), 'alfa_vidxgo_ratelimit.json')
 
 
 def _net_down():
-    """[NET-FIX] True per 10s dopo un fallimento di rete (DNS/connessione):
-    evita storm di retry e log-spam durante un blackout transitorio."""
-    return time.time() - _NET_FAIL[0] < 10.0
+    """[NET-FIX v2] cooldown ESPONENZIALE dopo fallimenti di rete: 10s ->
+    20s -> 40s -> 80s -> 160s (cap). Martellare un edge Cloudflare che
+    flagga/tarpitta l'IP PROLUNGA il blocco: meno richieste = sblocco prima."""
+    if _NET_FAIL[1] == 0:
+        return False
+    backoff = min(10 * (2 ** min(_NET_FAIL[1] - 1, 4)), 160)
+    return time.time() - _NET_FAIL[0] < backoff
 
 
 def _is_net_error(e):
-    """[NET-FIX] riconosce i fallimenti di rete transitori (DNS giu', conn.
-    rifiutata): log compatti + cooldown invece di traceback completi."""
+    """[NET-FIX v2] fallimenti di rete transitori: DNS giu', connessione
+    rifiutata, READ TIMEOUT (Cloudflare tarpitta o blocca l'IP di uscita)."""
     s = str(e)
-    if 'Name or service not known' in s or 'Temporary failure in name resolution' in s:
+    tn = type(e).__name__
+    if 'Name or service not known' in s or 'Temporary failure' in s:
         return True
-    return 'ConnectionError' in type(e).__name__ or 'gaierror' in type(e).__name__
+    if 'Timeout' in tn:                    # ReadTimeout, ConnectTimeout
+        return True
+    if 'timed out' in s.lower():
+        return True
+    if 'ConnectionError' in tn or 'gaierror' in tn:
+        return True
+    return False
+
+
+def _net_fail():
+    """[NET-FIX v2] registra un fallimento di rete (avvia/estende il backoff)."""
+    _NET_FAIL[0] = time.time()
+    _NET_FAIL[1] += 1
+
+
+def _net_ok():
+    """[NET-FIX v2] rete tornata: resetta il backoff."""
+    _NET_FAIL[1] = 0
 
 
 def _ratelimit_load():
@@ -299,7 +325,7 @@ def _prefetch_playlists():
         def fetch(path):
             url = base + path + (('?' + q) if q else '')
             try:
-                r = sess.get(url, timeout=(10, 30))
+                r = sess.get(url, timeout=(RELAY_CONNECT_TIMEOUT, 30))
             except Exception:
                 return None
             if r.status_code == 200:
@@ -328,12 +354,12 @@ def _prefetch_playlists():
 
 
 def _refresh_token():
-    # [NET-FIX] gate velocissimo (throttle successo), blackout check,
-    # poi lock NON-bloccante: un solo refresh alla volta, gli altri escono
+    # [NET-FIX v2] throttle successo, blackout check (backoff esponenziale),
+    # lock NON-bloccante: un solo refresh alla volta, gli altri escono
     if time.time() - _LAST_REFRESH[0] < 1.5:
         return True
     if _net_down():
-        return False                       # blackout in corso: riprova piu' tardi
+        return False                       # blackout/blocco in corso: piu' tardi
     if not _REFRESH_LOCK.acquire(blocking=False):
         return True                        # un altro thread sta gia' refreshando
     try:
@@ -342,7 +368,7 @@ def _refresh_token():
             r = s.get(_PROXY['t_url'],
                       headers={'User-Agent': UA_FF, 'Referer': HOST + '/',
                                'Accept': 'application/json, text/plain, */*'},
-                      timeout=10)
+                      timeout=RELAY_CONNECT_TIMEOUT + 1)
             if r.status_code == 200:
                 data = r.json()
                 new_url = data.get('url') or ''
@@ -357,15 +383,16 @@ def _refresh_token():
                         except Exception:
                             pass
                     _LAST_REFRESH[0] = time.time()
+                    _net_ok()
                     logger.info('vidxgo token refreshed')
                     return True
             logger.error('vidxgo token refresh failed: HTTP ' + str(r.status_code))
         except Exception as e:
-            # [NET-FIX] 1 riga compatta per blackout DNS, non 50 di traceback
+            # [NET-FIX v2] 1 riga compatta per DNS giu' / CF che tarpitta
             if _is_net_error(e):
-                _NET_FAIL[0] = time.time()
-                logger.error('vidxgo token refresh: rete irraggiungibile, '
-                             'backoff 10s (%s)' % str(e)[:80])
+                _net_fail()
+                logger.error('vidxgo token refresh: rete irraggiungibile '
+                             '(backoff #%d, %s)' % (_NET_FAIL[1], str(e)[:80]))
             else:
                 logger.error('vidxgo token refresh crashed: ' + traceback.format_exc())
         return False
@@ -384,15 +411,17 @@ def _maybe_refresh_by_expire():
         _refresh_token()
 
 
+# [HEAL-BG] hot re-resolve ---------------------------------------------------
 def _hot_heal(old_host):
-    """[HEAL] riesegue il resolve /t/ (endpoint salvato) e, se il nuovo
-    stream URL punta a un host DIVERSO da quello in 403, sposta il proxy
-    sul nuovo base a caldo. Il player continua a chiedere lo stesso
-    percorso locale: e' il relay a girare. Ritorna True se il resolve
-    e' riuscito (nuovo token e/o nuovo host)."""
+    """Riesegue il resolve /t/ (endpoint salvato) e, se il nuovo stream URL
+    punta a un host DIVERSO da quello in 403, sposta il proxy sul nuovo base
+    a caldo. Il player continua a chiedere lo stesso percorso locale: e' il
+    relay a girare. Ritorna True se il resolve e' riuscito."""
     try:
         if not _PROXY.get('t_url'):
             return False                    # stream da XOR: niente /t/ da richiamare
+        if _net_down():
+            return False                    # [NET-FIX v2] edge muto: non insistere
         if time.time() - _HEAL['t'] < 30.0:
             return False                    # troppo presto per un altro tentativo
         _HEAL['t'] = time.time()
@@ -438,11 +467,6 @@ def _hot_heal(old_host):
         return False
 
 
-def _maybe_refresh_by_expire_wrapper():
-    pass
-
-
-# [BG-MAINT] manutenzione FUORI dal percorso di streaming -------------------
 def _maintenance_due():
     exp = _PROXY.get('expire_ms') or 0
     if not exp or not _PROXY.get('t_url'):
@@ -469,7 +493,7 @@ def _maintenance_do(pos, need_hb):
 
 def _send_heartbeat(pos):
     if _net_down():
-        return                             # [NET-FIX] blackout: skip silenzioso
+        return                             # [NET-FIX v2] blackout: skip silenzioso
     try:
         s = _vidxgo_session()
         payload = {"sid": _HB['sid'], "v": 2, "imdb": _PROXY.get('imdb', ''),
@@ -479,12 +503,14 @@ def _send_heartbeat(pos):
         s.post(HOST + '/hb', json=payload,
                headers={'User-Agent': UA_FF, 'Referer': HOST + '/',
                         'Origin': HOST, 'Content-Type': 'application/json',
-                        'Accept': '*/*'}, timeout=10)
+                        'Accept': '*/*'}, timeout=RELAY_CONNECT_TIMEOUT + 1)
+        _net_ok()
     except Exception as e:
-        # [NET-FIX] log compatto anche qui
+        # [NET-FIX v2] log compatto anche qui
         if _is_net_error(e):
-            _NET_FAIL[0] = time.time()
-            logger.error('vidxgo hb: rete irraggiungibile, backoff 10s')
+            _net_fail()
+            logger.error('vidxgo hb: rete irraggiungibile (backoff #%d)'
+                         % _NET_FAIL[1])
         else:
             logger.error('vidxgo hb failed: ' + traceback.format_exc())
 
@@ -636,7 +662,7 @@ def _start_proxy():
                 if req_path.lower().endswith('.m3u8'):
                     _ratelimit_wait(host_up)
 
-                # [HEAL] dopo uno switch, il percorso locale puo' mappare
+                # [HEAL-BG] dopo uno switch, il percorso locale puo' mappare
                 # su una directory upstream diversa
                 req_up = req_path
                 if _PATH_MAP[0] and req_path.startswith(_PATH_MAP[0]):
@@ -671,8 +697,9 @@ def _start_proxy():
                 if _PROXY.get('fresh_query'):
                     url += '?' + _PROXY['fresh_query']
 
+                rt = (RELAY_CONNECT_TIMEOUT, RELAY_READ_TIMEOUT)
                 try:
-                    r = sess.get(url, headers=h, timeout=(10, 60), stream=True)
+                    r = sess.get(url, headers=h, timeout=rt, stream=True)
 
                     if r.status_code == 403 and _PROXY.get('t_url') and \
                             (time.time() - _PROXY.get('t0', time.time())) > REFRESH_GRACE:
@@ -683,53 +710,58 @@ def _start_proxy():
                         # retry SINCRONO: qui serve il token nuovo PRIMA di ritentare
                         if _refresh_token():
                             url = _PROXY['base'] + req_up + '?' + _PROXY['fresh_query']
-                            r = sess.get(url, headers=h, timeout=(10, 60), stream=True)
+                            r = sess.get(url, headers=h, timeout=rt, stream=True)
 
                     if r.status_code in (403, 429):
                         logger.error('vidxgo upstream %s -> HTTP %s: ruoto fingerprint'
                                      % (host_up, r.status_code))
-                        for cand in _TLS_CANDIDATES:
-                            if cand[0] == _relay_cand_for(host_up)[0]:
-                                continue
-                            s2 = _relay_session(cand)
-                            try:
-                                r2 = s2.get(url, headers=h, timeout=(10, 60), stream=True)
-                                if r2.status_code == 200:
-                                    _RELAY_CAND[host_up] = cand[0]
+                        # [NET-FIX v2] a edge muto la rotazione e' rumore
+                        if not _net_down():
+                            for cand in _TLS_CANDIDATES:
+                                if cand[0] == _relay_cand_for(host_up)[0]:
+                                    continue
+                                s2 = _relay_session(cand)
+                                try:
+                                    r2 = s2.get(url, headers=h, timeout=rt, stream=True)
+                                    if r2.status_code == 200:
+                                        _RELAY_CAND[host_up] = cand[0]
+                                        try:
+                                            r.close()
+                                        except Exception:
+                                            pass
+                                        r = r2
+                                        logger.info('vidxgo relay winner [%s] per %s'
+                                                    % (cand[0], host_up))
+                                        break
                                     try:
-                                        r.close()
+                                        r2.close()
                                     except Exception:
                                         pass
-                                    r = r2
-                                    logger.info('vidxgo relay winner [%s] per %s'
-                                                % (cand[0], host_up))
-                                    break
-                                try:
-                                    r2.close()
                                 except Exception:
                                     pass
-                            except Exception:
-                                pass
 
-                    # [HEAL] prima di arrendersi in DIRECT: re-resolve /t/ e,
-                    # se il CDN assegnato cambia, ritenta subito sul nuovo host
+                    # [HEAL-BG] nessun candidato ok: lancia il re-resolve /t/
+                    # in BACKGROUND (lo sweep a edge bloccato dura minuti e
+                    # l'handler non deve restare appeso: era la causa della
+                    # GUI congelata). Kodi ritenta la playlist da solo.
                     if r.status_code in (403, 429) and host_up not in _RELAY_DIRECT \
-                            and _hot_heal(host_up):
-                        new_host = urllib.parse.urlparse(_PROXY['base']).netloc
+                            and not _HEAL.get('busy') and not _net_down():
+                        _HEAL['busy'] = True
+                        import threading as _th
+
+                        def _heal_worker(host=host_up):
+                            try:
+                                _hot_heal(host)
+                            finally:
+                                _HEAL['busy'] = False
+                        _th.Thread(target=_heal_worker, daemon=True).start()
                         try:
                             r.close()
                         except Exception:
                             pass
-                        url = _PROXY['base'] + req_up
-                        if _PROXY.get('fresh_query'):
-                            url += '?' + _PROXY['fresh_query']
-                        s3 = _relay_session(_relay_cand_for(new_host))
-                        try:
-                            r = s3.get(url, headers=h, timeout=(10, 60), stream=True)
-                            logger.info('vidxgo hot-heal retry su %s -> HTTP %s'
-                                        % (new_host, r.status_code))
-                        except Exception as e:
-                            logger.error('vidxgo hot-heal retry exc: %s' % str(e)[:120])
+                        logger.info('vidxgo heal in background (Kodi ritentera)')
+                        self.send_error(503)
+                        return
 
                     if r.status_code in (403, 429):
                         cur_host = urllib.parse.urlparse(_PROXY['base']).netloc
@@ -752,11 +784,11 @@ def _start_proxy():
                             self.end_headers()
                             return
                 except Exception as e:
-                    # [NET-FIX] errore rete = log compatto
+                    # [NET-FIX v2] errore rete = log compatto + backoff
                     if _is_net_error(e):
-                        _NET_FAIL[0] = time.time()
-                        logger.error('vidxgo relay: rete irraggiungibile (%s)'
-                                     % str(e)[:100])
+                        _net_fail()
+                        logger.error('vidxgo relay: rete irraggiungibile '
+                                     '(backoff #%d, %s)' % (_NET_FAIL[1], str(e)[:90]))
                     else:
                         logger.error('vidxgo relay exc: %s' % str(e)[:150])
                     try:
@@ -1012,8 +1044,9 @@ def get_video_url(page_url, premium=False, user='', password='', video_password=
         _PROXY['expire_ms'] = 0
         _PROXY['hb_type'] = 'series' if is_episode else 'movie'
 
-        # [HEAL] ripristina lo stato mappa/timeout a ogni nuovo play
+        # [HEAL-BG] ripristina lo stato mappa/timeout a ogni nuovo play
         _HEAL['t'] = 0.0
+        _HEAL['busy'] = False
         _PATH_MAP[0] = _PATH_MAP[1] = ''
 
         if is_episode:
