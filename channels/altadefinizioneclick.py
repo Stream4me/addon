@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 # ------------------------------------------------------------
-# Canale per Altadefinizione
+# Canale per Altadefinizioneclick
 # ------------------------------------------------------------
 
 from core import support
 from platformcode import logger
-import re, html, traceback, urllib.parse, time
+import re, html, traceback, urllib.parse, time, json
 
 
 host = support.config.get_channel_url()
@@ -184,34 +184,109 @@ def peliculas_genere(item):
     return locals()
 
 
+# ------------------------------------------------------------------
+# HELPER: estrae token + seasons dal payload Next.js (self.__next_f)
+# ------------------------------------------------------------------
+def _estrai_next_json(data):
+    """
+    Ritorna (token, seasons) leggendo i chunk iniettati da Next.js.
+    - token: stringa numerica oppure None
+    - seasons: lista di dict {number, name, episodes:[{number,title,plot,still}]}
+    """
+    token = None
+    seasons = []
+
+    if not data:
+        return token, seasons
+
+    for m in re.finditer(r'self\.__next_f\.push\(\[1,"(.*?)"\]\)', data, re.S):
+        raw = m.group(1)
+        try:
+            chunk = json.loads('"' + raw + '"')
+        except Exception:
+            continue
+
+        if token is None:
+            mt = re.search(r'"token":"(\d+)"', chunk)
+            if mt:
+                token = mt.group(1)
+
+        if not seasons:
+            ms = re.search(r'"seasons":(\[.*?\])\s*,\s*"turnstileSiteKey"', chunk, re.S)
+            if ms:
+                try:
+                    seasons = json.loads(ms.group(1))
+                except Exception:
+                    seasons = []
+
+        if token and seasons:
+            break
+
+    return token, seasons
+
+
 @support.scrape
 def episodios(item):
     data = support.httptools.downloadpage(item.url, cloudscraper=True).data
 
-    token = None
-    for m in re.finditer(r'<iframe[^>]+src="https://v\.vidxgo\.co/(\d+)[^"]*"', data):
-        if 'trailer' in m.group(0).lower():
-            continue
-        token = m.group(1)
-        break
-    if token is None:
-        m = re.search(r'<iframe[^>]+src="https://v\.vidxgo\.co/(\d+)', data)
-        token = m.group(1) if m else None
+    # --- 1) Tenta il parsing del JSON di Next.js (dati ricchi) ---
+    token_json, seasons = _estrai_next_json(data)
+    logger.info("episodios: token_json=%s seasons=%d" % (token_json, len(seasons)))
+
+    # --- 2) Token: dal JSON se presente, altrimenti iframe (logica precedente) ---
+    token = token_json
+    if not token:
+        for m in re.finditer(r'<iframe[^>]+src="https://v\.vidxgo\.co/(\d+)[^"]*"', data):
+            if 'trailer' in m.group(0).lower():
+                continue
+            token = m.group(1)
+            break
+        if token is None:
+            m = re.search(r'<iframe[^>]+src="https://v\.vidxgo\.co/(\d+)', data)
+            token = m.group(1) if m else None
 
     if not token:
-        logger.error("Token not found in iframe src")
+        logger.error("episodios: token non trovato")
         data = ''
+    elif seasons:
+        # --- 3a) Costruisci HTML sintetico con titolo/plot/still ---
+        parts = []
+        for st in seasons:
+            s = st.get('number')
+            if not s:
+                continue
+            for ep in st.get('episodes', []):
+                e = ep.get('number')
+                if not e:
+                    continue
+                title = ep.get('title') or ('Episodio %d' % e)
+                plot  = ep.get('plot') or ''
+                still = ep.get('still') or ''
+                parts.append(
+                    '<a href="https://v.vidxgo.co/%s/%d/%d" '
+                    'data-s="%d" data-e="%d" '
+                    'data-title="%s" data-plot="%s" data-still="%s"></a>'
+                    % (token, s, e, s, e,
+                       html.escape(title, quote=True),
+                       html.escape(plot, quote=True),
+                       html.escape(still, quote=True))
+                )
+        data = ''.join(parts)
+        logger.info("episodios: costruiti %d item da Next.js" % len(parts))
     else:
+        # --- 3b) Fallback: data-episode dal DOM (logica precedente) ---
         pair_set = {(int(a), int(b)) for a, b in re.findall(r'data-episode="(\d+)-(\d+)"', data)}
         embedded = {s for s, _ in pair_set}
 
-        seasons = sorted({int(x) for x in re.findall(r'Stagione\s*(?:<!--[^>]*-->\s*)?(\d+)', data)})
+        seasons_txt = sorted({int(x) for x in re.findall(
+            r'Stagione\s*(?:<!--[^>]*-->\s*)?(\d+)', data)})
 
         eps = sorted({e for _, e in pair_set}) or \
-              sorted({int(x) for x in re.findall(r'Episodio\s*(?:<!--[^>]*-->\s*)?(\d+)', data)})
+              sorted({int(x) for x in re.findall(
+                  r'Episodio\s*(?:<!--[^>]*-->\s*)?(\d+)', data)})
 
         tuples = sorted(pair_set)
-        for s in seasons:
+        for s in seasons_txt:
             if s not in embedded:
                 tuples.extend((s, e) for e in eps)
         tuples.sort()
@@ -222,22 +297,61 @@ def episodios(item):
                 tuples = sorted(srv_v.probe(token)['episodes'])
                 logger.info("episodios: fallback probe vidxgo -> %s" % tuples)
             except Exception:
-                logger.error("episodios: probe fallback failed: " + traceback.format_exc())
+                logger.error("episodios: probe fallback failed: "
+                             + traceback.format_exc())
 
         if tuples:
-            data = ''.join('<a href="https://v.vidxgo.co/%s/%d/%d" data-s="%d" data-e="%d"></a>'
-                           % (token, s, e, s, e) for s, e in tuples)
+            data = ''.join(
+                '<a href="https://v.vidxgo.co/%s/%d/%d" data-s="%d" data-e="%d"></a>'
+                % (token, s, e, s, e) for s, e in tuples)
         else:
             logger.error("episodios: nessun episodio trovato (sito + probe)")
             data = ''
 
+    # --- 4) Regex di scraping: campi opzionali ---
     patron = (r'<a href="(?P<url>https://v\.vidxgo\.co/[^"]+)"'
-              r'[^>]*data-s="(?P<season>\d+)"[^>]*data-e="(?P<episode>\d+)"')
+              r'[^>]*data-s="(?P<season>\d+)"[^>]*data-e="(?P<episode>\d+)"'
+              r'(?:[^>]*data-title="(?P<title>[^"]*)")?'
+              r'(?:[^>]*data-plot="(?P<plot>[^"]*)")?'
+              r'(?:[^>]*data-still="(?P<still>[^"]*)")?')
     action = 'play'
 
     def itemHook(it):
         it.is_folder = False
         it.server = 'vidxgo'
+        it.contentType = 'episode'
+
+        # Titolo: "1x03 - La bugia" (o solo "1x03" se il titolo è generico)
+        try:
+            s = int(it.season)
+            e = int(it.episode)
+            real = (getattr(it, 'title', '') or '').strip()
+            base = "%dx%02d" % (s, e)
+            generici = ("", "%d" % e, "episodio %d" % e,
+                        "episodio %d " % e, "ep %d" % e)
+            if real and real.lower() not in generici:
+                it.title = base + " - " + real
+            else:
+                it.title = base
+        except Exception:
+            pass
+
+        # Trama
+        plot = (getattr(it, 'plot', '') or '').strip()
+        if plot:
+            it.plot = plot
+            try:
+                info = dict(getattr(it, 'info', {}) or {})
+                info['plot'] = plot
+                it.info = info
+            except Exception:
+                pass
+
+        # Still come thumbnail
+        still = (getattr(it, 'still', '') or '').strip()
+        if still:
+            it.thumbnail = still
+
         return it
 
     return locals()
