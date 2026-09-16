@@ -1,18 +1,23 @@
 # -*- coding: utf-8 -*-
 # Server vidxgo per S4me
 # ------------------------------------------------------------
-# [PORT-RANDOM]  porta effimera ad ogni play: ogni istanza del proxy ascolta
-#                su una porta diversa, nessuna probabilita' di collisione con
-#                processi/zombie. TRADEOFF NOTO: l'URL di playback cambia a
-#                ogni play -> il resume point di Kodi NON viene ritrovato.
+# [PORT-RANDOM]  porta effimera ad ogni play: nessuna collisione possibile.
+#                TRADEOFF NOTO: l'URL di playback cambia a ogni play -> il
+#                resume point di Kodi NON viene ritrovato. (Per il resume:
+#                blocchi bind in cascata su porte fisse, vedi git history.)
 # [RATE-FIX]     rate-limit CDN solo sulle playlist: i segmenti non throttlati
 #                (era la causa degli "stream stalled" periodici).
 # [BG-MAINT]     heartbeat e refresh token in background, fuori dal thread
 #                richiesta (latenza fuori dalla risposta a Kodi).
 # [NET-FIX]      blackout DNS/rete: lock reale sul refresh (niente storm di
-#                thread concorrenti), cooldown 10s sui fallimenti di rete
-#                (niente martellamento del resolver malato), log compatti
-#                (1 riga invece di 50) per heartbeat e refresh.
+#                thread concorrenti), cooldown 10s sui fallimenti di rete,
+#                log compatti (1 riga invece di 50) per heartbeat e refresh.
+# [HEAL]         un host CDN puo' andare in 403 a META' flusso (media-619
+#                visto su 2 piattaforme): prima di arrendersi in DIRECT mode
+#                si riesegue /t/ -- nuovo token e, se l'endpoint assegna un
+#                ALTRO host CDN, switch del base a CALDO senza chiudere il
+#                player (che continua a chiedere lo stesso percorso locale:
+#                e' il relay a girare). Rate-limited a 1 tentativo/30s.
 # ------------------------------------------------------------
 
 import base64, json, os, re, ssl, tempfile, threading, time, traceback, uuid
@@ -67,6 +72,11 @@ _PLCACHE_TTL = 120
 # [NET-FIX] stato blackout rete
 _NET_FAIL = [0.0]                       # ultimo fallimento di rete (DNS/conn.)
 _REFRESH_LOCK = threading.Lock()        # un solo refresh per volta, davvero
+
+# [HEAL] hot re-resolve: il CDN assegnato va in 403 a meta' flusso ->
+# riesegue /t/ e sposta il proxy su un host CDN sano a caldo
+_HEAL = {'t': 0.0}          # rate-limit: max 1 tentativo / 30s
+_PATH_MAP = ['', '']        # mappa dir locale -> dir upstream dopo heal
 
 
 _RATELIMIT_FILE = os.path.join(tempfile.gettempdir(), 'alfa_vidxgo_ratelimit.json')
@@ -374,6 +384,64 @@ def _maybe_refresh_by_expire():
         _refresh_token()
 
 
+def _hot_heal(old_host):
+    """[HEAL] riesegue il resolve /t/ (endpoint salvato) e, se il nuovo
+    stream URL punta a un host DIVERSO da quello in 403, sposta il proxy
+    sul nuovo base a caldo. Il player continua a chiedere lo stesso
+    percorso locale: e' il relay a girare. Ritorna True se il resolve
+    e' riuscito (nuovo token e/o nuovo host)."""
+    try:
+        if not _PROXY.get('t_url'):
+            return False                    # stream da XOR: niente /t/ da richiamare
+        if time.time() - _HEAL['t'] < 30.0:
+            return False                    # troppo presto per un altro tentativo
+        _HEAL['t'] = time.time()
+
+        hdrs = {'User-Agent': UA_FF, 'Referer': HOST + '/',
+                'Accept': 'application/json, text/plain, */*'}
+        r, t_url, _s = _vidxgo_resolve([_PROXY['t_url']], hdrs)
+        if r is None:
+            return False
+        data = r.json()
+        new_url = data.get('url') or ''
+        if not new_url:
+            return False
+        exp = data.get('expire')
+        if exp:
+            try:
+                _PROXY['expire_ms'] = int(exp)
+            except Exception:
+                pass
+        _PROXY['t_url'] = t_url
+        _PROXY['fresh_query'] = urllib.parse.urlparse(new_url).query
+
+        u = urllib.parse.urlparse(new_url)
+        new_base = u.scheme + '://' + u.netloc
+        if new_base != _PROXY['base']:
+            # mappa le directory se la struttura del percorso e' cambiata
+            old_dir = _PROXY.get('master_path', '').rsplit('/', 1)[0]
+            new_dir = u.path.rsplit('/', 1)[0]
+            if old_dir != new_dir:
+                _PATH_MAP[0], _PATH_MAP[1] = old_dir, new_dir
+            else:
+                _PATH_MAP[0] = _PATH_MAP[1] = ''
+            logger.info('vidxgo hot-heal: CDN %s -> %s' % (_PROXY['base'], new_base))
+            _PROXY['base'] = new_base
+            _PROXY['master_path'] = u.path
+            _PROXY['host'] = u.netloc
+            _PLCACHE.clear()                # playlist del vecchio host: stantie
+        else:
+            logger.info('vidxgo hot-heal: stesso CDN %s, token rinfrescato' % new_base)
+        return True
+    except Exception:
+        logger.error('vidxgo hot-heal: ' + traceback.format_exc())
+        return False
+
+
+def _maybe_refresh_by_expire_wrapper():
+    pass
+
+
 # [BG-MAINT] manutenzione FUORI dal percorso di streaming -------------------
 def _maintenance_due():
     exp = _PROXY.get('expire_ms') or 0
@@ -568,8 +636,14 @@ def _start_proxy():
                 if req_path.lower().endswith('.m3u8'):
                     _ratelimit_wait(host_up)
 
+                # [HEAL] dopo uno switch, il percorso locale puo' mappare
+                # su una directory upstream diversa
+                req_up = req_path
+                if _PATH_MAP[0] and req_path.startswith(_PATH_MAP[0]):
+                    req_up = _PATH_MAP[1] + req_path[len(_PATH_MAP[0]):]
+
                 if host_up in _RELAY_DIRECT:
-                    durl = _PROXY['base'] + req_path
+                    durl = _PROXY['base'] + req_up
                     if _PROXY.get('fresh_query'):
                         durl += '?' + _PROXY['fresh_query']
                     self.send_response(302)
@@ -593,7 +667,7 @@ def _start_proxy():
                         pass
                     return
 
-                url = _PROXY['base'] + req_path
+                url = _PROXY['base'] + req_up
                 if _PROXY.get('fresh_query'):
                     url += '?' + _PROXY['fresh_query']
 
@@ -608,7 +682,7 @@ def _start_proxy():
                             pass
                         # retry SINCRONO: qui serve il token nuovo PRIMA di ritentare
                         if _refresh_token():
-                            url = _PROXY['base'] + req_path + '?' + _PROXY['fresh_query']
+                            url = _PROXY['base'] + req_up + '?' + _PROXY['fresh_query']
                             r = sess.get(url, headers=h, timeout=(10, 60), stream=True)
 
                     if r.status_code in (403, 429):
@@ -637,17 +711,39 @@ def _start_proxy():
                             except Exception:
                                 pass
 
-                        if r.status_code in (403, 429) and host_up not in _RELAY_DIRECT:
-                            _RELAY_DIRECT.add(host_up)
-                            _ratelimit_mark(host_up)
+                    # [HEAL] prima di arrendersi in DIRECT: re-resolve /t/ e,
+                    # se il CDN assegnato cambia, ritenta subito sul nuovo host
+                    if r.status_code in (403, 429) and host_up not in _RELAY_DIRECT \
+                            and _hot_heal(host_up):
+                        new_host = urllib.parse.urlparse(_PROXY['base']).netloc
+                        try:
+                            r.close()
+                        except Exception:
+                            pass
+                        url = _PROXY['base'] + req_up
+                        if _PROXY.get('fresh_query'):
+                            url += '?' + _PROXY['fresh_query']
+                        s3 = _relay_session(_relay_cand_for(new_host))
+                        try:
+                            r = s3.get(url, headers=h, timeout=(10, 60), stream=True)
+                            logger.info('vidxgo hot-heal retry su %s -> HTTP %s'
+                                        % (new_host, r.status_code))
+                        except Exception as e:
+                            logger.error('vidxgo hot-heal retry exc: %s' % str(e)[:120])
+
+                    if r.status_code in (403, 429):
+                        cur_host = urllib.parse.urlparse(_PROXY['base']).netloc
+                        if cur_host not in _RELAY_DIRECT:
+                            _RELAY_DIRECT.add(cur_host)
+                            _ratelimit_mark(cur_host)
                             logger.error('vidxgo CDN %s blocca tutte le fingerprint '
-                                         '-> DIRECT mode' % host_up)
+                                         '-> DIRECT mode' % cur_host)
                             try:
                                 r.close()
                             except Exception:
                                 pass
                             _refresh_token()
-                            durl = _PROXY['base'] + req_path
+                            durl = _PROXY['base'] + req_up
                             if _PROXY.get('fresh_query'):
                                 durl += '?' + _PROXY['fresh_query']
                             self.send_response(302)
@@ -656,7 +752,7 @@ def _start_proxy():
                             self.end_headers()
                             return
                 except Exception as e:
-                    # [NET-FIX] anche qui: errore rete = log compatto
+                    # [NET-FIX] errore rete = log compatto
                     if _is_net_error(e):
                         _NET_FAIL[0] = time.time()
                         logger.error('vidxgo relay: rete irraggiungibile (%s)'
@@ -915,6 +1011,10 @@ def get_video_url(page_url, premium=False, user='', password='', video_password=
         _PROXY['t_url'] = ''
         _PROXY['expire_ms'] = 0
         _PROXY['hb_type'] = 'series' if is_episode else 'movie'
+
+        # [HEAL] ripristina lo stato mappa/timeout a ogni nuovo play
+        _HEAL['t'] = 0.0
+        _PATH_MAP[0] = _PATH_MAP[1] = ''
 
         if is_episode:
             candidates = [HOST + '/t/' + '/'.join(path_parts[:3]),

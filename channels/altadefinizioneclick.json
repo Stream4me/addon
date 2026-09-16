@@ -2,10 +2,10 @@
     "id": "altadefinizioneclick",
     "name": "AltadefinizioneClick",
     "active": true,
-    "language": ["ita","sub-ita"],
+    "language": ["ita"],
     "thumbnail": "altadefinizioneclick.png",
     "bannermenu": "altadefinizioneciclk.png",
-    "categories": ["tvshow","movie","vos"],
+    "categories": ["tvshow","movie"],
     "not_active":["include_in_newest_series"],
     "settings": []
 }
