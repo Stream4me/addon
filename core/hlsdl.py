@@ -2,13 +2,10 @@
 # ------------------------------------------------------------
 # core/hlsdl.py — download HLS (m3u8) -> file locale
 #
-# ffmpeg (se presente) : remux .mp4 con -c copy (gestisce AES-128)
-# fallback Python      : segmenti IN PARALLELO -> .ts (niente AES-128)
-#
-# Su questo OSMC ffmpeg NON e' installato di proposito: si usa sempre
-# il fallback Python (il .ts si legge benissimo in Kodi).
-#
-# Chiamato da specials/downloads.py::download_hls()
+# ffmpeg (se presente) : remux .mp4 con -c copy (via preferita)
+# fallback Python      : segmenti IN PARALLELO -> .ts
+#                        ADES-128 SUPPORTATO: decifra con pycryptodome
+#                        o cryptography (cloudscraper porta gia' il primo)
 # ------------------------------------------------------------
 
 import os, re, time, subprocess, traceback
@@ -16,6 +13,8 @@ from platformcode import logger
 
 FFMPEG = 'ffmpeg'      # percorso completo se un giorno lo installi
 WORKERS = 6            # connessioni parallele nel fallback Python
+
+_AES_BACKEND = None
 
 
 def _notify(msg):
@@ -32,7 +31,7 @@ def _progress():
         import xbmcgui
         return xbmcgui.DialogProgressBG()
     except Exception:
-        class _N:                              # stub se xbmcgui non c'e'
+        class _N:
             def create(self, *a, **k): pass
             def update(self, *a, **k): pass
             def close(self, *a, **k): pass
@@ -40,7 +39,7 @@ def _progress():
 
 
 def _abs(base, u):
-    """Risolve URL relativi dei segmenti contro l'URL della playlist."""
+    """Risolve URL relativi (segmenti/key/map) contro l'URL della playlist."""
     u = u.strip()
     if u.startswith('http'):
         return u
@@ -49,11 +48,63 @@ def _abs(base, u):
     return base.rsplit('/', 1)[0] + '/' + u
 
 
+# ---------------------------------------------------------- AES-128 ----
+
+def _aes_backend():
+    """Trova un backend AES: pycryptodome (gia' usato da cloudscraper)
+    o cryptography. (nome, modulo/oggetti) oppure (None, None)."""
+    global _AES_BACKEND
+    if _AES_BACKEND is not None:
+        return _AES_BACKEND
+    try:
+        from Crypto.Cipher import AES as _AES
+        _AES_BACKEND = ('pc', _AES)
+    except ImportError:
+        try:
+            from cryptography.hazmat.primitives.ciphers import (Cipher as _C,
+                                                                algorithms as _al,
+                                                                modes as _mo)
+            _AES_BACKEND = ('cg', (_C, _al, _mo))
+        except ImportError:
+            _AES_BACKEND = (None, None)
+    return _AES_BACKEND
+
+
+def _aes_decrypt(key, iv, data):
+    """AES-128-CBC decrypt + strip PKCS7 (i segmentatori HLS usano PKCS7)."""
+    name, obj = _aes_backend()
+    if name == 'pc':
+        out = obj.new(key, obj.MODE_CBC, iv).decrypt(data)
+    elif name == 'cg':
+        C, al, mo = obj
+        d = C(al.AES(key), mo.CBC(iv)).decryptor()
+        out = d.update(data) + d.finalize()
+    else:
+        raise RuntimeError('nessun backend AES disponibile')
+    n = out[-1] if out else 0
+    if 1 <= n <= 16 and out.endswith(bytes([n]) * n):
+        out = out[:-n]
+    return out
+
+
+def _parse_ext_x_key(line):
+    d = {'method': 'NONE', 'uri': None, 'iv': None}
+    m = re.search(r'METHOD=([^,\s]+)', line)
+    if m:
+        d['method'] = m.group(1)
+    m = re.search(r'URI="([^"]+)"', line)
+    if m:
+        d['uri'] = m.group(1)
+    m = re.search(r'IV=0[xX]([0-9a-fA-F]+)', line)
+    if m:
+        d['iv'] = bytes.fromhex(m.group(1).zfill(32))[:16]   # pad a sx -> 16 byte
+    return d
+
+
 # ------------------------------------------------------------ ffmpeg ----
 
 def download_hls_ffmpeg(m3u8_url, dest, headers=None, ua=None):
-    """Remux senza ricodifica. Su questo sistema ffmpeg non c'e' di
-    proposito: la funzione resta per chi volesse installarlo."""
+    """Remux senza ricodifica. Se ffmpeg non c'e', ritorna None -> fallback."""
     cmd = [FFMPEG, '-hide_banner', '-loglevel', 'error', '-nostdin', '-y']
     if ua:
         cmd += ['-user_agent', ua]
@@ -75,7 +126,7 @@ def download_hls_ffmpeg(m3u8_url, dest, headers=None, ua=None):
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         out, _ = p.communicate()
     except FileNotFoundError:
-        logger.info('hlsdl: ffmpeg non installato -> fallback Python')  # [FIX] info, non errore
+        logger.info('hlsdl: ffmpeg non installato -> fallback Python')
         return None
     except Exception:
         logger.error('hlsdl ffmpeg: ' + traceback.format_exc()[-300:])
@@ -96,11 +147,8 @@ def download_hls_ffmpeg(m3u8_url, dest, headers=None, ua=None):
 # ------------------------------------------------------------ python ----
 
 def download_hls_python(m3u8_url, dest_ts, headers=None, ua=None, workers=WORKERS):
-    """Fallback senza ffmpeg: segmenti IN PARALLELO (ThreadPoolExecutor),
-    scritti IN ORDINE (map() preserva l'ordine -> .ts coerente).
-    Sessione con keep-alive: una connessione per worker -> il DNS del
-    proxy si risolve poche volte, non per segmento.
-    Limiti: niente AES-128 (playlist cifrate), niente resume."""
+    """Fallback senza ffmpeg: segmenti IN PARALLELO, scritti IN ORDINE
+    (map() preserva l'ordine -> .ts coerente). AES-128 supportato."""
     import requests
     from requests.adapters import HTTPAdapter
     from concurrent.futures import ThreadPoolExecutor
@@ -134,21 +182,68 @@ def download_hls_python(m3u8_url, dest_ts, headers=None, ua=None, workers=WORKER
         best = max(pairs, key=lambda p: int(p[0]))[1].strip()
         data = get(_abs(m3u8_url, best))
 
-    if re.search(r'#EXT-X-KEY:METHOD=(?!NONE)', data):
-        logger.error('hlsdl: playlist cifrata (AES-128): serve ffmpeg')
-        _notify('playlist cifrata: installa ffmpeg')
-        return None
+    # --- parsing playlist: segmenti + chiavi correnti + sequence ---
+    segs = []          # (url, key_dict|None, media_sequence)
+    seq = 0
+    cur_key = None
+    for line in data.splitlines():
+        line = line.strip()
+        if line.startswith('#EXT-X-MEDIA-SEQUENCE:'):
+            try:
+                seq = int(line.split(':', 1)[1])
+            except Exception:
+                seq = 0
+        elif line.startswith('#EXT-X-KEY:'):
+            k = _parse_ext_x_key(line)
+            if k['method'] in ('NONE', ''):
+                cur_key = None
+            elif k['method'] == 'AES-128' and k['uri']:
+                cur_key = k
+            else:
+                logger.error('hlsdl: metodo chiave non supportato: %s (serve ffmpeg)'
+                             % k['method'])
+                _notify('cifratura non supportata: installa ffmpeg')
+                return None
+        elif line and not line.startswith('#'):
+            segs.append((_abs(m3u8_url, line), cur_key, seq))
+            seq += 1
 
-    m = re.search(r'#EXT-X-MAP:URI="?([^",\s]+)"?', data)   # fMP4: init segment
-    init_uri = _abs(m3u8_url, m.group(1)) if m else None
-
-    segs = [_abs(m3u8_url, l.strip()) for l in data.splitlines()
-            if l.strip() and not l.startswith('#')]
     if not segs:
         logger.error('hlsdl: nessun segmento nella playlist')
         return None
 
-    logger.info('hlsdl: %d segmenti, %d worker paralleli' % (len(segs), workers))
+    # --- chiavi AES: scaricate una volta per URI ---
+    keys = {}
+    encrypted = any(k is not None for _, k, _ in segs)
+    if encrypted:
+        name, _o = _aes_backend()
+        if name is None:
+            logger.error('hlsdl: playlist cifrata ma nessun backend AES '
+                         '(pycryptodome/cryptography). Installa ffmpeg.')
+            _notify('playlist cifrata: installa ffmpeg')
+            return None
+        logger.info('hlsdl: playlist cifrata AES-128, backend: %s' % name)
+        for _, k, _sq in segs:
+            if k and k['uri'] not in keys:
+                kb = get(_abs(m3u8_url, k['uri']), binary=True)
+                if len(kb) != 16:
+                    logger.error('hlsdl: chiave AES di %d byte (attesi 16)' % len(kb))
+                    return None
+                keys[k['uri']] = kb
+
+    m = re.search(r'#EXT-X-MAP:URI="?([^",\s]+)"?', data)   # fMP4: init segment
+    init_uri = _abs(m3u8_url, m.group(1)) if m else None
+
+    def fetch_one(args):
+        u, k, sq = args
+        b = get(u, binary=True)
+        if k is None:
+            return b
+        iv = k['iv'] or sq.to_bytes(16, 'big')   # IV assente -> media sequence
+        return _aes_decrypt(keys[k['uri']], iv, b)
+
+    logger.info('hlsdl: %d segmenti (%s), %d worker paralleli'
+                % (len(segs), 'cifrati' if encrypted else 'in chiaro', workers))
     prog = _progress()
     prog.create('HLS download', os.path.basename(dest_ts))
     ok = 0
@@ -157,7 +252,7 @@ def download_hls_python(m3u8_url, dest_ts, headers=None, ua=None, workers=WORKER
             if init_uri:
                 f.write(get(init_uri, binary=True))
             with ThreadPoolExecutor(max_workers=workers) as ex:
-                for content in ex.map(lambda u: get(u, binary=True), segs):
+                for content in ex.map(fetch_one, segs):
                     f.write(content)
                     ok += 1
                     prog.update(int(100.0 * ok / len(segs)))
