@@ -124,6 +124,18 @@ def resolve(domain):
 
 
 def _resolve(domain):
+    # [FIX] IP literals / localhost: DoH non puo' risolverli e brucia
+    # ~5s di timeout prima del fallback. Short-circuit.
+    d = (domain or '').strip().lower()
+    if d.startswith('[') and d.endswith(']'):
+        return d
+    if ':' in d:                                   # IPv6 letterale
+        return d
+    if d == 'localhost':
+        return '127.0.0.1'
+    parts = d.split('.')
+    if len(parts) == 4 and all(p.isdigit() and 0 <= int(p) <= 255 for p in parts):
+        return d                                   # IPv4 letterale
     cache = db['dnscache'].get(domain, {})
     ip = None
     if type(cache) != dict or (cache.get('datetime') and

@@ -35,7 +35,7 @@ FOLDER_MOVIES = config.get_setting("folder_movies")
 FOLDER_TVSHOWS = config.get_setting("folder_tvshows")
 TITLE_FILE = "[COLOR %s]| %i%% |[/COLOR] - %s"
 TITLE_TVSHOW = "[COLOR %s]| %i%% |[/COLOR] - %s [%s]"
-extensions_list = ['.aaf', '.3gp', '.asf', '.avi', '.flv', '.mpeg', '.m1v', '.m2v', '.m4v', '.mkv', '.mov', '.mpg', '.mpe', '.mp4', '.ogg', '.wmv']
+extensions_list = ['.aaf', '.3gp', '.asf', '.avi', '.flv', '.mpeg', '.m1v', '.m2v', '.m4v', '.mkv', '.mov', '.mpg', '.mpe', '.mp4', '.ts', '.ogg', '.wmv']
 
 
 def mainlist(item):
@@ -576,11 +576,90 @@ def sort_method(item):
     return value
 
 
+def download_hls(url, item):
+    """[HLS] Download di playlist HLS (m3u8 / vixcloud /playlist/).
+    Il Downloader a part salverebbe solo il manifesto (pochi KB di testo):
+    qui usiamo core/hlsdl (ffmpeg -c copy, fallback Python in .ts).
+    Ritorna lo stesso dict di download_from_url."""
+    from core import hlsdl
+    if PY3:
+        from urllib.parse import parse_qs
+    else:
+        from urlparse import parse_qs
+
+    info("HLS download:", url)
+
+    # headers alla Kodi: "url|Header1=val&Header2=val"
+    headers = []
+    if '|' in url:
+        url, qs = url.split('|', 1)
+        for k, v in parse_qs(qs).items():
+            headers.append([k, v[0]])
+
+    # path/nome identici a download_from_url (downloadFilename e' RELATIVO
+    # a DOWNLOAD_PATH: e' la convenzione di tutto il fork)
+    download_path = filetools.dirname(filetools.join(DOWNLOAD_PATH, item.downloadFilename))
+    file_name = filetools.basename(filetools.join(DOWNLOAD_PATH, item.downloadFilename))
+    base = re.sub(r'\.(mp4|ts|mkv|m3u8)$', '',
+                  filetools.join(download_path, file_name), flags=re.IGNORECASE)
+
+    if not filetools.exists(download_path):
+        filetools.mkdir(download_path)
+
+    update_json(item.path, {"downloadUrl": url, "downloadStatus": STATUS_CODES.downloading,
+                            "downloadProgress": 0, "downloadCompleted": 0})
+
+    # Referer dall'origine del item se non ci sono headers
+    # (vixcloud e' embeddato con referer=1: lo esige)
+    if not headers and getattr(item, 'url', ''):
+        m = re.match(r'(https?://[^/]+)', item.url)
+        if m:
+            headers = [['Referer', m.group(1) + '/']]
+
+    dest = hlsdl.download(url, base, headers=headers)
+
+    if dest and filetools.exists(dest):
+        size = os.path.getsize(dest)
+        status = STATUS_CODES.completed
+        if size < 5000000:                      # stessa sanita' del ramo Downloader
+            status = STATUS_CODES.error
+    else:
+        size, status = 0, STATUS_CODES.error
+
+    # downloadFilename resta RELATIVO a DOWNLOAD_PATH (come nel ramo Downloader)
+    if dest:
+        rel = filetools.join(filetools.dirname(item.downloadFilename),
+                             filetools.basename(dest))
+    else:
+        rel = item.downloadFilename
+
+    # [FIX] come nel ramo Downloader: rispetta "sposta in videoteca"
+    try:
+        if status == STATUS_CODES.completed and config.get_setting("library_move"):
+            move_to_libray(item.clone(downloadFilename=rel))
+    except Exception as e:
+        logger.error('[HLS] move_to_libray fallito: ' + str(e))
+    save_server_statistics(item.server, 0, status != STATUS_CODES.error)
+    update_json(item.path, {"downloadUrl": url, "downloadStatus": status,
+                            "downloadSize": size,
+                            "downloadCompleted": size if status == STATUS_CODES.completed else 0,
+                            "downloadProgress": 100 if status == STATUS_CODES.completed else 0,
+                            "downloadFilename": rel})
+    platformtools.dialog_notification('HLS', 'completato' if status == STATUS_CODES.completed
+                                      else 'errore', sound=False)
+    return {"downloadUrl": url, "downloadStatus": status, "downloadSize": size,
+            "downloadProgress": 100 if status == STATUS_CODES.completed else 0,
+            "downloadCompleted": size if status == STATUS_CODES.completed else 0,
+            "downloadFilename": rel}
+
 def download_from_url(url, item):
     info("Attempting to download:", url)
-    if '.m3u8' in url.lower().split('|')[0] or url.lower().startswith("rtmp"):
+    low = url.lower().split('|')[0]
+    if '.m3u8' in low or '/playlist/' in low:      # [HLS] /playlist/ vixcloud NON contiene .m3u8
+        return download_hls(url, item)
+    if url.lower().startswith("rtmp"):
         save_server_statistics(item.server, 0, False)
-        platformtools.dialog_notification('m3u8 Download',config.get_localized_string(60364), sound=False)
+        platformtools.dialog_notification('m3u8 Download', config.get_localized_string(60364), sound=False)
         return {"downloadStatus": STATUS_CODES.error}
 
     # We get the download path and the file name
