@@ -1,11 +1,13 @@
 {
     "id": "guardaserieicu",
-    "name": "Guarda Serie Icu",
+    "name": "GuardaserieX",
     "language": ["ita", "sub-ita"],
-    "active": false,
-    "thumbnail": "https://raw.githubusercontent.com/32Dexter/DexterRepo/master/media/guarda_serie.jpg",
+    "active": true,
+    "thumbnail": "https://guardaseriex.cyou/templates/Guardaserie/images/logo.svg",
     "banner": "",
     "categories": ["tvshow"],
     "not_active": ["include_in_newest"],
-    "settings": []
+    "settings": [],
+    "tiny": true
+
 }

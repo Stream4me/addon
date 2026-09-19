@@ -6,6 +6,7 @@
   "thumbnail": "animeunity.png",
   "banner": "animeunity.png",
   "categories": ["anime"],
+  "tiny": true,
   "settings": [
     {
       "id": "order",
