@@ -6,6 +6,7 @@
     "thumbnail": "animeworld.png",
     "banner": "animeworld.png",
     "categories": ["anime", "vos"],
+    "tiny": true,
     "settings": [
         {
             "id": "lang",

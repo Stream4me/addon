@@ -6,5 +6,7 @@
 	"thumbnail": "cb01.png",
 	"banner": "cb01.png",
 	"categories": ["tvshow", "movie", "vos", "documentary"],
-	"settings": []
+	"settings": [],
+        "tiny": true
+
 }

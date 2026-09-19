@@ -1,0 +1,14 @@
+{
+    "id": "cineblog001",
+    "name": "Cineblog001",
+    "language": ["ita", "sub-ita"],
+    "active": true,
+    "thumbnail": "https://cineblog001.center/templates/CB01/img/logo.png",
+    "banner": "",
+    "categories": ["tvshow", "movie", "vos"],
+    "not_active": ["include_in_newest"],
+    "settings": [],
+    "tiny": true
+
+}
+

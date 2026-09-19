@@ -7,5 +7,7 @@
     "banner": "",
     "categories": ["tvshow"],
     "not_active": ["include_in_newest"],
-    "settings": []
+    "settings": [],
+    "tiny": true
+
 }

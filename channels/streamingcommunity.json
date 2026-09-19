@@ -6,5 +6,7 @@
   "thumbnail": "streamingcommunity.png",
   "banner": "streamingcommunity.png",
   "categories": ["movie","tvshow"],
-  "settings": []
+  "settings": [],
+  "tiny": true
+
 }
