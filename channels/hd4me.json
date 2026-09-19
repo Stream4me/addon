@@ -7,5 +7,7 @@
     "banner": "hd4me.png",
     "categories": ["movie", "vos"],
     "not_active": ["include_in_newest"],
-    "settings": []
+    "settings": [],
+    "tiny": true
+
 }

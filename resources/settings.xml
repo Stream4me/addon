@@ -140,6 +140,7 @@
         <setting label="30000" type="lsep"/>
         <setting id="touch_view" label='30002' type="bool" default="false"/>
         <setting id="viewchange_notify" label='70514' type="bool" default="false"/>
+        <setting id="tiny_mode" label="Tiny Mode (solo canali essenziali)" type="bool" default="false"/>
         <!-- View Mode (hidden)-->
         <setting id="skin_name" label='Skin Name' type="text" default="skin.estuary" visible="false"/>
         <setting id="view_mode_home" type="action" label="70009" default= "Default, 0" visible="false"/>
