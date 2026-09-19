@@ -1,12 +1,20 @@
 {
     "id": "casacinema",
     "name": "Casacinema",
-    "language": ["ita", "sub-ita"],
-    "active": false,
+    "language": [
+        "ita",
+        "sub-ita"
+    ],
+    "active": true,
     "thumbnail": "casacinema.png",
     "banner": "casacinema.png",
-    "categories": ["tvshow", "movie"],
-    "not_active": ["include_in_newest"],
-    "settings": [
-    ]
+    "categories": [
+        "tvshow",
+        "movie"
+    ],
+    "not_active": [
+        "include_in_newest"
+    ],
+    "settings": [],
+    "tiny": true
 }

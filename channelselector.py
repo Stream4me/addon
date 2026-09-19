@@ -68,6 +68,10 @@ def getmainlist(view="thumb_"):
 def getchanneltypes(view="thumb_"):
     logger.debug()
 
+    # [TINY] tiny mode: niente categorie, lista piatta canali essenziali
+    if config.get_setting('tiny_mode'):
+        return filterchannels("all", view)
+
     # Category List
     channel_types = ["movie", "tvshow", "anime", "documentary", "vos", "live", "torrent",  "music"] #, "direct"
 
@@ -140,6 +144,16 @@ def filterchannels(category, view="thumb_"):
             if not channel_parameters["active"]:
                 continue
 
+            # [TINY] tiny mode: mostra solo i canali con tiny:true nel json
+            if config.get_setting('tiny_mode'):
+                try:
+                    import json as _json
+                    with open(channel_path) as _f:
+                        if not _json.load(_f).get('tiny', False):
+                            continue
+                except Exception:
+                    pass
+
             # The channel is skipped if it is not active and we are not activating / deactivating the channels
             channel_status = config.get_setting("enabled", channel_parameters["channel"])
 
@@ -183,7 +197,7 @@ def filterchannels(category, view="thumb_"):
     channelslist.sort(key=lambda item: item.title.lower().strip())
 
     if not config.get_setting("only_channel_icons"):
-        if category == "all":
+        if category == "all" and not config.get_setting("tiny_mode"):  # [TINY]
             channel_parameters = channeltools.get_channel_parameters('url')
             # If you prefer the banner and the channel has it, now change your mind
             if view == "banner_" and "banner" in channel_parameters:

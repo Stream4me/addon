@@ -4,8 +4,9 @@
 #
 # ffmpeg (se presente) : remux .mp4 con -c copy (via preferita)
 # fallback Python      : segmenti IN PARALLELO -> .ts
-#                        ADES-128 SUPPORTATO: decifra con pycryptodome
-#                        o cryptography (cloudscraper porta gia' il primo)
+#                        AES-128 SUPPORTATO: decifra con pycryptodome
+#                        (namespace 'Cryptodome' di Kodi o 'Crypto')
+#                        o cryptography
 # ------------------------------------------------------------
 
 import os, re, time, subprocess, traceback
@@ -50,23 +51,134 @@ def _abs(base, u):
 
 # ---------------------------------------------------------- AES-128 ----
 
+# Addon che possono fornire pycryptodome. NON includiamo
+# 'script.module.cryptography' perche' di solito non esiste su Kodi.
+# NB: nella maggior parte dei casi NON serve: il fork 'Cryptodome' e'
+# gia' presente in system/Python/Lib/site-packages ed e' importabile
+# direttamente.
+_AES_ADDON_CANDIDATES = (
+    ('script.module.pycryptodome',),
+)
+
+
+def _safe_addon_path(addon_id):
+    """Ritorna il path dell'addon se esiste, altrimenti None."""
+    try:
+        import xbmcaddon
+        return xbmcaddon.Addon(addon_id).getAddonInfo('path')
+    except Exception:
+        return None
+
+
+def _find_package_dir(base, package_name):
+    """Cerca ricorsivamente `package_name` sotto `base`.
+    Ritorna il path della directory che CONTIENE il package, oppure None."""
+    target = os.path.join(base, package_name)
+    if os.path.isdir(target):
+        return base
+    try:
+        for root, dirs, _files in os.walk(base):
+            depth = root[len(base):].count(os.sep)
+            if depth > 3:
+                dirs[:] = []
+                continue
+            if package_name in dirs:
+                return root
+    except Exception:
+        pass
+    return None
+
+
+def _try_import_pycryptodome():
+    """Import di pycryptodome. Ordine di tentativi:
+       1) 'Cryptodome' (fork ufficiale, namespace dedicato, gia' in Kodi)
+       2) 'Crypto'     (namespace classico)
+       3) come addon Kodi script.module.pycryptodome, cercando
+          sia 'Cryptodome' sia 'Crypto' nel suo path.
+    Ritorna il modulo AES oppure None."""
+    # 1) Cryptodome (di solito gia' importabile da Kodi)
+    try:
+        from Cryptodome.Cipher import AES as _AES
+        logger.info('hlsdl: pycryptodome trovato come Cryptodome')
+        return _AES
+    except ImportError:
+        pass
+
+    # 2) Crypto (pycryptodome classico)
+    try:
+        from Crypto.Cipher import AES as _AES
+        logger.info('hlsdl: pycryptodome trovato come Crypto')
+        return _AES
+    except ImportError:
+        pass
+
+    # 3) come addon Kodi: cerca 'Cryptodome' o 'Crypto' sotto il suo path
+    import sys
+    for (addon_id,) in _AES_ADDON_CANDIDATES:
+        base = _safe_addon_path(addon_id)
+        if not base:
+            logger.error('hlsdl: addon %s non trovato' % addon_id)
+            continue
+        logger.info('hlsdl: addon %s trovato in %s' % (addon_id, base))
+
+        for pkg_name in ('Cryptodome', 'Crypto'):
+            # rimuovi eventuali import falliti precedenti
+            for m in list(sys.modules):
+                if m == pkg_name or m.startswith(pkg_name + '.'):
+                    del sys.modules[m]
+            pkg_parent = _find_package_dir(base, pkg_name)
+            if not pkg_parent:
+                continue
+            logger.info('hlsdl: "%s" trovato in %s' % (pkg_name, pkg_parent))
+            if pkg_parent not in sys.path:
+                sys.path.insert(0, pkg_parent)
+            try:
+                if pkg_name == 'Cryptodome':
+                    from Cryptodome.Cipher import AES as _AES
+                else:
+                    from Crypto.Cipher import AES as _AES
+                return _AES
+            except ImportError as e:
+                logger.error('hlsdl: import %s.Cipher fallito: %s'
+                             % (pkg_name, e))
+
+    return None
+
+
+def _try_import_cryptography():
+    """Import di cryptography dal path normale (non come addon Kodi)."""
+    try:
+        from cryptography.hazmat.primitives.ciphers import (Cipher as _C,
+                                                            algorithms as _al,
+                                                            modes as _mo)
+        return (_C, _al, _mo)
+    except ImportError:
+        return None
+
+
 def _aes_backend():
-    """Trova un backend AES: pycryptodome (gia' usato da cloudscraper)
-    o cryptography. (nome, modulo/oggetti) oppure (None, None)."""
+    """Trova un backend AES: pycryptodome (Cryptodome/Crypto) o cryptography.
+    Ritorna (nome, obj) oppure (None, None). Cachato in _AES_BACKEND."""
     global _AES_BACKEND
     if _AES_BACKEND is not None:
         return _AES_BACKEND
-    try:
-        from Crypto.Cipher import AES as _AES
-        _AES_BACKEND = ('pc', _AES)
-    except ImportError:
-        try:
-            from cryptography.hazmat.primitives.ciphers import (Cipher as _C,
-                                                                algorithms as _al,
-                                                                modes as _mo)
-            _AES_BACKEND = ('cg', (_C, _al, _mo))
-        except ImportError:
-            _AES_BACKEND = (None, None)
+
+    aes = _try_import_pycryptodome()
+    if aes is not None:
+        _AES_BACKEND = ('pc', aes)
+        logger.info('hlsdl: AES backend = pycryptodome')
+        return _AES_BACKEND
+
+    cg = _try_import_cryptography()
+    if cg is not None:
+        _AES_BACKEND = ('cg', cg)
+        logger.info('hlsdl: AES backend = cryptography')
+        return _AES_BACKEND
+
+    logger.error('hlsdl: nessun backend AES disponibile. '
+                 'Verifica che Cryptodome sia in system/Python/Lib/site-packages, '
+                 'oppure installa ffmpeg.')
+    _AES_BACKEND = (None, None)
     return _AES_BACKEND
 
 
@@ -108,8 +220,10 @@ def download_hls_ffmpeg(m3u8_url, dest, headers=None, ua=None):
     cmd = [FFMPEG, '-hide_banner', '-loglevel', 'error', '-nostdin', '-y']
     if ua:
         cmd += ['-user_agent', ua]
-    for k, v in (headers or []):
-        cmd += ['-headers', '%s: %s\r\n' % (k, v)]     # CRLF obbligatorio
+    if headers:
+        # ffmpeg vuole TUTTI gli header in UNA sola stringa, CRLF-terminati.
+        hdr = ''.join('%s: %s\r\n' % (k, v) for k, v in headers)
+        cmd += ['-headers', hdr]
     cmd += ['-reconnect', '1', '-reconnect_streamed', '1',
             '-reconnect_delay_max', '5']
     cmd += ['-i', m3u8_url, '-c', 'copy',
@@ -219,8 +333,9 @@ def download_hls_python(m3u8_url, dest_ts, headers=None, ua=None, workers=WORKER
         name, _o = _aes_backend()
         if name is None:
             logger.error('hlsdl: playlist cifrata ma nessun backend AES '
-                         '(pycryptodome/cryptography). Installa ffmpeg.')
-            _notify('playlist cifrata: installa ffmpeg')
+                         '(pycryptodome/cryptography). Installa ffmpeg o '
+                         'verifica che Cryptodome sia disponibile.')
+            _notify('playlist cifrata: manca pycryptodome o ffmpeg')
             return None
         logger.info('hlsdl: playlist cifrata AES-128, backend: %s' % name)
         for _, k, _sq in segs:
