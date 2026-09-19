@@ -2,46 +2,63 @@
 # ------------------------------------------------------------
 # Canale per 'CineBlog001'  (https://cineblog001.center)
 # ------------------------------------------------------------
-# Rev: 1.4.5  (2026-09-19)
+# Rev: 1.4.7  (2026-09-19)
 #
-# Flusso:
-#   mainlist -> Film / Generi / Serie-TV / Sub-ITA
-#   peliculas -> action='check'
-#   check: fetch -> token; serie rilevata dal testo pagina (no probe)
-#          serie -> episodios (tier) / film -> findvideos (cached_data)
-#   episodios a TIER (stile guardaserie):
-#     1) PIANO B: sito gemello altadefinizionex — lista episodi
-#        NELL'HTML (data-episode="s-e") + token iframe; passa
-#        cloudscraper (provato ogni giorno dal canale ADX)
-#     2) probe() del server (fallback, 15s, cache 10min)
-#   findvideos: episodio diretto (/token/s/e) / film (var imdb JS)
-#       -> clone(server='vidxgo') -> support.server()
-#   + titoli episodio da TMDB (cache per stagione)
-#   + voce "Aggiungi alla Videoteca" in fondo agli episodi
-#   + Generi: infolabels/locandina/fanart TMDB dai dati discover
+# Menu: Film / Serie TV / Sub-ITA / Generi / Cerca
 #
-#   [ADD 1.4.5] peliculas_genere: it.infoLabels compilati con i dati
-#               discover GIA' in mano (plot/anno/rating/poster/fanart,
-#               genre_ids convertiti in nomi) — zero richieste extra
-#   [KEEP 1.4.4] tier ADX primo / probe fallback, titoli TMDB, videoteca
+# ROUTING (fondato sul segnale PROVATO: la categoria CB01):
+#   - listati: url->categoria mappata dal data; serie ('Serie TV' nel
+#     blocco) -> action='episodios' (invocazione diretta, stile
+#     casacinema); film -> 'findvideos'
+#   - generi: categoria letta direttamente dal match _CARD_RE
+#   - check(): router di fallback con _is_tv_page
+#   - episodios: guardia anti-falso-serie (cached_data film -> findvideos)
+#
+#   [FIX 1.4.7] FANART: i generi settavano infoLabels['fanart'] ma mai
+#               item.fanart (ignorata dal renderer); i listati non avevano
+#               alcun dato TMDB. Ora: generi -> it.fanart esplicito;
+#               listati + serie -> arricchimento con tmdb.set_infoLabels
+#               (pool condiviso + cache 2 livelli + dedup del core)
+#   [FIX 1.4.7] generi: item instradati come SERIE non ricevono piu'
+#               tmdb_id/plot del FILM omonimo trovato da discover/movie
+#               (avvelenava la videoteca); ricevono una ricerca tv dedicata
+#   [PERF 1.4.7] generi: ricerche CB01 in parallelo (ThreadPool, 4 worker
+#               ~25s -> ~6-8s); chiamate TMDB via Tmdb.get_json (cache+rate
+#               limit) invece di _fetch nudo
+#   [TUNE 1.4.7] TMDB_GENRE_PAGE 12 -> 20 (ora sostenibile: se CB01/CF
+#               protesta, riportare a 12)
+#   [ADD 1.4.7] episodios: fallback fanart/infolabels con 1 chiamata TMDB
+#               (cachata) se l'item non ne ha gia'
+#   [KEEP 1.4.6] guardia falso-serie, menu top, routing da categoria
+#   [KEEP 1.4.5] tier ADX->probe, videoteca
 # ------------------------------------------------------------
 
 from core import support, httptools
 from platformcode import logger
 import re, html, time, traceback, json, threading, sys
 
+try:
+    from urllib.parse import quote_plus
+except Exception:
+    quote_plus = None
+
+try:
+    from concurrent.futures import ThreadPoolExecutor
+except Exception:
+    ThreadPoolExecutor = None
+
 host = 'https://cineblog001.center'
 if host.endswith('/'):
     host = host[:-1]
 
-ADX_HOST = 'https://altadefinizionex.live'      # sito gemello (stesso vidxgo)
+ADX_HOST = 'https://altadefinizionex.live'
 TMDB_API_KEY = 'a1ab8b8669da03637a4b98fa39c39228'
-TMDB_GENRE_PAGE = 12
-PROBE_TIMEOUT = 15                               # solo fallback tier 2
+TMDB_GENRE_PAGE = 20          # [1.4.7] era 12: con le ricerche in parallelo si puo' alzare
+PROBE_TIMEOUT = 15
+_CB01_WORKERS = 4             # [1.4.7] parallelismo ricerche CB01 (prudente: Cloudflare)
 
 headers = [['Referer', host]]
 
-# nomi TMDB per i genre_ids del discover (infolabels dei Generi)
 TMDB_GENRE_NAMES = {
     28: 'Azione', 12: 'Avventura', 16: 'Animazione', 35: 'Commedia',
     80: 'Crime', 99: 'Documentario', 18: 'Drammatico', 10751: 'Famiglia',
@@ -87,8 +104,23 @@ def _fetch(url, attempts=2):
     return ''
 
 
+def _tmdb_get(url):
+    """[1.4.7] GET API TMDB con cache/rate-limit del core (Tmdb.get_json),
+    fallback a _fetch + json per robustezza."""
+    try:
+        from core import tmdb as core_tmdb
+        d = core_tmdb.Tmdb.get_json(url)
+        if isinstance(d, dict) and d:
+            return d
+    except Exception:
+        pass
+    try:
+        return json.loads(_fetch(url) or '{}')
+    except Exception:
+        return {}
+
+
 def _token_from_data(data):
-    """Token vidxgo: var imdb='tt...' prima, themoviedb fallback."""
     m = re.search(r"imdb\s*=\s*'(tt\d{6,10})'", data, re.I)
     if m:
         return m.group(1)[2:]
@@ -97,14 +129,44 @@ def _token_from_data(data):
 
 
 def _is_tv_page(data):
-    """Serie rilevata dal CONTENUTO pagina (niente probe per il routing)."""
-    return bool(re.search(
-        r'(?:serie\s*tv|stagione\s*\d|episodio\s*\d)', data[:30000], re.I))
+    """Serie SOLO se 'Serie TV' e' nel PRIMO blocco categoria della pagina
+    dettaglio (i meta dicono 'serie tv' su tutte le pagine: boilerplate)."""
+    m = re.search(r'class="text-uppercase">\s*<b>\s*([^<]{0,120})',
+                  data[:40000])
+    return bool(m and 'serie tv' in m.group(1).lower())
+
+
+def _clean_tmdb_title(txt):
+    """[1.4.7] Titolo ripulito per la ricerca TMDB: via tag [..], entita'
+    html e (anno) — l'anno va in infoLabels['year'], non nella query."""
+    txt = html.unescape(txt or '')
+    txt = re.sub(r'\[[^\]]*\]', '', txt)
+    txt = re.sub(r'\(\s*\d{4}\s*\)', '', txt)
+    return txt.strip()
+
+
+def _extract_year(txt):
+    m = re.search(r'\((\d{4})\)', html.unescape(txt or ''))
+    return m.group(1) if m else ''
+
+
+def _set_fanart(it):
+    """[1.4.7] Propaga fanart/thumbnail da infoLabels all'item (il renderer
+    legge item.fanart, non infoLabels)."""
+    try:
+        il = it.infoLabels or {}
+        if isinstance(il, dict):
+            if il.get('fanart') and not getattr(it, 'fanart', ''):
+                it.fanart = il['fanart']
+            if il.get('thumbnail') and not getattr(it, 'thumbnail', ''):
+                it.thumbnail = il['thumbnail']
+    except Exception:
+        pass
 
 
 # ------------------------- tier 2: probe server -------------------------
 
-_PROBE_CACHE = {}          # token -> (timestamp, {'mode','episodes'})
+_PROBE_CACHE = {}
 
 
 def _get_vdx():
@@ -153,11 +215,9 @@ def _probe_cached(token, max_age=600):
 # ------------------------- tier 1: sito gemello ADX -------------------------
 
 def _pairs_from_altadefinizione(title):
-    """TIER PRIMARIO: cerca la serie sul gemello ADX (stesso token
-    imdb-based vidxgo). Lista episodi nell'HTML: data-episode.
-    Ritorna (pairs, token)."""
+    """TIER PRIMARIO: la serie sul gemello ADX (stesso token imdb-based).
+    Lista episodi nell'HTML: data-episode="s-e". Ritorna (pairs, token)."""
     try:
-        from urllib.parse import quote_plus
         if not title:
             return [], None
         title = title.strip()
@@ -177,7 +237,6 @@ def _pairs_from_altadefinizione(title):
             logger.info('ADX: nessun risultato serie per %r' % title)
             return [], None
 
-        # match titolo (containment, case-insensitive); altrimenti il primo
         page_path = cands[0][0]
         tl = title.lower()
         for u, t in cands:
@@ -189,7 +248,6 @@ def _pairs_from_altadefinizione(title):
         if not pdata:
             return [], None
 
-        # token dall'iframe (salta i trailer)
         token = None
         for m in re.finditer(r'<iframe[^>]+src="https://v\.vidxgo\.co/(\d+)[^"]*"',
                              pdata):
@@ -204,7 +262,6 @@ def _pairs_from_altadefinizione(title):
             logger.info('ADX: token non trovato su ' + page_path)
             return [], None
 
-        # coppie (stagione, episodio) — stessa logica del canale ADX
         pair_set = {(int(a), int(b))
                     for a, b in re.findall(r'data-episode="(\d+)-(\d+)"', pdata)}
         embedded = {s for s, _ in pair_set}
@@ -233,24 +290,22 @@ def _pairs_from_altadefinizione(title):
 
 # ------------------------- titoli episodio (TMDB) -------------------------
 
-_TMDB_TV_CACHE = {}        # imdb -> tmdb tv id
-_TMDB_SEASON_CACHE = {}    # (tvid, season) -> {ep_number: title}
+_TMDB_TV_CACHE = {}
+_TMDB_SEASON_CACHE = {}
 
 
 def _episode_titles(token, pairs):
-    """Titoli episodio da TMDB (miglior sforzo): un errore qui non
-    deve MAI cancellare la lista."""
     titles = {}
     if not (token and token.isdigit()):
-        return titles                       # token tm<id>: skip
+        return titles
     imdb = 'tt' + token
     try:
+        # [1.4.7] via _tmdb_get: cache di core/tmdb anche qui
         tvid = _TMDB_TV_CACHE.get(imdb)
         if not tvid:
             u = ('https://api.themoviedb.org/3/find/%s'
                  '?api_key=%s&external_source=imdb_id' % (imdb, TMDB_API_KEY))
-            data = json.loads(_fetch(u) or '{}')
-            tv = (data.get('tv_results') or [{}])[0]
+            tv = (_tmdb_get(u).get('tv_results') or [{}])[0]
             tvid = tv.get('id')
             if tvid:
                 _TMDB_TV_CACHE[imdb] = tvid
@@ -262,7 +317,7 @@ def _episode_titles(token, pairs):
             if eps is None:
                 u = ('https://api.themoviedb.org/3/tv/%d/season/%d'
                      '?api_key=%s&language=it' % (tvid, sn, TMDB_API_KEY))
-                data = json.loads(_fetch(u) or '{}')
+                data = _tmdb_get(u)
                 eps = {}
                 for ep in data.get('episodes', []):
                     try:
@@ -289,6 +344,7 @@ def mainlist(item):
     search = ''
     return locals()
 
+
 # ------------------------- listati -------------------------
 
 @support.scrape
@@ -296,20 +352,68 @@ def peliculas(item):
     raw = _fetch(item.url, attempts=3)
     data = raw or ''
 
+    # mappa url->categoria (segnale PROVATO per il routing)
+    urlmap = {}
+    for m in _CARD_RE.finditer(data):
+        urlmap[m.group('url')] = (m.group('category') or '')
+
     patron = _CARD_RE.pattern
     patronNext = r'<a\s+href="([^"]+)"[^>]*>&raquo;</a>'
-    action = 'check'
+
+    def itemHook(it):
+        it.cb01_category = urlmap.get(it.url, '')
+        return it
+
+    def itemlistHook(itemlist):
+        out = []
+        for it in itemlist:
+            cat = (getattr(it, 'cb01_category', '') or '').lower()
+            if 'serie tv' in cat:
+                it.action = 'episodios'
+                it.contentType = 'tvshow'      # [1.4.7] serve a tmdb.set_infoLabels
+                it.contentTitle = getattr(it, 'fulltitle', '') or it.title
+            else:
+                it.action = 'findvideos'
+                it.contentType = 'movie'
+            out.append(it)
+
+        # [1.4.7] arricchimento TMDB di TUTTE le card (fanart, plot, anno,
+        # voto, tmdb_id): ricerche in parallelo e cachiate dal core tmdb.
+        # Salto la voce di paginazione (ricerca TMDB inutile).
+        targets = [it for it in out
+                   if 'pagina successiva' not in (it.title or '').lower()]
+        if targets:
+            try:
+                from core import tmdb as core_tmdb
+                for it in targets:
+                    raw_title = getattr(it, 'fulltitle', '') or it.title or ''
+                    clean = _clean_tmdb_title(raw_title)
+                    yr = _extract_year(raw_title)
+                    if yr and not it.infoLabels.get('year'):
+                        it.infoLabels['year'] = yr
+                    if it.contentType == 'tvshow':
+                        if not it.infoLabels.get('tvshowtitle'):
+                            it.infoLabels['tvshowtitle'] = clean
+                    if not it.infoLabels.get('title'):
+                        it.infoLabels['title'] = clean
+                core_tmdb.set_infoLabels(targets, seekTmdb=True)
+            except Exception:
+                logger.error('tmdb enrichment listati: '
+                             + traceback.format_exc()[-200:])
+            for it in targets:
+                _set_fanart(it)
+        return out
+
     return locals()
 
 
 def search(item, text):
     logger.info('search: ' + text)
-    item.contentType = 'movie'
-    from urllib.parse import quote_plus
-    item.url = host + "/index.php?do=search&subaction=search&story=" + quote_plus(text)
+    from urllib.parse import quote_plus as _qp
+    item.url = host + "/index.php?do=search&subaction=search&story=" + _qp(text)
     try:
         item.args = 'search'
-        return peliculas(item)
+        return peliculas(item)      # [1.4.7] contentType deciso per-card dall'itemlistHook
     except Exception:
         logger.error(traceback.format_exc())
     return []
@@ -318,23 +422,11 @@ def search(item, text):
 # ------------------------- generi (TMDB + ricerca CB01) -------------------------
 
 _GENRES = [
-    ('Azione',        28),
-    ('Animazione',    16),
-    ('Avventura',     12),
-    ('Commedia',      35),
-    ('Crime',         80),
-    ('Documentario',  99),
-    ('Drammatico',    18),
-    ('Famiglia',      10751),
-    ('Fantascienza',  878),
-    ('Fantasy',       14),
-    ('Guerra',        10752),
-    ('Horror',        27),
-    ('Poliziesco',    9648),
-    ('Romantico',     10749),
-    ('Storico',       36),
-    ('Thriller',      53),
-    ('Western',       37),
+    ('Azione', 28), ('Animazione', 16), ('Avventura', 12), ('Commedia', 35),
+    ('Crime', 80), ('Documentario', 99), ('Drammatico', 18), ('Famiglia', 10751),
+    ('Fantascienza', 878), ('Fantasy', 14), ('Guerra', 10752), ('Horror', 27),
+    ('Poliziesco', 9648), ('Romantico', 10749), ('Storico', 36),
+    ('Thriller', 53), ('Western', 37),
 ]
 
 
@@ -350,75 +442,121 @@ def genres(item):
     return itemlist
 
 
+def _cb01_match(title):
+    """[1.4.7] Ricerca CB01 per un titolo TMDB. Ritorna il match _CARD_RE o None."""
+    try:
+        surl = (host + '/index.php?do=search&subaction=search&story='
+                + quote_plus(title))
+        sdata = _fetch(surl)
+        return _CARD_RE.search(sdata) if sdata else None
+    except Exception:
+        logger.error('_cb01_match(%r): %s' % (title, traceback.format_exc()[-200:]))
+        return None
+
+
 def peliculas_genere(item):
-    """TMDB discover MOVIE (solo film per definizione) -> ricerca
-    per-titolo su CB01 -> primo match card.
-    [1.4.5] infolabels/locandina/fanart TMDB dai dati discover GIA'
-    in mano: zero richieste extra."""
     logger.info()
     gtid = getattr(item, 'gen_id', None)
     page = int(getattr(item, 'page', 1) or 1)
     if not gtid:
         return []
 
-    results = []
     api = ('https://api.themoviedb.org/3/discover/movie'
            '?api_key=%s&with_genres=%s&sort_by=popularity.desc'
            '&language=it&include_adult=false&page=%d'
            % (TMDB_API_KEY, gtid, page))
-    tdata = _fetch(api, attempts=3)
-    try:
-        results = json.loads(tdata).get('results', [])
-    except Exception:
+    # [1.4.7] via _tmdb_get: la discover finisce in cache del core
+    results = _tmdb_get(api).get('results', [])
+    if not results:
         logger.error('peliculas_genere: TMDB discover fallito')
 
-    from urllib.parse import quote_plus
-    itemlist = []
+    # [1.4.7] ricerche CB01 in PARALLELO (prima seriali: ~2s x titolo)
+    titles = []
     for r in results[:TMDB_GENRE_PAGE]:
-        title = (r.get('title') or r.get('original_title') or '').strip()
-        if not title:
-            continue
-        surl = (host + '/index.php?do=search&subaction=search&story='
-                + quote_plus(title))
-        sdata = _fetch(surl)
-        m = _CARD_RE.search(sdata)
+        t = (r.get('title') or r.get('original_title') or '').strip()
+        if t:
+            titles.append((r, t))
+
+    if ThreadPoolExecutor and len(titles) > 1:
+        try:
+            with ThreadPoolExecutor(max_workers=_CB01_WORKERS) as ex:
+                matches = list(ex.map(lambda tt: _cb01_match(tt[1]), titles))
+        except Exception:
+            logger.error('pool CB01 fallito, fallback seriale: '
+                         + traceback.format_exc()[-200:])
+            matches = [_cb01_match(t) for _, t in titles]
+    else:
+        matches = [_cb01_match(t) for _, t in titles]
+
+    itemlist = []
+    serie_items = []                      # [1.4.7] da arricchire con ricerca tv
+    for (r, title), m in zip(titles, matches):
         if not m:
             logger.info('peliculas_genere: no match su CB01: %s' % title)
             continue
-        it = item.clone(action='check',
+
+        cat = (m.group('category') or '').lower()
+        it = item.clone(action='findvideos',
                         url=m.group('url'),
                         title=m.group('title'))
-        it.contentTitle = m.group('title')
+        thumb = m.group('thumb') or ''
 
-        # [1.4.5] infolabels TMDB dai risultati discover (zero chiamate)
-        try:
-            names = ', '.join(TMDB_GENRE_NAMES.get(g, '')
-                              for g in r.get('genre_ids', [])[:3])
-            names = ', '.join(x for x in names.split(', ') if x)
-            it.infoLabels = {
-                'title': r.get('title') or '',
-                'originaltitle': r.get('original_title') or '',
-                'plot': r.get('overview') or '',
-                'year': int((r.get('release_date') or '0000')[:4] or 0),
-                'rating': r.get('vote_average') or '',
-                'tmdb_id': r.get('id') or '',
-                'genre': names,
-                'thumbnail': ('https://image.tmdb.org/t/p/original'
-                              + r['poster_path']) if r.get('poster_path') else '',
-                'fanart': ('https://image.tmdb.org/t/p/original'
-                           + r['backdrop_path']) if r.get('backdrop_path') else '',
-            }
-            # locandina TMDB (qualita' costante) con fallback CB01
-            if it.infoLabels['thumbnail']:
-                it.thumbnail = it.infoLabels['thumbnail']
-            else:
-                it.thumbnail = m.group('thumb') or ''
-        except Exception:
-            logger.error('infolabels discover: '
-                         + traceback.format_exc()[-200:])
-            it.thumbnail = m.group('thumb') or ''
+        poster = ('https://image.tmdb.org/t/p/original' + r['poster_path']) \
+                 if r.get('poster_path') else ''
+        backdrop = ('https://image.tmdb.org/t/p/original' + r['backdrop_path']) \
+                   if r.get('backdrop_path') else ''
 
+        if 'serie tv' in cat:
+            # [1.4.7] FIX: e' una SERIE ma discover/movie ha restituito un FILM
+            # omonimo: niente tmdb_id/plot/anno del film (avvelenavano la
+            # videoteca). Fanart provvisoria dal discover, poi ricerca tv.
+            it.action = 'episodios'
+            it.contentType = 'tvshow'
+            it.contentTitle = title
+            it.infoLabels = {'tvshowtitle': title, 'title': title}
+            if backdrop or poster:
+                it.fanart = backdrop or poster
+            serie_items.append(it)
+        else:
+            # infolabels TMDB dai risultati discover (zero chiamate extra)
+            try:
+                names = ', '.join(TMDB_GENRE_NAMES.get(g, '')
+                                  for g in r.get('genre_ids', [])[:3])
+                names = ', '.join(x for x in names.split(', ') if x)
+                it.infoLabels = {
+                    'title': r.get('title') or '',
+                    'originaltitle': r.get('original_title') or '',
+                    'plot': r.get('overview') or '',
+                    'year': int((r.get('release_date') or '0000')[:4] or 0),
+                    'rating': r.get('vote_average') or '',
+                    'tmdb_id': r.get('id') or '',
+                    'genre': names,
+                    'thumbnail': poster,
+                    # [1.4.7] FIX fanart: fallback al poster se manca il backdrop
+                    'fanart': backdrop or poster,
+                }
+            except Exception:
+                logger.error('infolabels discover: '
+                             + traceback.format_exc()[-200:])
+
+        # [1.4.7] FIX fanart: item.fanart esplicito (prima solo in infoLabels)
+        if (it.infoLabels or {}).get('thumbnail'):
+            it.thumbnail = it.infoLabels['thumbnail']
+        elif thumb:
+            it.thumbnail = thumb
+        _set_fanart(it)
         itemlist.append(it)
+
+    # [1.4.7] serie trovate nei generi: infolabels/fanart corretti (ricerca tv)
+    if serie_items:
+        try:
+            from core import tmdb as core_tmdb
+            core_tmdb.set_infoLabels(serie_items, seekTmdb=True)
+            for it in serie_items:
+                _set_fanart(it)
+        except Exception:
+            logger.error('tmdb enrichment serie (generi): '
+                         + traceback.format_exc()[-200:])
 
     if len(results) >= 20:
         nxt = item.clone(action='peliculas_genere')
@@ -429,20 +567,17 @@ def peliculas_genere(item):
     return itemlist
 
 
-# ------------------------- router serie/film -------------------------
+# ------------------------- router di fallback -------------------------
 
 def check(item):
-    """Router: serie dal testo pagina -> episodios (tier); film -> findvideos."""
+    """Router di fallback (entry indirette): _is_tv_page sul PRIMO
+    blocco categoria della pagina dettaglio."""
     data = _fetch(item.url, attempts=3)
     if not data:
         return []
     token = _token_from_data(data)
 
     if _is_tv_page(data):
-        if not token:
-            logger.error('check: serie senza token su ' + item.url)
-            _notify('serie: token non trovato')
-            return []
         item.cached_data = data
         item.vidxgo_token = token
         return episodios(item)
@@ -452,16 +587,36 @@ def check(item):
 
 
 def episodios(item):
-    """Lista episodi a TIER: 1) ADX (gemello, veloce) 2) probe (fallback).
-    + titoli TMDB + voce videoteca."""
+    """Lista episodi a TIER: 1) ADX 2) probe. + guardia anti-falso-serie."""
     logger.info()
+
+    # guardia: se abbiamo la pagina e dichiara FILM, esci
+    cd = getattr(item, 'cached_data', '') or ''
+    if cd and not _is_tv_page(cd):
+        logger.info('episodios: la pagina e\' un film -> findvideos')
+        return findvideos(item)
+
     token = getattr(item, 'vidxgo_token', None)
     title = getattr(item, 'contentTitle', '') or \
             getattr(item, 'fulltitle', '') or item.title
     pairs = getattr(item, 'vidxgo_pairs', None)
 
+    # [1.4.7] fallback infolabels/fanart con UNA chiamata TMDB (cachata):
+    # serve quando si entra da path non arricchiti (es. check()). Se l'item
+    # ha gia' fanart (listati/generi/enrichment) la chiamata si scherma da sola.
+    try:
+        if not getattr(item, 'fanart', ''):
+            from core import tmdb as core_tmdb
+            if not item.infoLabels.get('tvshowtitle'):
+                item.infoLabels['tvshowtitle'] = title
+            if not item.infoLabels.get('title'):
+                item.infoLabels['title'] = title
+            core_tmdb.set_infoLabels(item, seekTmdb=True)
+    except Exception:
+        logger.error('episodios tmdb fallback: ' + traceback.format_exc()[-200:])
+
     if not pairs:
-        # ---- TIER 1: PIANO B altadefinizionex (veloce, affidabile) ----
+        # ---- TIER 1: PIANO B altadefinizionex ----
         logger.info('episodios tier 1: PIANO B (sito gemello ADX)')
         pairs, alt_token = _pairs_from_altadefinizione(title)
         if pairs and alt_token:
@@ -469,25 +624,27 @@ def episodios(item):
             _PROBE_CACHE[token] = (time.time(),
                                    {'mode': 'tv', 'episodes': pairs})
 
-    if not pairs and token:
-        # ---- TIER 2: probe server (fallback) ----
-        logger.info('episodios tier 2: probe server')
-        info = _probe_cached(token)
-        if info and info.get('mode') == 'tv':
-            pairs = info['episodes']
-            logger.info('episodios tier 2: %d episodi da probe' % len(pairs))
+    if not pairs:
+        # ---- TIER 2: probe server ----
+        if not token:
+            data = _fetch(item.url)
+            token = _token_from_data(data) if data else None
+        if token:
+            logger.info('episodios tier 2: probe server')
+            info = _probe_cached(token)
+            if info and info.get('mode') == 'tv':
+                pairs = info['episodes']
+                logger.info('episodios tier 2: %d episodi' % len(pairs))
 
     if not pairs:
         logger.error('episodios: nessun episodio (ADX + probe)')
         _notify('episodi non disponibili ora, riprova')
         return []
-
     if not token:
-        logger.error('episodios: token mancante a fine tier')
+        logger.error('episodios: token mancante')
         _notify('token non trovato')
         return []
 
-    # titoli episodio (TMDB, best effort)
     try:
         titles = _episode_titles(token, pairs)
     except Exception:
@@ -496,7 +653,7 @@ def episodios(item):
 
     itemlist = []
     for s, e in pairs:
-        it = item.clone(action='findvideos')
+        it = item.clone(action='findvideos')   # eredita fanart/infolabels dall'item serie
         it.contentType = 'episode'
         it.contentSeason = s
         it.contentEpisode = e
@@ -508,7 +665,6 @@ def episodios(item):
             it.title += ' - ' + t
         itemlist.append(it)
 
-    # voce videoteca in fondo (il canale espone addToLibrary)
     cl = item.clone(action='addToLibrary')
     cl.contentType = 'tvshow'
     cl.contentTitle = title
@@ -523,7 +679,6 @@ def episodios(item):
 
 
 def addToLibrary(item):
-    """Instradato dal launcher (getattr(channel, item.action))."""
     from core import videolibrarytools
     return videolibrarytools.add_to_videolibrary(item, sys.modules[__name__])
 
@@ -539,7 +694,6 @@ def findvideos(item):
     s = int(getattr(item, 'contentSeason', 0) or 0)
     e = int(getattr(item, 'contentEpisode', 0) or 0)
 
-    # episodio diretto (da episodios: URL gia' pronto)
     if s and e and '/%d/%d' % (s, e) in (item.url or ''):
         it = item.clone(action='play', server='vidxgo')
         it.contentTitle = getattr(item, 'contentTitle', '') or item.title
@@ -551,13 +705,11 @@ def findvideos(item):
 
     embed_url = None
 
-    # V1: token dal JS (solo cifre)
     token = _token_from_data(data)
     if token:
         embed_url = 'https://v.vidxgo.co/' + token
         logger.info('findvideos: token: ' + token)
 
-    # V2: iframe vidxgo completo
     if not embed_url:
         for mm in re.finditer(r'<iframe[^>]+src=["\']([^"\']+)["\']', data, re.I):
             src = html.unescape(mm.group(1)).strip()
