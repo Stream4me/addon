@@ -13,147 +13,147 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Poedit 2.0.4\n"
-"Language: en_EN\n"
+"Language: it_IT\n"
 
 msgctxt "#20000"
 msgid "Stream4Me"
-msgstr ""
+msgstr "Stream4Me"
 
 msgctxt "#20001"
 msgid "eng"
-msgstr ""
+msgstr "ita"
 
 msgctxt "#30000"
 msgid "View"
-msgstr ""
+msgstr "Vista"
 
 msgctxt "#30001"
 msgid "Check for updates"
-msgstr ""
+msgstr "Verifica aggiornamenti"
 
 msgctxt "#30002"
 msgid "Enable touch view"
-msgstr ""
+msgstr "Abilita vista touch"
 
 msgctxt "#30003"
 msgid "Enable debug logging"
-msgstr ""
+msgstr "Abilita logging di debug"
 
 msgctxt "#30004"
 msgid "Automatically update channels"
-msgstr ""
+msgstr "Aggiorna automaticamente i canali"
 
 msgctxt "#30005"
 msgid "Video quality"
-msgstr ""
+msgstr "Qualità video"
 
 msgctxt "#30006"
 msgid "Ask"
-msgstr ""
+msgstr "Chiedi"
 
 msgctxt "#30007"
 msgid "Low"
-msgstr ""
+msgstr "Bassa"
 
 msgctxt "#30008"
 msgid "High"
-msgstr ""
+msgstr "Alta"
 
 msgctxt "#30009"
 msgid "Show only channels"
-msgstr ""
+msgstr "Mostra solo canali"
 
 msgctxt "#30010"
 msgid "Channel icons view"
-msgstr ""
+msgstr "Visualizzazione icone dei canali"
 
 msgctxt "#30011"
 msgid "Poster (vertical)"
-msgstr ""
+msgstr "Poster (verticale)"
 
 msgctxt "#30012"
 msgid "Banner (horizontal)"
-msgstr ""
+msgstr "Banner (orizzontale)"
 
 msgctxt "#30014"
 msgid "Username"
-msgstr ""
+msgstr "Username"
 
 msgctxt "#30015"
 msgid "Password"
-msgstr ""
+msgstr "Password"
 
 msgctxt "#30017"
 msgid "Download path"
-msgstr ""
+msgstr "Percorso download"
 
 msgctxt "#30018"
 msgid "Download list path"
-msgstr ""
+msgstr "Percorso lista downloads"
 
 msgctxt "#30019"
 msgid "Channels language"
-msgstr ""
+msgstr "Lingua canali"
 
 msgctxt "#30020"
 msgid "Check if the links exist"
-msgstr ""
+msgstr "Controlla se i link esistono"
 
 msgctxt "#30021"
 msgid "Number of links to check"
-msgstr ""
+msgstr "Numero di link da verificare"
 
 msgctxt "#30022"
 msgid "YES"
-msgstr ""
+msgstr "SÌ"
 
 msgctxt "#30023"
 msgid "NO"
-msgstr ""
+msgstr "NO"
 
 msgctxt "#30024"
 msgid "Contextual menu"
-msgstr ""
+msgstr "Menu contestuale"
 
 msgctxt "#30025"
 msgid "Other possible results"
-msgstr ""
+msgstr "Altri possibili risultati:"
 
 msgctxt "#30026"
 msgid "Direct"
-msgstr ""
+msgstr "Diretta"
 
 msgctxt "#30027"
 msgid "SetResolvedUrl"
-msgstr ""
+msgstr "Segnalibro"
 
 msgctxt "#30028"
 msgid "Built-in"
-msgstr ""
+msgstr "Built-in"
 
 msgctxt "#30029"
 msgid "Download and play"
-msgstr ""
+msgstr "Download e riproduci"
 
 msgctxt "#30030"
 msgid "Advanced options"
-msgstr ""
+msgstr "Opzioni avanzate"
 
 msgctxt "#30031"
 msgid "Continue download?"
-msgstr ""
+msgstr "Continuare il download?"
 
 msgctxt "#30032"
 msgid "Select YES to continue downloading in the background"
-msgstr ""
+msgstr "Seleziona SI per continuare il download in background"
 
 msgctxt "#30033"
 msgid "Internal Client"
-msgstr ""
+msgstr "Client Interno"
 
 msgctxt "#30034"
 msgid "Select the video, or 'Cancel' for all"
-msgstr ""
+msgstr "Seleziona il video o 'Annulla' per tutti"
 
 msgctxt "#30035"
 msgid "ERROR in the Client"
@@ -165,39 +165,39 @@ msgstr "Modulo non trovato o incompatibile con il dispositivo."
 
 msgctxt "#30037"
 msgid "Delete Folder"
-msgstr ""
+msgstr "Elimina Cartella"
 
 msgctxt "#30038"
 msgid "Do you really want to delete the %s folder and all its contents?"
-msgstr ""
+msgstr "Vuoi veramente eliminare la cartella %s e tutto il suo contenuto?"
 
 msgctxt "#30039"
 msgid "Delete File"
-msgstr ""
+msgstr "Elimina File"
 
 msgctxt "#30040"
 msgid "Do you really want to delete the %s file?"
-msgstr ""
+msgstr "Vuoi veramente eliminare il file %s?"
 
 msgctxt "#30041"
 msgid "Select a value"
-msgstr ""
+msgstr "Seleziona un valore"
 
 msgctxt "#30043"
 msgid "Force view mode"
-msgstr ""
+msgstr "Forza modalità di visualizzazione"
 
 msgctxt "#30044"
 msgid "Play mode"
-msgstr ""
+msgstr "Modalità di riproduzione"
 
 msgctxt "#30045"
 msgid "Resume from:"
-msgstr ""
+msgstr "Riprendi da:"
 
 msgctxt "#30046"
 msgid "Resume from start"
-msgstr ""
+msgstr "Riprendi dall'inizio"
 
 msgctxt "#30047"
 msgid "Show resume from How:"
@@ -213,71 +213,71 @@ msgstr "Finestra della skin"
 
 msgctxt "#30050"
 msgid "Server connection error"
-msgstr ""
+msgstr "Errore connessione server"
 
 msgctxt "#30051"
 msgid "Website error message (http code %d)"
-msgstr ""
+msgstr "Messaggio d'errore sito web (codice http %d)"
 
 msgctxt "#30055"
 msgid "Video not available"
-msgstr ""
+msgstr "Video non disponibile"
 
 msgctxt "#30057"
 msgid "The video has been removed from %s or the website has changed structure"
-msgstr ""
+msgstr "Il video è stato rimosso da %s oppure il sito ha cambiato struttura"
 
 msgctxt "#30058"
 msgid "Try another server or channel"
-msgstr ""
+msgstr "Prova un altro server o canale"
 
 msgctxt "#30065"
 msgid "Unsopported Server"
-msgstr ""
+msgstr "Server non supportato"
 
 msgctxt "#30067"
 msgid "Path"
-msgstr ""
+msgstr "Percorso"
 
 msgctxt "#30068"
 msgid "Filter by servers"
-msgstr ""
+msgstr "Filtra per server"
 
 msgctxt "#30069"
 msgid "Priority to quality"
-msgstr ""
+msgstr "Priorità alla qualità"
 
 msgctxt "#30100"
 msgid "Settings"
-msgstr ""
+msgstr "Impostazioni"
 
 msgctxt "#30101"
 msgid "Downloads"
-msgstr ""
+msgstr "Downloads"
 
 msgctxt "#30102"
 msgid "Favorites"
-msgstr ""
+msgstr "Preferiti"
 
 msgctxt "#30103"
 msgid "Global search"
-msgstr ""
+msgstr "Ricerca globale"
 
 msgctxt "#30104"
 msgid "Help"
-msgstr ""
+msgstr "Aiuto"
 
 msgctxt "#30105"
 msgid "Removed from favorites"
-msgstr ""
+msgstr "Rimosso dai preferiti"
 
 msgctxt "#30108"
 msgid "added to favorites"
-msgstr ""
+msgstr "aggiunto ai preferiti"
 
 msgctxt "#30109"
 msgid "added to download list"
-msgstr ""
+msgstr "aggiunto/i alla lista download"
 
 msgctxt "#30110"
 msgid " Episodes of: "
@@ -285,988 +285,987 @@ msgstr " Episodi di: "
 
 msgctxt "#30112"
 msgid "Enter title to search"
-msgstr ""
+msgstr "Inserisci il titolo da cercare"
 
 msgctxt "#30118"
 msgid "Channels"
-msgstr ""
+msgstr "Canali"
 
 msgctxt "#30119"
 msgid "Choose a Category"
-msgstr ""
+msgstr "Categorie"
 
 msgctxt "#30121"
 msgid "All"
-msgstr ""
+msgstr "Tutti i canali"
 
 msgctxt "#30122"
 msgid "Movies"
-msgstr ""
+msgstr "Film"
 
 msgctxt "#30123"
 msgid "TV shows"
-msgstr ""
+msgstr "Serie TV"
 
 msgctxt "#30124"
 msgid "Anime"
-msgstr ""
+msgstr "Anime"
 
 msgctxt "#30125"
 msgid "Documentaries"
-msgstr ""
+msgstr "Documentari"
 
 msgctxt "#30126"
 msgid "This video needs inputstream.adaptive addon, but automatic install failed, install it manually"
-msgstr ""
+msgstr "Questo video necessita dell'addon inputstream.adaptive ma l'installazione automatica è fallita, installalo manualmente."
 
 msgctxt "#30130"
 msgid "News"
-msgstr ""
+msgstr "Novità"
 
 msgctxt "#30131"
 msgid "Video library"
-msgstr ""
+msgstr "Videoteca"
 
 msgctxt "#30132"
 msgid "It seems that the Channel %s no longer exists."
-msgstr ""
+msgstr "Sembra che il canale %s non esista più."
 
 msgctxt "#30133"
 msgid "Do you want to remove ALL links from this channel?"
-msgstr ""
+msgstr "Vuoi rimuovere TUTTI i collegamenti da questo canale?"
 
 msgctxt "#30135"
 msgid "The movie "%s" has been added to the video library"
-msgstr ""
+msgstr "Il film "%s" è stato aggiunto alla videoteca"
 
 msgctxt "#30136"
 msgid "Original version"
-msgstr ""
+msgstr "Versione originale"
 
 msgctxt "#30137"
 msgid "Direct"
-msgstr ""
+msgstr "Diretto"
 
 msgctxt "#30138"
 msgid "Live"
-msgstr ""
+msgstr "Live"
 
 msgctxt "#30139"
 msgid "Music"
-msgstr ""
+msgstr "Musica"
 
 msgctxt "#30140"
 msgid "Seasons"
-msgstr ""
+msgstr "Stagioni"
 
 msgctxt "#30141"
 msgid "Skin not supported"
-msgstr ""
+msgstr "Skin non supportata"
 
 msgctxt "#30142"
 msgid "Skin %s is not currently supported"
-msgstr ""
+msgstr "La skin %s non è attualmente supportata"
 
 msgctxt "#30151"
 msgid "Watch the video"
-msgstr ""
+msgstr "Guarda il video"
 
 msgctxt "#30153"
 msgid "Download"
-msgstr ""
+msgstr "Download"
 
 msgctxt "#30154"
 msgid "Remove from favorites"
-msgstr ""
+msgstr "Rimuovi dai preferiti"
 
 msgctxt "#30155"
 msgid "Add to favorites"
-msgstr ""
+msgstr "Aggiungi ai preferiti"
 
 msgctxt "#30161"
 msgid "Add to video library"
-msgstr ""
+msgstr "Aggiungi alla videoteca"
 
 msgctxt "#30162"
 msgid "Search for trailer"
-msgstr ""
+msgstr "Cerca il trailer"
 
 msgctxt "#30163"
 msgid "Choose an option"
-msgstr ""
+msgstr "Scegli un'opzione"
 
 msgctxt "#30164"
 msgid "Delete this file"
-msgstr ""
+msgstr "Cancella questo file"
 
-
-msgctxt "#3016"
+msgctxt "#30165"
 msgid "Modify server: %s"
-msgstr ""
+msgstr "Modifica server: %s"
 
 msgctxt "#30200"
 msgid "Square"
-msgstr ""
+msgstr "Square"
 
 msgctxt "#30300"
 msgid "Delete also downloaded files?"
-msgstr ""
+msgstr "Cancellare anche i file scaricati?"
 
 msgctxt "#30501"
 msgid "Path and folders"
-msgstr ""
+msgstr "Percorso e cartelle"
 
 msgctxt "#30974"
 msgid "Search in Channels"
-msgstr ""
+msgstr "Cerca nei Canali"
 
 msgctxt "#30975"
 msgid "Movie Info"
-msgstr ""
+msgstr "Informazioni Film"
 
 msgctxt "#30976"
 msgid "TV shows - Airing Today"
-msgstr ""
+msgstr "Serie TV - In Onda"
 
 msgctxt "#30977"
 msgid "Last Episodes - On-Air"
-msgstr ""
+msgstr "Ultimi Episodi - In Onda"
 
 msgctxt "#30978"
 msgid "New TV shows"
-msgstr ""
+msgstr "Nuove Serie TV"
 
 msgctxt "#30979"
 msgid "Character Info"
-msgstr ""
+msgstr "Informazioni Persona"
 
 msgctxt "#30980"
 msgid "Search by Title"
-msgstr ""
+msgstr "Cerca per Titolo"
 
 msgctxt "#30981"
 msgid "Search by Person"
-msgstr ""
+msgstr "Cerca per Persona"
 
 msgctxt "#30982"
 msgid "Search by Company"
-msgstr ""
+msgstr "Cerca per Società"
 
 msgctxt "#30983"
 msgid "Now Playing"
-msgstr ""
+msgstr "Oggi in Sala"
 
 msgctxt "#30984"
 msgid "Popular"
-msgstr ""
+msgstr "Popolari"
 
 msgctxt "#30985"
 msgid "Top Rated"
-msgstr ""
+msgstr "Migliori"
 
 msgctxt "#30986"
 msgid "Search by Collection"
-msgstr ""
+msgstr "Ricerca per Collezione"
 
 msgctxt "#30987"
 msgid "Genre"
-msgstr ""
+msgstr "Genere"
 
 msgctxt "#30988"
 msgid "Search by Year"
-msgstr ""
+msgstr "Ricerca per Anno"
 
 msgctxt "#30989"
 msgid "Search Similar Movies"
-msgstr ""
+msgstr "Cerca Film Simili"
 
 msgctxt "#30990"
 msgid "Search TV show"
-msgstr ""
+msgstr "Cerca serie TV"
 
 msgctxt "#30991"
 msgid "Library"
-msgstr ""
+msgstr "Videoteca"
 
 msgctxt "#30992"
 msgid "Next Page"
-msgstr ""
+msgstr "Successivo"
 
 msgctxt "#30993"
 msgid "Looking for %s..."
-msgstr ""
+msgstr "Ricerca di %s..."
 
 msgctxt "#30994"
 msgid "Searching in %s..."
-msgstr ""
+msgstr "Sto cercando in %s..."
 
 msgctxt "#30995"
 msgid "%d found so far: %s"
-msgstr ""
+msgstr "%d trovati sinora: %s"
 
 msgctxt "#30996"
 msgid "Most Voted"
-msgstr ""
+msgstr "Più Votati"
 
 msgctxt "#30997"
 msgid "Academy Awards"
-msgstr ""
+msgstr "Premi Oscar"
 
 msgctxt "#30998"
 msgid "Quick menu shortcut"
-msgstr ""
+msgstr "Scorciatoia menu rapido"
 
 msgctxt "#30999"
 msgid "Assign key"
-msgstr ""
+msgstr "Assegna tasto"
 
 msgctxt "#31000"
 msgid "Unassign key"
-msgstr ""
+msgstr "Disassegna tasto"
 
 msgctxt "#50000"
 msgid "Sagas"
-msgstr ""
+msgstr "Saghe"
 
 msgctxt "#50001"
 msgid "On Air"
-msgstr ""
+msgstr "Adesso in onda"
 
 msgctxt "#50002"
 msgid "Latest News"
-msgstr ""
+msgstr "Novità"
 
 msgctxt "#50003"
 msgid "Loading"
-msgstr ""
+msgstr "Caricamento"
 
 msgctxt "#50004"
 msgid "Path: "
-msgstr ""
+msgstr "Percorso: "
 
 msgctxt "#50005"
 msgid "Delete this channel?"
-msgstr ""
+msgstr "Eliminare questo canale?"
 
 msgctxt "#59970"
 msgid "Synchronization with Trakt started"
-msgstr ""
+msgstr "Sincronizzazione con Trakt iniziata"
 
 msgctxt "#59972"
 msgid "Search for: '%s' | Time: %2.f seconds"
-msgstr ""
+msgstr "Ricerca di: '%s' | Tempo: %2.f secondi"
 
 msgctxt "#59973"
 msgid "Search Cancelled"
-msgstr ""
+msgstr "Ricerca annullata"
 
 msgctxt "#59974"
 msgid "Choose categories"
-msgstr ""
+msgstr "Scegli categorie"
 
 msgctxt "#59975"
 msgid "Subtitles"
-msgstr ""
+msgstr "Sottotitolati"
 
 msgctxt "#59976"
 msgid "Latin"
-msgstr ""
+msgstr "Sudamericano"
 
 msgctxt "#59977"
 msgid "4k"
-msgstr ""
+msgstr "4k"
 
 msgctxt "#59978"
 msgid "horror"
-msgstr ""
+msgstr "horror"
 
 msgctxt "#59979"
 msgid "kids"
-msgstr ""
+msgstr "bambini"
 
 msgctxt "#59980"
 msgid "Castilian"
-msgstr ""
+msgstr "castigliano"
 
 msgctxt "#59981"
 msgid "latin"
-msgstr ""
+msgstr "sudamericano"
 
 msgctxt "#59982"
 msgid "torrent"
-msgstr ""
+msgstr "torrent"
 
 msgctxt "#59983"
 msgid "%.2f %s of %.2f %s a %.2f %s/s (%d/%d)"
-msgstr ""
+msgstr "%.2f %s di %.2f %s a %.2f %s/s (%d/%d)"
 
 msgctxt "#59985"
 msgid "Channel %s unreachable"
-msgstr ""
+msgstr "Canale %s irraggiungibile"
 
 msgctxt "#59986"
 msgid "Error loading the server: %s\n"
-msgstr ""
+msgstr "Errore al caricamento del server: %s\n"
 
 msgctxt "#59987"
 msgid "Start downloading now?"
-msgstr ""
+msgstr "Iniziare il download adesso?"
 
 msgctxt "#59988"
 msgid "Saving configuration..."
-msgstr ""
+msgstr "Salvataggio configurazione..."
 
 msgctxt "#59989"
 msgid "Please wait"
-msgstr ""
+msgstr "Attendere prego"
 
 msgctxt "#59990"
 msgid "Channels included in the search"
-msgstr ""
+msgstr "Sto cercando nei canali:"
 
 msgctxt "#59991"
 msgid "All"
-msgstr ""
+msgstr "Tutti"
 
 msgctxt "#59992"
 msgid "None"
-msgstr ""
+msgstr "Nessuno"
 
 msgctxt "#59993"
 msgid "Configuration -- Search"
-msgstr ""
+msgstr "Configurazione -- Ricerca"
 
 msgctxt "#59994"
 msgid "Channels included in search"
-msgstr ""
+msgstr "Canali inclusi nella ricerca"
 
 msgctxt "#59995"
 msgid "Saved Searches"
-msgstr ""
+msgstr "Ricerche salvate"
 
 msgctxt "#59996"
 msgid "Delete saved searches"
-msgstr ""
+msgstr "Elimina le ricerche salvate"
 
 msgctxt "#59997"
 msgid "Options"
-msgstr ""
+msgstr "Opzioni"
 
 msgctxt "#59998"
 msgid "Search by categories (advanced search)"
-msgstr ""
+msgstr "Cerca per categorie (ricerca avanzata)"
 
 msgctxt "#59999"
 msgid "Search for actor/actress"
-msgstr ""
+msgstr "Cerca attore/attrice"
 
 msgctxt "#60000"
 msgid "Filter server (Black List)"
-msgstr ""
+msgstr "Filtra server (Black List)"
 
 msgctxt "#60001"
 msgid "No links available that meets the requirements of the Black list. Try again by changing the filter in 'Server Configuration"
-msgstr ""
+msgstr "Nessun collegamento disponibile che soddisfi i requisiti della Black list. Riprova modificando il filtro in 'Configurazione Server"
 
 msgctxt "#60003"
 msgid "Download unseen episodes"
-msgstr ""
+msgstr "Scarica episodi non visti"
 
 msgctxt "#60004"
 msgid "No connector for the server %s"
-msgstr ""
+msgstr "Non c'è nessun connettore per il server %s"
 
 msgctxt "#60005"
 msgid "Deleting all links from channel %s"
-msgstr ""
+msgstr "Eliminando tutti i link del canale %s"
 
 msgctxt "#60006"
 msgid "[B]An error has occurred in %s:[/B]"
-msgstr ""
+msgstr "[B]Si è verificato un errore in %s:[/B]"
 
 msgctxt "#60007"
 msgid "An error has occurred on %s"
-msgstr ""
+msgstr "Si è verificato un errore su %s"
 
 msgctxt "#60008"
 msgid "Process completed"
-msgstr ""
+msgstr "Processo completato"
 
 msgctxt "#60009"
 msgid "To watch a vide on %s you need<br/>an account on: %s"
-msgstr ""
+msgstr "Per poter vedere un vídeo su %s occorre<br/>un account su: %s"
 
 msgctxt "#60010"
 msgid "All available links belongs to server on your black list.\nDo you want to show these links?"
-msgstr ""
+msgstr "Tutti i collegamenti disponibili appartengono ai server inclusi nella tua Black List.\nVuoi mostrare questi link?"
 
 msgctxt "#60011"
 msgid "Cache deleted"
-msgstr ""
+msgstr "Cache eliminata"
 
 msgctxt "#60012"
 msgid "No video to play"
-msgstr ""
+msgstr "Nessun video da riprodurre"
 
 msgctxt "#60013"
 msgid "This website [B]%s[/B] seems to be unavailable, try later. if the web page is working correctly, please report the error on: https://github.com/stream4me/addon/issues"
-msgstr ""
+msgstr "Il sito [B]%s[/B] non sembra essere disponibile, riprova più tardi. Se la pagina web funziona correttamente segnala l'errore qui: https://github.com/stream4me/addon/issues"
 
 msgctxt "#60014"
 msgid "It may be due to a connection problem, the web page of the channel has changed its structure, or an internal error of S4Me. If on browser it works, report the issue using [B]Help->Report an issue.[/B]"
-msgstr ""
+msgstr "Potrebbe essere dovuto a un problema di connessione, la pagina web del canale ha cambiato la sua struttura, oppure un errore interno di S4Me. Se sul browser funziona, segnala il problema andando in [B]Aiuto->Segnala un problema[/B]."
 
 msgctxt "#60015"
 msgid "Do you want to report the issue?\n(Be sure you follow all steps and give a clear and comprehensive explanation of what happened"
-msgstr ""
+msgstr "Vuoi fare una segnalazione agli sviluppatori?\n(Assicurati di seguire bene tutti i punti e dai una spiegazione chiara ed esaustiva di quanto accaduto)"
 
 msgctxt "#60016"
 msgid "Segna film come non visto"
-msgstr ""
+msgstr "Segna film come non visto"
 
 msgctxt "#60017"
 msgid "Mark movie as not watched"
-msgstr ""
+msgstr "Segna film come visto"
 
 msgctxt "#60018"
 msgid "Delete movie/channel"
-msgstr ""
+msgstr "Elimina film/canale"
 
 msgctxt "#60019"
 msgid "Delete movie"
-msgstr ""
+msgstr "Elimina film"
 
 msgctxt "#60020"
 msgid "Mark TV show as not watched"
-msgstr ""
+msgstr "Segna serie TV come non vista"
 
 msgctxt "#60021"
 msgid "Mark TV show as watched"
-msgstr ""
+msgstr "Segna serie TV come vista"
 
 msgctxt "#60022"
 msgid "Remove from video library update"
-msgstr ""
+msgstr "Rimuovi da aggiornamento videoteca"
 
 msgctxt "#60023"
 msgid "Add to video library update"
-msgstr ""
+msgstr "Aggiungi ad aggiornamento videoteca"
 
 msgctxt "#60024"
 msgid "Delete TV show/channel"
-msgstr ""
+msgstr "Elimina serie TV/canale"
 
 msgctxt "#60025"
 msgid "Delete TV show"
-msgstr ""
+msgstr "Elimina serie TV"
 
 msgctxt "#60026"
 msgid "S4Me settings"
-msgstr ""
+msgstr "Impostazioni S4Me"
 
 msgctxt "#60027"
 msgid "Season %s"
-msgstr ""
+msgstr "Stagione %s"
 
 msgctxt "#60028"
 msgid "Segna stagione come non vista"
-msgstr ""
+msgstr "Segna stagione come non vista"
 
 msgctxt "#60029"
 msgid "Mark season as not watched"
-msgstr ""
+msgstr "Segna stagione come vista"
 
 msgctxt "#60030"
 msgid "*All the seasons"
-msgstr ""
+msgstr "*Tutte le stagioni"
 
 msgctxt "#60031"
 msgid "Season %s Episode %s"
-msgstr ""
+msgstr "Stagione %s Episodio %s"
 
 msgctxt "#60032"
 msgid "Mark episode as not watched"
-msgstr ""
+msgstr "Segna episodio come non visto"
 
 msgctxt "#60033"
 msgid "Mark episode as watched"
-msgstr ""
+msgstr "Segna episodio come visto"
 
 msgctxt "#60034"
 msgid "Show only link %s"
-msgstr ""
+msgstr "Mostra solo link %s"
 
 msgctxt "#60035"
 msgid "Show all the links"
-msgstr ""
+msgstr "Mostra tutti i collegamenti"
 
 msgctxt "#60036"
 msgid "Episode %s"
-msgstr ""
+msgstr "Episodio %s"
 
 msgctxt "#60037"
 msgid "TV show update..."
-msgstr ""
+msgstr "Aggiornamento serie TV..."
 
 msgctxt "#60038"
 msgid "An error has occurred in S4Me"
-msgstr ""
+msgstr "Si è verificato un errore in S4Me"
 
-msgctxt "60039"
-msgid "Channel %s unreachable"
-msgstr ""
+msgctxt "#60039"
+msgid "Error on channel %s"
+msgstr "Errore nel canale %s"
 
 msgctxt "#60040"
 msgid "Delete movie"
-msgstr ""
+msgstr "Elimina film"
 
 msgctxt "#60041"
 msgid "Delete TV show"
-msgstr ""
+msgstr "Elimina serie TV"
 
 msgctxt "#60042"
 msgid "Delete channel %s"
-msgstr ""
+msgstr "Elimina canale %s"
 
 msgctxt "#60043"
 msgid "Delete %s links of channel %s"
-msgstr ""
+msgstr "Cancellati %s collegamenti del canale %s"
 
 msgctxt "#60044"
 msgid "Do you want really to delete "%s" from video library?"
-msgstr ""
+msgstr "Vuoi davvero rimuovere "%s" dalla videoteca?"
 
 msgctxt "#60045"
 msgid "Sync with Trakt started"
-msgstr ""
+msgstr "Sincronizzazione con Trakt iniziata"
 
 msgctxt "#60046"
 msgid "The Movie Database not found. Install it now?"
-msgstr ""
+msgstr "The Movie Database non trovato. Installare ora?"
 
 msgctxt "#60047"
 msgid "The Movie Database has not been installed"
-msgstr ""
+msgstr "The Movie Database non è stato installato"
 
 msgctxt "#60048"
 msgid "The TVDB not found. Install it now?"
-msgstr ""
+msgstr "The TVDB non trovato. Installare ora?"
 
 msgctxt "#60049"
 msgid "The TVDB has not been installed"
-msgstr ""
+msgstr "The TVDB non è stato installato"
 
 msgctxt "#60050"
 msgid "The Movie Database not found. Install it now?"
-msgstr ""
+msgstr "The Movie Database non trovato. Installare ora?"
 
 msgctxt "#60051"
 msgid "The Movie Database has not been installed"
-msgstr ""
+msgstr "The Movie Database non è stato installato"
 
 msgctxt "#60052"
 msgid "Error on setting LibraryPath in BD"
-msgstr ""
+msgstr "Errore di impostazione LibraryPath in BD"
 
 msgctxt "#60053"
 msgid "Do you want to configure this scraper in italian as default option for the movies ?"
-msgstr ""
+msgstr "Si desidera configurare questo scraper in italiano come opzione predefinita per i film ?"
 
 msgctxt "#60054"
 msgid "Do you want to configure this scraper in italian as default option for the TV shows?"
-msgstr ""
+msgstr "Si desidera configurare questo scraper in italiano come opzione predefinita per le serie TV?"
 
 msgctxt "#60055"
 msgid "Error configuring the information provider in Kodi database"
-msgstr ""
+msgstr "Errore di configurazione del provider informazioni nel database di Kodi"
 
 msgctxt "#60056"
 msgid "Video library %s not configured"
-msgstr ""
+msgstr "Videoteca %s non configurata"
 
 msgctxt "#60057"
 msgid "Video library %s configured"
-msgstr ""
+msgstr "Videoteca %s configurata"
 
 msgctxt "#60058"
 msgid "You need to restart Kodi for the changes to take effect"
-msgstr ""
+msgstr "E' necessario riavviare Kodi affinchè le modifiche abbiano effetto"
 
 msgctxt "#60060"
 msgid "Kodi video library configuration"
-msgstr ""
+msgstr "Configurazione videteca Kodi"
 
 msgctxt "#60062"
 msgid "Adding movies to your video library..."
-msgstr ""
+msgstr "Aggiunta film alla videoteca..."
 
 msgctxt "#60063"
 msgid "Error in adding movies to your video library..."
-msgstr ""
+msgstr "Errore di aggiunta alla videoteca..."
 
 msgctxt "#60064"
 msgid "Adding episodes to the video library..."
-msgstr ""
+msgstr "Aggiunta episodi alla videoteca..."
 
 msgctxt "#60065"
 msgid "Added episode to the video library..."
-msgstr ""
+msgstr "Aggiunta episodio alla videoteca..."
 
 msgctxt "#60066"
 msgid "An error has occurred. The movie "%s" has not been added to the video library"
-msgstr ""
+msgstr "Si è verificato un errore. Il film "%s" non è stato aggiunto alla videoteca"
 
 msgctxt "#60067"
 msgid "An error has occurred. The TV show "%s" has not been added to the video library. It has not been possible to add any episode"
-msgstr ""
+msgstr "Si è verificato un errore. La serie TV "%s" non è stata aggiunta alla videoteca. Non è stato possibile aggiungere alcun episodio"
 
 msgctxt "#60068"
 msgid "An error has occurred. The TV show "%s" has not been added to the video library"
-msgstr ""
+msgstr "Si è verificato un errore. La serie TV "%s" non è stata aggiunta alla videoteca"
 
 msgctxt "#60069"
 msgid "An error has occurred. The TV show "%s" has not been completely added to the video library"
-msgstr ""
+msgstr "Si è verificato un errore. La serie TV "%s" non è stata aggiunta completamente alla videoteca"
 
 msgctxt "#60070"
 msgid "The TV show "%s" has been added to the video library"
-msgstr ""
+msgstr "La serie TV "%s" è stata aggiunta alla videoteca"
 
 msgctxt "#60071"
 msgid "AutoPlay configuration"
-msgstr ""
+msgstr "Configurazione AutoPlay"
 
 msgctxt "#60072"
 msgid "It seems that links of %s are not working."
-msgstr ""
+msgstr "Sembra che i collegamenti di %s Non funzionino."
 
 msgctxt "#60073"
 msgid "Do you want to ignore all the links from this server?"
-msgstr ""
+msgstr "Vuoi ignorare tutti i collegamenti di questo server?"
 
 msgctxt "#60074"
 msgid "It's not possible to use AutoPlay"
-msgstr ""
+msgstr "Impossibile utilizzare AutoPlay"
 
 msgctxt "#60075"
 msgid "No coincidence"
-msgstr ""
+msgstr "Nessuna coincidenza"
 
 msgctxt "#60076"
 msgid "New quality/server available in configuration"
-msgstr ""
+msgstr "Nuova qualità/server disponibile in configurazione"
 
 msgctxt "#60077"
 msgid "AutoPlay initialization error"
-msgstr ""
+msgstr "Errore inizializzazione AutoPlay"
 
 msgctxt "#60078"
 msgid "View the log for more information."
-msgstr ""
+msgstr "Consultare il log per maggiori informazioni."
 
 msgctxt "#60079"
 msgid "AutoPlay (Turns AutoPlay On/Off)"
-msgstr ""
+msgstr "AutoPlay (Attiva/Disattiva la riproduzione automatica)"
 
 msgctxt "#60080"
 msgid "AutoPlay Language (Optional)"
-msgstr ""
+msgstr "Lingua per AutoPlay (opzionale)"
 
 msgctxt "#60081"
 msgid "      Favorite servers"
-msgstr ""
+msgstr "      Server Preferiti"
 
 msgctxt "#60082"
 msgid "Favorite server %s"
-msgstr ""
+msgstr "Server Preferito %s"
 
 msgctxt "#60083"
 msgid "      Preferred Qualities"
-msgstr ""
+msgstr "      Qualità Preferite"
 
 msgctxt "#60084"
 msgid "Preferred Quality %s"
-msgstr ""
+msgstr "Qualità Preferita %s"
 
 msgctxt "#60085"
 msgid "   Priority (Indicates the order for AutoPlay)"
-msgstr ""
+msgstr "   Priorità (Indica l'ordine per la Riproduzione Automatica)"
 
 msgctxt "#60086"
 msgid "It has been renamed to:"
-msgstr ""
+msgstr "È Stato rinominato in:"
 
 msgctxt "#60087"
 msgid "Unexpected error on channel %s"
-msgstr ""
+msgstr "Errore inaspettato sul canale %s"
 
 msgctxt "#60088"
 msgid "Enter URL"
-msgstr ""
+msgstr "Inserisci URL"
 
 msgctxt "#60089"
 msgid "Enter the URL [Link to server/download]"
-msgstr ""
+msgstr "Inserire l'URL [Link a server/download]"
 
 msgctxt "#60090"
 msgid "Enter the URL [Direct link to video]."
-msgstr ""
+msgstr "Inserire l'URL [Link diretto al video]"
 
 msgctxt "#60091"
 msgid "Enter the URL [Search for links in a URL]"
-msgstr ""
+msgstr "Inserire l'URL [Ricerca link in un URL]"
 
 msgctxt "#60092"
 msgid "View Direct URL"
-msgstr ""
+msgstr "Vedi URL Diretto"
 
 msgctxt "#60093"
 msgid "There is no compatible video in this URL"
-msgstr ""
+msgstr "Non c'è nessun video compatibile in questo URL"
 
 msgctxt "#60200"
 msgid "Download..."
-msgstr ""
+msgstr "Download in corso..."
 
 msgctxt "#60201"
 msgid "Download starting..."
-msgstr ""
+msgstr "Inizio download..."
 
 msgctxt "#60202"
 msgid "ETA: %s"
-msgstr ""
+msgstr "ETA: %s"
 
 msgctxt "#60203"
 msgid "Downloader %s/%s"
-msgstr ""
+msgstr "Downloader %s/%s"
 
 msgctxt "#60204"
 msgid "Speed meter"
-msgstr ""
+msgstr "Misuratore di velocità"
 
 msgctxt "#60205"
 msgid "File writer"
-msgstr ""
+msgstr "Scrittura File"
 
 msgctxt "#60206"
 msgid "plugin"
-msgstr ""
+msgstr "plugin"
 
 msgctxt "#60207"
 msgid "Download..."
-msgstr ""
+msgstr "Download in corso..."
 
 msgctxt "#60208"
 msgid "You can't download this video"
-msgstr ""
+msgstr "Non è possibile scaricare questo video"
 
 msgctxt "#60209"
 msgid "RTMP downloads are not"
-msgstr ""
+msgstr "I download in RTMP non sono "
 
 msgctxt "#60210"
 msgid "still supported"
-msgstr ""
+msgstr "ancora supportati"
 
 msgctxt "#60211"
 msgid "Missing %s"
-msgstr ""
+msgstr "Manca %s"
 
 msgctxt "#60212"
 msgid "Check that rtmpdump is installed"
-msgstr ""
+msgstr "Verifica che rtmpdump sia installato"
 
 msgctxt "#60213"
 msgid "The RTMP download option is experimental"
-msgstr ""
+msgstr "L'opzione di download RTMP è sperimentale"
 
 msgctxt "#60214"
 msgid "and the video will be downloaded in the background."
-msgstr ""
+msgstr "e il video verrà scaricato in background."
 
 msgctxt "#60215"
 msgid "No progress bar will be displayed."
-msgstr ""
+msgstr "Non verrà visualizzata alcuna barra di avanzamento."
 
 msgctxt "#60216"
 msgid "addon"
-msgstr ""
+msgstr "addon"
 
 msgctxt "#60217"
 msgid "Download..."
-msgstr ""
+msgstr "Download in corso..."
 
 msgctxt "#60218"
 msgid "%.2fMB/%.2fMB (%d%%) %.2f Kb/s %s missing "
-msgstr ""
+msgstr "%.2fMB/%.2fMB (%d%%) %.2f Kb/s %s manca "
 
 msgctxt "#60219"
 msgid "Copying the file"
-msgstr ""
+msgstr "Copia del file"
 
 msgctxt "#60220"
 msgid "Stop download"
-msgstr ""
+msgstr "Ferma download"
 
 msgctxt "#60221"
 msgid "Play"
-msgstr ""
+msgstr "Riproduci"
 
 msgctxt "#60222"
 msgid "Stop all downloads"
-msgstr ""
+msgstr "Ferma tutti i download"
 
 msgctxt "#60223"
 msgid "Enter another name"
-msgstr ""
+msgstr "Immettere un altro nome"
 
 msgctxt "#60224"
 msgid "Complete information"
-msgstr ""
+msgstr "Completare le informazioni"
 
 msgctxt "#60225"
 msgid "Search on TMDB"
-msgstr ""
+msgstr "Cerca su TMDB"
 
 msgctxt "#60226"
 msgid "Search on TVDB"
-msgstr ""
+msgstr "Cerca su TVDB"
 
 msgctxt "#60227"
 msgid "Identifier not found for: %s"
-msgstr ""
+msgstr "Identificatore non trovato per: %s"
 
 msgctxt "#60228"
 msgid "No information found for: %s"
-msgstr ""
+msgstr "Nessuna informazione trovata per: %s"
 
 msgctxt "#60229"
 msgid "Enter the name of %s to search"
-msgstr ""
+msgstr "Inserisci il titolo del %s per cercare"
 
 msgctxt "#60230"
 msgid "Title:"
-msgstr ""
+msgstr "Titolo:"
 
 msgctxt "#60231"
 msgid "Original title"
-msgstr ""
+msgstr "Titolo originale"
 
 msgctxt "#60232"
 msgid "Year"
-msgstr ""
+msgstr "Anno"
 
 msgctxt "#60233"
 msgid "Identifiers:"
-msgstr ""
+msgstr "Identificatori:"
 
 msgctxt "#60234"
 msgid "    The Movie Database ID"
-msgstr ""
+msgstr "    The Movie Database ID"
 
 msgctxt "#60235"
 msgid "        URL Tmdb"
-msgstr ""
+msgstr "        URL Tmdb"
 
 msgctxt "#60236"
 msgid "    The TVDB ID"
-msgstr ""
+msgstr "    The TVDB ID"
 
 msgctxt "#60237"
 msgid "        URL TVDB"
-msgstr ""
+msgstr "        URL TVDB"
 
 msgctxt "#60238"
 msgid "    IMDb ID"
-msgstr ""
+msgstr "    IMDb ID"
 
 msgctxt "#60239"
 msgid "    Other ID"
-msgstr ""
+msgstr "    Altro ID"
 
 msgctxt "#60240"
 msgid "Images(urls):"
-msgstr ""
+msgstr "Immagini(urls):"
 
 msgctxt "#60241"
 msgid "    Background"
-msgstr ""
+msgstr "    Fondo"
 
 msgctxt "#60242"
 msgid "    Thumbnail"
-msgstr ""
+msgstr "    Miniatura"
 
 msgctxt "#60243"
 msgid "Type of content"
-msgstr ""
+msgstr "Tipo di contenuto"
 
 msgctxt "#60244"
 msgid "Movie"
-msgstr ""
+msgstr "Film"
 
 msgctxt "#60245"
 msgid "TV show"
-msgstr ""
+msgstr "Serie TV"
 
 msgctxt "#60246"
 msgid "Full information"
-msgstr ""
+msgstr "Informazioni complete"
 
 msgctxt "#60247"
 msgid "[%s]: Select the correct movie"
-msgstr ""
+msgstr "[%s]: Seleziona il Film corretto"
 
 msgctxt "#60248"
 msgid "Login to this page: %s"
-msgstr ""
+msgstr "Accedi a questa pagina: %s"
 
 msgctxt "#60249"
 msgid "Enter this code and accept: %s"
-msgstr ""
+msgstr "Inserisci questo codice e accetta: %s"
 
 msgctxt "#60250"
 msgid "Once done, click here!"
-msgstr ""
+msgstr "Una volta fatto,  clicca qui!"
 
 msgctxt "#60251"
 msgid "Synchronize with Trakt. Do not close this window"
-msgstr ""
+msgstr "Sincronizza con Trakt. Non chiudere questa finestra"
 
 msgctxt "#60252"
 msgid "1. Enter the following URL: %s"
-msgstr ""
+msgstr "1. Inserisci il seguente URL: %s"
 
 msgctxt "#60253"
 msgid "2. Enter this code on the page and accept:  %s"
-msgstr ""
+msgstr "2. Inserisci questo codice sulla pagina e accetta:  %s"
 
 msgctxt "#60254"
 msgid "3. Wait until this window closes"
-msgstr ""
+msgstr "3. Attendi fino a quando questa finestra non si chiude"
 
 msgctxt "#60255"
 msgid "Successfully completed"
-msgstr ""
+msgstr "Completato con successo"
 
 msgctxt "#60256"
 msgid "Account linked correctly"
-msgstr ""
+msgstr "Account collegato correttamente"
 
 msgctxt "#60257"
 msgid "Error"
-msgstr ""
+msgstr "Errore"
 
 msgctxt "#60258"
 msgid "Problem in the connection process"
-msgstr ""
+msgstr "Problema nel processo di collegamento"
 
 msgctxt "#60259"
 msgid "Account linked correctly"
-msgstr ""
+msgstr "Account collegato correttamente"
 
 msgctxt "#60260"
 msgid "Problem in the connection process"
-msgstr ""
+msgstr "Problema nel processo di collegamento"
 
 msgctxt "#60261"
 msgid ""
@@ -1274,759 +1273,759 @@ msgstr ""
 
 msgctxt "#60262"
 msgid "You can install the Trakt script below."
-msgstr ""
+msgstr "Puoi installare lo script Trakt qui sotto."
 
 msgctxt "#60263"
 msgid "Do you want to continue?"
-msgstr ""
+msgstr "Vuoi continuare?"
 
 msgctxt "#60264"
 msgid "In progress"
-msgstr ""
+msgstr "In corso"
 
 msgctxt "#60265"
 msgid "Completed"
-msgstr ""
+msgstr "Completato"
 
 msgctxt "#60266"
 msgid "Action"
-msgstr ""
+msgstr "Azione"
 
 msgctxt "#60267"
 msgid "Adventure"
-msgstr ""
+msgstr "Avventura"
 
 msgctxt "#60268"
 msgid "Animation"
-msgstr ""
+msgstr "Animazione"
 
 msgctxt "#60270"
 msgid "Comedy"
-msgstr ""
+msgstr "Commedia"
 
 msgctxt "#60271"
 msgid "Crime"
-msgstr ""
+msgstr "Crimine"
 
 msgctxt "#60273"
 msgid "Family"
-msgstr ""
+msgstr "Famiglia"
 
 msgctxt "#60274"
 msgid "Fantasy"
-msgstr ""
+msgstr "Fantasy"
 
 msgctxt "#60275"
 msgid "Cooking"
-msgstr ""
+msgstr "Cucina"
 
 msgctxt "#60276"
 msgid "Contests"
-msgstr ""
+msgstr "Gare"
 
 msgctxt "#60277"
 msgid "Home and garden"
-msgstr ""
+msgstr "Casa e giardino"
 
 msgctxt "#60278"
 msgid "Mistery"
-msgstr ""
+msgstr "Mistero"
 
 msgctxt "#60279"
 msgid "News"
-msgstr ""
+msgstr "Notizie"
 
 msgctxt "#60280"
 msgid "Romantic"
-msgstr ""
+msgstr "Romantico"
 
 msgctxt "#60281"
 msgid "Science fiction"
-msgstr ""
+msgstr "Fantascienza"
 
 msgctxt "#60282"
 msgid "Soap Opera"
-msgstr ""
+msgstr "Telenovele"
 
 msgctxt "#60283"
 msgid "Sport"
-msgstr ""
+msgstr "Sport"
 
 msgctxt "#60284"
 msgid "Talk Show"
-msgstr ""
+msgstr "Talk Show"
 
 msgctxt "#60285"
 msgid "Travels"
-msgstr ""
+msgstr "Viaggi"
 
 msgctxt "#60286"
 msgid "Pre-child audience: children under 6 years"
-msgstr ""
+msgstr "Pubblico pre-infanzia: bambini sotto i 6 anni"
 
 msgctxt "#60287"
 msgid "Child audience: from 7 years old"
-msgstr ""
+msgstr "Pubblico infantile: dai 7 anni"
 
 msgctxt "#60288"
 msgid "General audience: without family control"
-msgstr ""
+msgstr "Pubblico generico: senza controllo familiare"
 
 msgctxt "#60289"
 msgid "Parental control"
-msgstr ""
+msgstr "Guida parentale: supervisione dei genitori"
 
 msgctxt "#60290"
 msgid "More than 14 years old"
-msgstr ""
+msgstr "Più di 14 anni"
 
 msgctxt "#60291"
 msgid "More than 17 years old"
-msgstr ""
+msgstr "Più di 17 anni"
 
 msgctxt "#60292"
 msgid "Searching for TV show information"
-msgstr ""
+msgstr "Ricerca informazioni sulla serie TV"
 
 msgctxt "#60293"
 msgid "Please wait..."
-msgstr ""
+msgstr "Attendere prego..."
 
 msgctxt "#60294"
 msgid "Searching for TV show information"
-msgstr ""
+msgstr "Ricerca di informazioni sulla serie TV"
 
 msgctxt "#60295"
 msgid "Loading results..."
-msgstr ""
+msgstr "Caricamento risultati..."
 
 msgctxt "#60296"
 msgid "Searching for TV show information"
-msgstr ""
+msgstr "Ricerca di informazioni sulla serie TV"
 
 msgctxt "#60297"
 msgid "Find %s possible matches"
-msgstr ""
+msgstr "Trovate %s possibili corrispondenze"
 
 msgctxt "#60298"
 msgid "%s - Select the correct TV show"
-msgstr ""
+msgstr "%s - Seleziona la serie TV corretta"
 
 msgctxt "#60299"
 msgid "Not found in the language '%s'"
-msgstr ""
+msgstr "Non trovato nella lingua '%s'"
 
 msgctxt "#60300"
 msgid "Search in language 'en'"
-msgstr ""
+msgstr "Cerca nella lingua 'en'"
 
 msgctxt "#60301"
 msgid "Not found in the language '%s'"
-msgstr ""
+msgstr "Non trovato nella lingua '%s'"
 
 msgctxt "#60302"
 msgid "Search in language 'en'"
-msgstr ""
+msgstr "Cerca nella lingua 'en'"
 
 msgctxt "#60303"
 msgid "The file already exists"
-msgstr ""
+msgstr "Il file esiste già"
 
 msgctxt "#60304"
 msgid "The unzipped %s file already exists, or you want to overwrite it.?"
-msgstr ""
+msgstr "il file %s da decomprimere esiste già, vuoi sovrascriverlo?"
 
 msgctxt "#60305"
 msgid "[COLOR red]Do not open this link[/COLOR]"
-msgstr ""
+msgstr "[COLOR red]NON aprire questo link[/COLOR]"
 
 msgctxt "#60306"
 msgid "The fields 'New password' and 'Confirm new password' do not match"
-msgstr ""
+msgstr "I campi 'Nuova password' e 'Conferma nuova password' non corrispondono."
 
 msgctxt "#60307"
 msgid "Use 'Preferences' to change your password"
-msgstr ""
+msgstr "Entra in 'Preferenze' per cambiare la password"
 
 msgctxt "#60308"
 msgid "[COLOR red]It's one use, so write it[/COLOR]"
-msgstr ""
+msgstr "[COLOR red]Funziona una volta sola, quindi scrivilo[/COLOR]"
 
 msgctxt "#60309"
 msgid "The password is not correct."
-msgstr ""
+msgstr "La password non è corretta."
 
 msgctxt "#60310"
 msgid "Changes made in this section will not be saved."
-msgstr ""
+msgstr "Le modifiche apportate in questa sezione non verranno salvate."
 
 msgctxt "#60311"
 msgid "Download..."
-msgstr ""
+msgstr "Download in corso..."
 
 msgctxt "#60312"
 msgid "Close this window to start playback"
-msgstr ""
+msgstr "Chiudi questa finestra per avviare la riproduzione"
 
 msgctxt "#60313"
 msgid "Cancel this window to start playback"
-msgstr ""
+msgstr "Annulla questa finestra per avviare la riproduzione"
 
 msgctxt "#60314"
 msgid "Speed: "
-msgstr ""
+msgstr "Velocità: "
 
 msgctxt "#60315"
 msgid " KB/s "
-msgstr ""
+msgstr " KB/s "
 
 msgctxt "#60316"
 msgid "MB of "
-msgstr ""
+msgstr "MB di "
 
 msgctxt "#60317"
 msgid "MB"
-msgstr ""
+msgstr "MB"
 
 msgctxt "#60318"
 msgid "Remaining time: "
-msgstr ""
+msgstr "Tempo rimanente: "
 
 msgctxt "#60319"
 msgid "Cancelled"
-msgstr ""
+msgstr "Annullato"
 
 msgctxt "#60320"
 msgid "Download in background cancelled"
-msgstr ""
+msgstr "Download in background cancellato"
 
 msgctxt "#60321"
 msgid "Press the button to be used to open the window"
-msgstr ""
+msgstr "Premere il tasto da utilizzare per aprire la finestra"
 
 msgctxt "#60322"
 msgid "You have %s seconds"
-msgstr ""
+msgstr "Hai %s secondi"
 
 msgctxt "#60323"
 msgid "Press the button to be used to open the window"
-msgstr ""
+msgstr "Premere il tasto da utilizzare per aprire la finestra"
 
 msgctxt "#60324"
 msgid "You have %s seconds"
-msgstr ""
+msgstr "Hai %s secondi"
 
 msgctxt "#60325"
 msgid "Saved key"
-msgstr ""
+msgstr "Chiave salvata"
 
 msgctxt "#60326"
 msgid "Restart Kodi to apply changes"
-msgstr ""
+msgstr "Riavvia Kodi per applicare le modifiche"
 
 msgctxt "#60327"
 msgid "News"
-msgstr ""
+msgstr "Novità"
 
 msgctxt "#60328"
 msgid "Channels"
-msgstr ""
+msgstr "Canali"
 
 msgctxt "#60329"
 msgid "Search"
-msgstr ""
+msgstr "Ricerca"
 
 msgctxt "#60330"
 msgid "Favorites"
-msgstr ""
+msgstr "Preferiti"
 
 msgctxt "#60331"
 msgid "Video library"
-msgstr ""
+msgstr "Videoteca"
 
 msgctxt "#60332"
 msgid "Downloads"
-msgstr ""
+msgstr "Download"
 
 msgctxt "#60333"
 msgid "Configuration"
-msgstr ""
+msgstr "Configurazione"
 
 msgctxt "#60334"
 msgid "Log file too large. Restart Kodi and retry"
-msgstr ""
+msgstr "File di log troppo pesante. Riapri kodi e riprova"
 
 msgctxt "#60335"
 msgid "Watch in..."
-msgstr ""
+msgstr "Vedere in..."
 
 msgctxt "#60336"
 msgid "Download in..."
-msgstr ""
+msgstr "Scaricare in..."
 
 msgctxt "#60339"
 msgid "Nothing to play"
-msgstr ""
+msgstr "Niente da riprodurre"
 
 msgctxt "#60342"
 msgid "Download completed: "
-msgstr ""
+msgstr "Download completo: "
 
 msgctxt "#60343"
 msgid "Kodi has closed the video"
-msgstr ""
+msgstr "Kodi ha chiuso il video"
 
 msgctxt "#60344"
 msgid "Continue with the session?"
-msgstr ""
+msgstr "Continuare con la sessione?"
 
 msgctxt "#60346"
 msgid "Delete video downloads"
-msgstr ""
+msgstr "Elimina i download di video"
 
 msgctxt "#60347"
 msgid "No items to display"
-msgstr ""
+msgstr "Nessun elemento da visualizzare"
 
 msgctxt "#60348"
 msgid "Information"
-msgstr ""
+msgstr "Informazione"
 
 msgctxt "#60349"
 msgid "Previous menu"
-msgstr ""
+msgstr "Menu precedente"
 
 msgctxt "#60350"
 msgid "Search in other channels"
-msgstr "Search in other channels"
+msgstr "Cerca negli altri canali"
 
 msgctxt "#60351"
 msgid "Set as main menu"
-msgstr ""
+msgstr "Imposta come menu principale"
 
 msgctxt "#60352"
 msgid "Add TV show to video library"
-msgstr ""
+msgstr "Aggiungi serie TV alla videoteca"
 
 msgctxt "#60353"
 msgid "Add movie to video library"
-msgstr ""
+msgstr "Aggiungi film alla videoteca"
 
 msgctxt "#60354"
 msgid "Download movie"
-msgstr ""
+msgstr "Scarica film"
 
 msgctxt "#60355"
 msgid "Download TV show"
-msgstr ""
+msgstr "Scarica serie TV"
 
 msgctxt "#60356"
 msgid "Download episode"
-msgstr ""
+msgstr "Scarica episodio"
 
 msgctxt "#60357"
 msgid "Download season"
-msgstr ""
+msgstr "Scarica stagione"
 
 msgctxt "#60358"
 msgid "Open configuration"
-msgstr ""
+msgstr "Apri configurazione"
 
 msgctxt "#60359"
 msgid "Search trailer"
-msgstr ""
+msgstr "Cerca trailer"
 
 msgctxt "#60360"
 msgid "Quick menu"
-msgstr ""
+msgstr "Menu rapido"
 
 msgctxt "#60361"
 msgid "Super favourites menu"
-msgstr ""
+msgstr "Menu super favoriti"
 
 msgctxt "#60362"
 msgid "Unexpected error on server %s"
-msgstr ""
+msgstr "Errore inaspettato sul server %s"
 
 msgctxt "#60363"
 msgid "The server on which it is hosted"
-msgstr ""
+msgstr "Il server in cui è ospitato "
 
 msgctxt "#60364"
 msgid "is not yet supported in S4Me"
-msgstr ""
+msgstr "non è ancora supportato in S4Me"
 
 msgctxt "#60365"
 msgid "Loading video..."
-msgstr ""
+msgstr "Caricamento video..."
 
 msgctxt "#60366"
 msgid "External plugin: %s"
-msgstr ""
+msgstr "Plugin esterno: %s"
 
 msgctxt "#60376"
 msgid "Video information"
-msgstr ""
+msgstr "Informazioni video"
 
 msgctxt "#60377"
 msgid "Title:"
-msgstr ""
+msgstr "Titolo:"
 
 msgctxt "#60378"
 msgid "Original Title:"
-msgstr ""
+msgstr "Titolo original:"
 
 msgctxt "#60379"
 msgid "Original language:"
-msgstr ""
+msgstr "Lingua originale:"
 
 msgctxt "#60380"
 msgid "Score:"
-msgstr ""
+msgstr "Punteggio:"
 
 msgctxt "#60381"
 msgid "Release:"
-msgstr ""
+msgstr "Rilascio:"
 
 msgctxt "#60382"
 msgid "Genres:"
-msgstr ""
+msgstr "Generi:"
 
 msgctxt "#60383"
 msgid "TV show:"
-msgstr ""
+msgstr "Serie TV:"
 
 msgctxt "#60384"
 msgid "Season title:"
-msgstr ""
+msgstr "Titolo della stagione:"
 
 msgctxt "#60385"
 msgid "Season:"
-msgstr ""
+msgstr "Stagione:"
 
 msgctxt "#60386"
 msgid "Episode:"
-msgstr ""
+msgstr "Episodio:"
 
 msgctxt "#60387"
 msgid "Emission:"
-msgstr ""
+msgstr "Emissione:"
 
 msgctxt "#60388"
 msgid "Summary:"
-msgstr ""
+msgstr "Riassunto:"
 
 msgctxt "#60389"
 msgid "Updating "%s" [%s]..."
-msgstr ""
+msgstr "Aggiornamento "%s" [%s]..."
 
 msgctxt "#60390"
 msgid "AutoPlay configuration"
-msgstr ""
+msgstr "Configurazione AutoPlay"
 
 msgctxt "#60391"
 msgid "AutoPlay"
-msgstr ""
+msgstr "AutoPlay"
 
 msgctxt "#60392"
 msgid "\n\n\nTotal Reset of the addon %s.\n\nAttention This function completely resets the addon."
-msgstr ""
+msgstr "\n\n\nReset totale dell'addon %s.\n\nAttenzione questa funzione resetta totalmente l'addon."
 
 msgctxt "#60393"
 msgid "Reset %s"
-msgstr ""
+msgstr "Reset %s"
 
 msgctxt "#60394"
 msgid "Reset %s"
-msgstr ""
+msgstr "Reset %s"
 
 msgctxt "#60395"
 msgid "Are you sure you want to reset all settings of %s ?"
-msgstr ""
+msgstr "Sei sicuro di voler resettare tutte le impostazioni di %s ?"
 
 msgctxt "#60396"
 msgid "Cancel"
-msgstr ""
+msgstr "Annulla"
 
 msgctxt "#60397"
 msgid "Confirm"
-msgstr ""
+msgstr "Conferma"
 
 msgctxt "#60398"
 msgid " Settings Reset was successful!"
-msgstr ""
+msgstr "Reset delle impostazioni è avvenuto con successo!"
 
 msgctxt "#60399"
 msgid "AutoPlay allows you to auto play links directly, based on your server settings and preferred qualities. "
-msgstr ""
+msgstr "AutoPlay consente di riprodurre automaticamente i collegamenti, in base alla configurazione dei server e alle qualità preferite. "
 
 msgctxt "#60400"
 msgid "512 Mega"
-msgstr ""
+msgstr "512 Mega"
 
 msgctxt "#60401"
 msgid "1 Gb"
-msgstr ""
+msgstr "1 Gb"
 
 msgctxt "#60402"
 msgid "2 Gb"
-msgstr ""
+msgstr "2 Gb"
 
 msgctxt "#60403"
 msgid "more than 2 Gb"
-msgstr ""
+msgstr "più di 2 Gb"
 
 msgctxt "#60404"
 msgid "Choose cache setting"
-msgstr ""
+msgstr "Scegli settaggio cache"
 
 msgctxt "#60405"
 msgid "\nCache Set for 512 Mega RAM"
-msgstr ""
+msgstr "\nCache Impostata per 512 Mega di RAM"
 
 msgctxt "#60406"
 msgid "\nCache Set for 1 Gb RAM"
-msgstr ""
+msgstr "\nCache Impostata per 1 Gb di RAM"
 
 msgctxt "#60407"
 msgid "\nCache Set for 2 Gb RAM"
-msgstr ""
+msgstr "\nCache Impostata per 2 Gb di RAM"
 
 msgctxt "#60408"
 msgid "\nCache Set higher than 2 Gb of RAM"
-msgstr ""
+msgstr "\nCache Impostata superiore a 2 Gb di RAM"
 
 msgctxt "#60409"
 msgid "plugin"
-msgstr ""
+msgstr "plugin"
 
 msgctxt "#60410"
 msgid "An advancedsettings.xml file has been created"
-msgstr ""
+msgstr "E' stato creato un file advancedsettings.xml"
 
 msgctxt "#60411"
 msgid "with the ideal streaming configuration."
-msgstr ""
+msgstr "con la configurazione ideale per lo streaming."
 
 msgctxt "#60412"
 msgid "Choose channels to include"
-msgstr ""
+msgstr "Scegli i canali da includere"
 
 msgctxt "#60413"
 msgid "New movie search..."
-msgstr ""
+msgstr "Nuova ricerca film..."
 
 msgctxt "#60414"
 msgid "New TV show search..."
-msgstr ""
+msgstr "Nuova ricerca serie TV..."
 
 msgctxt "#60415"
 msgid "Other settings"
-msgstr ""
+msgstr "Altre impostazioni"
 
 msgctxt "#60416"
 msgid "Delete saved searches"
-msgstr ""
+msgstr "Cancella ricerche salvate"
 
 msgctxt "#60417"
 msgid "Delete search history"
-msgstr ""
+msgstr "Elimina cronologia ricerche"
 
 msgctxt "#60418"
 msgid "Choose channels to include in your search"
-msgstr ""
+msgstr "Scegli i canali da includere nella ricerca"
 
 msgctxt "#60419"
 msgid "Delete saved searches"
-msgstr ""
+msgstr "Cancella ricerche salvate"
 
 msgctxt "#60420"
 msgid "More Options"
-msgstr ""
+msgstr "Altre opzioni"
 
 msgctxt "#60421"
 msgid "Channels included in the global search "
-msgstr ""
+msgstr "Canali inclusi nella ricerca globale: "
 
 msgctxt "#60422"
 msgid "Channels search"
-msgstr ""
+msgstr "Ricerca canali"
 
 msgctxt "#60423"
 msgid "Search"
-msgstr ""
+msgstr "Ricerca"
 
 msgctxt "#60424"
 msgid "Searches key have been deleted correctly"
-msgstr ""
+msgstr "Ricerche cancellate correttamente"
 
 msgctxt "#60425"
 msgid "Channel search"
-msgstr ""
+msgstr "Cerca canale"
 
 msgctxt "#60426"
 msgid "FILTER: Configure"
-msgstr ""
+msgstr "FILTRO: Configura"
 
 msgctxt "#60427"
 msgid "FILTER: Adding '%s'"
-msgstr ""
+msgstr "FILTRO: Aggiungere '%s'"
 
 msgctxt "#60428"
 msgid "FILTER: Delete '%s'"
-msgstr ""
+msgstr "FILTRO: Eliminare '%s'"
 
 msgctxt "#60429"
 msgid "Filter configuration for TV show..."
-msgstr ""
+msgstr "Configura filtro per serie TV..."
 
 msgctxt "#60430"
-msgid "FILTER: Delete '%s'"
-msgstr ""
+msgid "FILTRO: Delete '%s'"
+msgstr "FILTRO: Eliminare '%s'"
 
 msgctxt "#60431"
 msgid " and quality %s"
-msgstr ""
+msgstr " e qualità %s"
 
 msgctxt "#60432"
 msgid "No results in this language '%s'%s, click to show without filter"
-msgstr ""
+msgstr "Nessun risultato in questa lingua '%s'%s, clicca per mostrare senza filtro"
 
 msgctxt "#60433"
 msgid " (disabled)"
-msgstr ""
+msgstr " (disattivato)"
 
 msgctxt "#60434"
 msgid "Configure [%s]%s"
-msgstr ""
+msgstr "Configurare [%s]%s"
 
 msgctxt "#60435"
 msgid "There are no filters, search for a TV show and click on the context menu 'FILTER: Configure'"
-msgstr ""
+msgstr "Non ci sono filtri, cerca una serie TV e fai clic sul menu contestuale 'FILTRO: Configura'"
 
 msgctxt "#60436"
 msgid "Spanish"
-msgstr ""
+msgstr "Spagnolo"
 
 msgctxt "#60437"
 msgid "Delete"
-msgstr ""
+msgstr "Eliminare"
 
 msgctxt "#60438"
 msgid "Enable / Disable filter?"
-msgstr ""
+msgstr "Attiva / Disattiva filtro?"
 
 msgctxt "#60439"
 msgid "Language"
-msgstr ""
+msgstr "Lingua"
 
 msgctxt "#60440"
 msgid "Permitted quality"
-msgstr ""
+msgstr "Qualità consentita"
 
 msgctxt "#60441"
 msgid "Filter links for: %s"
-msgstr ""
+msgstr "Filtro link per: %s"
 
 msgctxt "#60442"
 msgid "Are you sure you want to delete the filter?"
-msgstr ""
+msgstr "Sei sicuro di voler eliminare il filtro?"
 
 msgctxt "#60443"
 msgid "Click 'Yes' to remove the filter from %s, click 'No' or close the window to do nothing."
-msgstr ""
+msgstr "Clicca 'Sì' per rimuovere il filtro da %s, Clicca 'No' o chiudere la finestra per non fare nulla."
 
 msgctxt "#60444"
 msgid "FILTER DELETED"
-msgstr ""
+msgstr "FILTRO ELIMINATO"
 
 msgctxt "#60445"
 msgid "Error on saving on disk"
-msgstr ""
+msgstr "Errore nel salvataggio su disco"
 
 msgctxt "#60446"
 msgid "FILTER SAVED"
-msgstr ""
+msgstr "FILTRO SALVATO"
 
 msgctxt "#60447"
 msgid "Guide (opens the browser)"
-msgstr ""
+msgstr "Guida alle funzioni di S4Me (apre il browser)"
 
 msgctxt "#60448"
 msgid "    - How do I report an error?"
-msgstr ""
+msgstr "    - Come segnalo un errore?"
 
 msgctxt "#60449"
 msgid "    - Is it possible to enable/disable channels?"
-msgstr ""
+msgstr "    - È Possibile attivare/disattivare i canali?"
 
 msgctxt "#60450"
 msgid "    - Is automatic synchronization with Trakt possible?"
-msgstr ""
+msgstr "    - È possibile la sincronizzazione automatica con Trakt?"
 
 msgctxt "#60451"
 msgid "    - Is it possible to show all the results together in the global search?"
-msgstr ""
+msgstr "    - È Possibile mostrare tutti i risultati uniti nella ricerca globale?"
 
 msgctxt "#60452"
 msgid "    - Links take too long to appear."
-msgstr ""
+msgstr "    - I link ci mettono troppo ad apparire."
 
 msgctxt "#60453"
 msgid "    - The content search is not performed correctly."
-msgstr ""
+msgstr "    - La ricerca dei contenuti non viene eseguita correttamente."
 
 msgctxt "#60454"
 msgid "    - Some channels do not function properly."
-msgstr ""
+msgstr "    - Alcuni canali non funzionano correttamente."
 
 msgctxt "#60455"
 msgid "    - The library does not update correctly."
-msgstr ""
+msgstr "    - La libreria non viene aggiornata correttamente."
 
 msgctxt "#60456"
 msgid "    - Links of interest"
-msgstr ""
+msgstr "    - Collegamenti di interesse"
 
 msgctxt "#60457"
-msgid "Stream4Me"
+msgid ""
 msgstr ""
 
 msgctxt "#60458"
 msgid "The disabling can be done in 'Settings>Turn on/off channels'. You can toggle channels on/off one at a time or all at the same time. Want to manage your channels now?"
-msgstr ""
+msgstr "La disabilitazione può essere fatta in 'Impostazioni>Attiva/Disattiva canali'. È Possibile Attivare/Disattivare i canali uno alla volta o tutti allo stesso tempo. Vuoi gestire i canali adesso?"
 
 msgctxt "#60459"
 msgid "Currently it is possible to activate the synchronization (silent) after having marked an episode as 'as watched' (this happens automatically). This option can be enabled in 'Settings>Library Settings'. Do you want access to these settings?"
-msgstr ""
+msgstr "Attualmente è possibile attivare la sincronizzazione (silenziosa) dopo aver segnato come 'come visto' un episodio (ciò avviene automaticamente). Questa opzione può essere attivata in 'Impostazioni>Impostazioni libreria'. Vuoi accedere a queste impostazioni?"
 
 msgctxt "#60460"
 msgid "This can be improved by limiting the maximum number of links or by displaying them in a Pop-Up window. These settings can be found in 'Settings>Library Settings' Do you want to access these settings?"
-msgstr ""
+msgstr "Questo può essere migliorato limitando il numero massimo di collegamenti o visualizzandoli in una finestra Pop-Up. Queste impostazioni possono essere trovate in 'Impostazioni>Impostazioni libreria' Vuoi accedere a queste impostazioni?"
 
 msgctxt "#60461"
 msgid "S4Me - FAQ - %s"
-msgstr ""
+msgstr "S4Me - FAQ - %s"
 
 msgctxt "#60462"
 msgid "You may not have written the library path correctly in 'Settings>Preferences'.\nIl The specified path must be exactly the same as the 'source' entered in 'Archive' of the Kodi library.\nAVANZATO: This path is also found in 'sources.xml'.\nThere can be problems using some Kodi forks and paths with 'special://'. SPMC, for example, has problems with this, and there doesn't seem to be a solution, as it is an external problem to Stream4Me that has existed for a long time.\nYou can try solving these problems in 'Settings>Library Settings' by changing the 'Search in' setting from 'The folder of each TV show' to 'All library'."
-msgstr ""
+msgstr "Potresti non aver scritto correttamente il percorso della libreria in 'Impostazioni>Preferenze'.\nIl percorso specificato deve essere esattamente uguale al 'sorgente' inserito in 'Archivio' della libreria di Kodi.\nAVANZATO: Questo percorso si trova anche in 'sources.xml'.\nPotresti riscontrare dei problemi utilizzando alcuni fork di Kodi e percorsi con 'special://'. SPMC, per esempio, ha problemi con questo, e non sembra esserci una soluzione, poichè è un problema esterno Stream4Me che esiste da molto tempo.\nPuoi provare a risolvere questi problemi in 'Impostazioni>Impostazioni libreria', modificando l'impostazione 'Esegui ricerca contenuto in' da 'La cartella di ogni serie TV' in 'Tutta la libreria'."
 
 msgctxt "#60463"
 msgid "The channel site may not work. In case the site works you can report the problem on github."
-msgstr ""
+msgstr "Può darsi che il sito del canale non funzioni. Nel caso il sito funzioni puoi segnalare il problema su github."
 
 msgctxt "#60464"
 msgid "It is possible that you have updated S4Me recently and that the changes have not been fully applied Well, you can try 'Settings>Other Tools', checking the *_data.json files or reattaching everything to the library again"
-msgstr ""
+msgstr "È Possibile che tu abbia aggiornato S4Me di recente e che i cambiamenti non siano stati totalmente applicati Bene, puoi provare in 'Impostazioni>Altri strumenti', controllando i files *_data.json o riaggiungendo tutto ancora alla libreria"
 
 msgctxt "#60465"
 msgid "Do you want access to these settings?"
-msgstr ""
+msgstr "Vuoi accedere a queste impostazioni?"
 
 msgctxt "#60466"
 msgid "Yes, the option to display merged or split results by channels can be found in 'Settings>Global Search Settings>Other Settings'. Do you want access to these settings?"
-msgstr ""
+msgstr "Sì, l'opzione per mostrare i risultati uniti o divisi per canali si trova in 'Impostazioni>Impostazioni ricerca globale>Altre impostazioni'. Vuoi accedere a queste impostazioni?"
 
 msgctxt "#60467"
 msgid ""
@@ -2038,439 +2037,439 @@ msgstr ""
 
 msgctxt "#60469"
 msgid "Uploading new data"
-msgstr ""
+msgstr "Caricamento nuovi dati"
 
 msgctxt "#60470"
 msgid "Searching in Tmdb......."
-msgstr ""
+msgstr "Ricerca in Tmdb......."
 
 msgctxt "#60471"
 msgid "No results, missing information about the year of the video"
-msgstr ""
+msgstr "Nessun risultato, informazioni mancanti sull'anno del video"
 
 msgctxt "#60472"
 msgid "There is no information on the %s required"
-msgstr ""
+msgstr "Non ci sono informazioni sulla %s richiesta"
 
 msgctxt "#60473"
 msgid "No results"
-msgstr ""
+msgstr "Nessun risultato"
 
 msgctxt "#60474"
 msgid "There is no information on the %s required"
-msgstr ""
+msgstr "Non ci sono informazioni sulla %s richiesta"
 
 msgctxt "#60475"
 msgid "Filmaffinity recording......."
-msgstr ""
+msgstr "Registrazione filmaffinity......."
 
 msgctxt "#60476"
 msgid "There is no information about this movie..."
-msgstr ""
+msgstr "Non ci sono informazioni su questo film..."
 
 msgctxt "#60477"
 msgid "Important recommendations......."
-msgstr ""
+msgstr "Raccomandazioni importanti......."
 
 msgctxt "#60478"
 msgid "Completated %s"
-msgstr ""
+msgstr "Completata %s"
 
 msgctxt "#60479"
 msgid "In progress %s"
-msgstr ""
+msgstr "In corso %s"
 
 msgctxt "#60480"
 msgid "(Seasons: %s)"
-msgstr ""
+msgstr "(Stagioni: %s)"
 
 msgctxt "#60481"
 msgid "Picture collection on FANART.TV"
-msgstr ""
+msgstr "Raccolta di immagini su FANART.TV"
 
 msgctxt "#60482"
 msgid "Tuned Instruments in Vtunes"
-msgstr ""
+msgstr "Strumenti sintonizzati in Vtunes"
 
 msgctxt "#60483"
 msgid "Picture collection on FANART.TV"
-msgstr ""
+msgstr "Raccolta di immagini su FANART.TV"
 
 msgctxt "#60484"
 msgid "Update Kodi to its latest version"
-msgstr ""
+msgstr "Aggiorna Kodi alla sua ultima versione"
 
 msgctxt "#60485"
 msgid "for detailed info"
-msgstr ""
+msgstr "per info dettagliate"
 
 msgctxt "#60486"
 msgid "Uploading new information"
-msgstr ""
+msgstr "Caricamento nuove informazioni"
 
 msgctxt "#60487"
 msgid "Search in Tmdb......."
-msgstr ""
+msgstr "Ricerca in Tmdb......."
 
 msgctxt "#60488"
 msgid "No information..."
-msgstr ""
+msgstr "Nessuna informazione..."
 
 msgctxt "#60489"
 msgid "Production company: "
-msgstr ""
+msgstr "Compagnia di produzione: "
 
 msgctxt "#60490"
 msgid "Country: "
-msgstr ""
+msgstr "Nazione: "
 
 msgctxt "#60491"
 msgid "Preview: "
-msgstr ""
+msgstr "Anteprima: "
 
 msgctxt "#60492"
 msgid "Seasons/Episodes: "
-msgstr ""
+msgstr "Stagioni/Episodi: "
 
 msgctxt "#60493"
 msgid "Is the TV show you're looking for inlcuded?"
-msgstr ""
+msgstr "La serie TV che stai cercando è inclusa?"
 
 msgctxt "#60494"
 msgid "Is the movie you're looking for inlcuded?"
-msgstr ""
+msgstr "Il film che stai cercando è incluso?"
 
 msgctxt "#60495"
 msgid "Close"
-msgstr ""
+msgstr "Chiudere"
 
 msgctxt "#60496"
 msgid "Loading results"
-msgstr ""
+msgstr "Caricamento risultati"
 
 msgctxt "#60497"
 msgid "Wait........"
-msgstr ""
+msgstr "Attendere........"
 
 msgctxt "#60498"
 msgid "Select..."
-msgstr ""
+msgstr "Seleziona..."
 
 msgctxt "#60499"
 msgid "plugin"
-msgstr ""
+msgstr "plugin"
 
 msgctxt "#60500"
 msgid "Nothing to play"
-msgstr ""
+msgstr "Nulla da riprodurre"
 
 msgctxt "#60501"
 msgid "Cast"
-msgstr ""
+msgstr "Cast"
 
 msgctxt "#60502"
 msgid "Uploading new data"
-msgstr ""
+msgstr "Caricamento nuovi dati"
 
 msgctxt "#60503"
 msgid "Loading data from the %s..."
-msgstr ""
+msgstr "Caricamento dati del %s..."
 
 msgctxt "#60504"
 msgid "No information"
-msgstr ""
+msgstr "Nessuna informazione"
 
 msgctxt "#60505"
 msgid "Uploading filmography..."
-msgstr ""
+msgstr "Caricamento filmografia..."
 
 msgctxt "#60506"
 msgid "Picture collection..."
-msgstr ""
+msgstr "Raccolta di immagini..."
 
 msgctxt "#60507"
 msgid "Error"
-msgstr ""
+msgstr "Errore"
 
 msgctxt "#60508"
 msgid "Video not available"
-msgstr ""
+msgstr "Video non disponibile"
 
 msgctxt "#60509"
 msgid "Movies"
-msgstr ""
+msgstr "Film"
 
 msgctxt "#60510"
 msgid "Kids"
-msgstr ""
+msgstr "Bambini"
 
 msgctxt "#60511"
 msgid "TV shows"
-msgstr ""
+msgstr "Serie TV"
 
 msgctxt "#60512"
 msgid "Anime"
-msgstr ""
+msgstr "Anime"
 
 msgctxt "#60513"
 msgid "Documentaries"
-msgstr ""
+msgstr "Documentari"
 
 msgctxt "#60514"
 msgid "Channels included in: %s"
-msgstr ""
+msgstr "Canali inclusi in: %s"
 
 msgctxt "#60515"
 msgid "Simultaneous search deactivated"
-msgstr ""
+msgstr "Ricerca simultanea disattivata"
 
 msgctxt "#60516"
 msgid "Simultaneous novelty search provides"
-msgstr ""
+msgstr "La ricerca simultanea di novità fornisce"
 
 msgctxt "#60517"
 msgid "higher speed and its deactivation is advisable only in case of failure."
-msgstr ""
+msgstr "una maggiore velocità e la sua disattivazione è consigliabile solo in caso di guasto."
 
 msgctxt "#60518"
 msgid "Would you like to activate the simultaneous search now?"
-msgstr ""
+msgstr "Vuoi attivare la ricerca simultanea ora?"
 
 msgctxt "#60519"
 msgid "Channel search..."
-msgstr ""
+msgstr "Ricerca canali..."
 
 msgctxt "#60520"
 msgid "Search in '%s'..."
-msgstr ""
+msgstr "Ricerca in '%s'..."
 
 msgctxt "#60521"
 msgid "Completed in %d/%d channels..."
-msgstr ""
+msgstr "Completato in %d/%d canali..."
 
 msgctxt "#60522"
 msgid "Results obtained: %s | Time: %2.f seconds"
-msgstr ""
+msgstr "Risultati ottenuti: %s | Tempo: %2.f secondi"
 
 msgctxt "#60523"
 msgid " (In %s and %s)"
-msgstr ""
+msgstr " (In %s y %s)"
 
 msgctxt "#60524"
 msgid " (In %s)"
-msgstr ""
+msgstr " (In %s)"
 
 msgctxt "#60525"
 msgid "Included channels by category"
-msgstr ""
+msgstr "Canali inclusi per categoria"
 
 msgctxt "#60526"
 msgid "    - Movies "
-msgstr ""
+msgstr "    - Film "
 
 msgctxt "#60527"
 msgid "    - Kids"
-msgstr ""
+msgstr "    - Bambini"
 
 msgctxt "#60528"
 msgid "    - TV show episodes"
-msgstr ""
+msgstr "    - Episodi serie TV"
 
 msgctxt "#60529"
 msgid "    - Anime episodes"
-msgstr ""
+msgstr "    - Episodi anime"
 
 msgctxt "#60530"
 msgid "    - Documentaries"
-msgstr ""
+msgstr "    - Documentari"
 
 msgctxt "#60531"
 msgid "Other settings"
-msgstr ""
+msgstr "Altre impostazioni"
 
 msgctxt "#60532"
 msgid "Configuration -- News"
-msgstr ""
+msgstr "Configurazione -- Novità"
 
 msgctxt "#60533"
 msgid "Channels included in News "
-msgstr ""
+msgstr "Canali inclusi in Novità "
 
 msgctxt "#60534"
 msgid "Last 2 months"
-msgstr ""
+msgstr "Ultimi 2 Mesi"
 
 msgctxt "#60535"
 msgid "Preferences"
-msgstr ""
+msgstr "Preferenze"
 
 msgctxt "#60536"
 msgid "Special settings"
-msgstr ""
+msgstr "Impostazioni speciali"
 
 msgctxt "#60537"
 msgid "Channel settings"
-msgstr ""
+msgstr "Impostazioni canali"
 
 msgctxt "#60538"
 msgid "Server settings"
-msgstr ""
+msgstr "Impostazioni server"
 
 msgctxt "#60539"
 msgid "Settings for the 'News' section"
-msgstr ""
+msgstr "Impostazioni per la sezione 'Novità'"
 
 msgctxt "#60540"
 msgid "Global search settings"
-msgstr ""
+msgstr "Impostazioni ricerca globale"
 
 msgctxt "#60541"
 msgid "Download settings"
-msgstr ""
+msgstr "Impostazioni download"
 
 msgctxt "#60542"
 msgid "Configure video library"
-msgstr ""
+msgstr "Configura videoteca"
 
 msgctxt "#60544"
 msgid "More Options"
-msgstr ""
+msgstr "Altre opzioni"
 
 msgctxt "#60545"
 msgid "Activate/deactivate channels"
-msgstr ""
+msgstr "Attiva/disattiva canali"
 
 msgctxt "#60546"
 msgid "Channel settings"
-msgstr ""
+msgstr "Impostazioni dei canali"
 
 msgctxt "#60547"
 msgid "Channel Configuration '%s'"
-msgstr ""
+msgstr "Configurazione del canale '%s'"
 
 msgctxt "#60548"
 msgid "HChannel Options"
-msgstr ""
+msgstr "Opzioni del canale"
 
 msgctxt "#60549"
 msgid "Check the files * _data.json"
-msgstr ""
+msgstr "Controlla i file * _data.json"
 
 msgctxt "#60550"
 msgid "Servers locked"
-msgstr ""
+msgstr "Server bloccati"
 
 msgctxt "#60551"
 msgid "Favorite servers"
-msgstr ""
+msgstr "Server preferiti"
 
 msgctxt "#60552"
 msgid "Debriders settings"
-msgstr ""
+msgstr "Impostazioni debrider"
 
 msgctxt "#60553"
 msgid "   Server configuration '%s'"
-msgstr ""
+msgstr "   Configurazione del server '%s'"
 
 msgctxt "#60554"
 msgid "Server settings"
-msgstr ""
+msgstr "Impostazioni server"
 
 msgctxt "#60557"
 msgid "Saving configuration"
-msgstr ""
+msgstr "Salvataggio configurazione"
 
 msgctxt "#60558"
 msgid "Please wait."
-msgstr ""
+msgstr "Attendere prego."
 
 msgctxt "#60559"
 msgid "Saving configuration...%s"
-msgstr ""
+msgstr "Salvataggio configurazione...%s"
 
 msgctxt "#60560"
 msgid " -  CORRECTED!!"
-msgstr ""
+msgstr " -  CORRETTO!!"
 
 msgctxt "#60561"
 msgid "Saving configuration..."
-msgstr ""
+msgstr "Salvataggio configurazione"
 
 msgctxt "#60562"
 msgid "Please wait"
-msgstr ""
+msgstr "Attendere prego"
 
 msgctxt "#60563"
 msgid "Saving configuration..."
-msgstr ""
+msgstr "Salvataggio configurazione"
 
 msgctxt "#60564"
 msgid "Channel Options"
-msgstr ""
+msgstr "Opzioni dei canali"
 
 msgctxt "#60565"
 msgid "   Check the files * _data.json"
-msgstr ""
+msgstr "  Controlla i file * _data.json"
 
 msgctxt "#60566"
 msgid "Video library options"
-msgstr ""
+msgstr "Opzioni della videoteca"
 
 msgctxt "#60567"
 msgid "Restore video library (strm, nfo and json)"
-msgstr ""
+msgstr "Ripristina videoteca (strm, nfo e json)"
 
 msgctxt "#60568"
 msgid "Update video library"
-msgstr ""
+msgstr "Aggiorna videoteca"
 
 msgctxt "#60569"
 msgid " - There are no default settings"
-msgstr ""
+msgstr "- Non ci sono impostazioni predefinite"
 
 msgctxt "#60570"
 msgid " | Error Detail: %s"
-msgstr ""
+msgstr " | Dettaglio dell' errore: %s"
 
 msgctxt "#60571"
 msgid " -  Default settings cannot be loaded!"
-msgstr ""
+msgstr " -  Non è possibile caricare le impostazioni di default!"
 
 msgctxt "#60572"
 msgid "Ask"
-msgstr ""
+msgstr "Chiedere"
 
 msgctxt "#60577"
 msgid "Order Servers"
-msgstr ""
+msgstr "Ordina i server"
 
 msgctxt "#60578"
 msgid "    Server #%s"
-msgstr ""
+msgstr "    Server #%s"
 
 msgctxt "#60579"
 msgid "Error"
-msgstr ""
+msgstr "Errore"
 
 msgctxt "#60580"
 msgid "A saving error occurred"
-msgstr ""
+msgstr "Si è verificato un errore al salvataggio"
 
 msgctxt "#60581"
 msgid "Restoring video library"
-msgstr ""
+msgstr "Ripristino videoteca"
 
 msgctxt "#60582"
 msgid "This may take some time."
-msgstr ""
+msgstr "Questo potrebbe richiedere del tempo."
 
 msgctxt "#60583"
 msgid "Do you want to continue?"
-msgstr ""
+msgstr "Vuoi continuare?"
 
 msgctxt "#60584"
 msgid "Restoring TV shows video library"
-msgstr ""
+msgstr "Ripristino videoteca serie TV"
 
 msgctxt "#60585"
 msgid ""
@@ -2478,175 +2477,175 @@ msgstr ""
 
 msgctxt "#60586"
 msgid "Restoring movies video library"
-msgstr ""
+msgstr "Ripristino videoteca film"
 
 msgctxt "#60587"
 msgid "Channel configuration"
-msgstr ""
+msgstr "Configurazione canale"
 
 msgctxt "#60588"
 msgid " - Settings created"
-msgstr ""
+msgstr "- Impostazioni create"
 
 msgctxt "#60589"
 msgid " - No correction necessary"
-msgstr ""
+msgstr " - Nessuna correzione necessaria"
 
 msgctxt "#60590"
 msgid " - An error has occurred"
-msgstr ""
+msgstr " - Si è verificato un errore"
 
 msgctxt "#60591"
 msgid "Activate all"
-msgstr ""
+msgstr "Attiva tutti"
 
 msgctxt "#60592"
 msgid "Deactivate all"
-msgstr ""
+msgstr "Disattiva tutti"
 
 msgctxt "#60593"
 msgid "Default Set"
-msgstr ""
+msgstr "Imposta di default"
 
 msgctxt "#60594"
 msgid "All channels"
-msgstr ""
+msgstr "Tutti i canali"
 
 msgctxt "#60595"
 msgid " (Default disabled)"
-msgstr ""
+msgstr " (Disattivato di default)"
 
 msgctxt "#60596"
 msgid "Channels"
-msgstr ""
+msgstr "Canali"
 
 msgctxt "#60597"
 msgid "    Server #%s"
-msgstr ""
+msgstr "    Server #%s"
 
 msgctxt "#60598"
 msgid "Video library configuration"
-msgstr ""
+msgstr "Configurazione videoteca"
 
 msgctxt "#60599"
 msgid "Video library update configuration"
-msgstr ""
+msgstr "Configurazione aggiornamento videoteca"
 
 msgctxt "#60600"
 msgid "TV shows"
-msgstr ""
+msgstr "Serie TV"
 
 msgctxt "#60601"
 msgid "Video library update"
-msgstr ""
+msgstr "Aggiornamento videoteca"
 
 msgctxt "#60602"
 msgid "Never"
-msgstr ""
+msgstr "Mai"
 
 msgctxt "#60603"
 msgid "When Kodi starts"
-msgstr ""
+msgstr "All'avvio di Kodi"
 
 msgctxt "#60604"
 msgid "Daily"
-msgstr ""
+msgstr "Giornaliero"
 
 msgctxt "#60605"
 msgid "When Kodi starts and daily"
-msgstr ""
+msgstr "All'avvio di Kodi e giornaliero"
 
 msgctxt "#60606"
 msgid "      Update waiting time"
-msgstr ""
+msgstr "      Tempo di attesa aggiornamento"
 
 msgctxt "#60607"
 msgid "Each time you start Kodi"
-msgstr ""
+msgstr "Ad ogni avvio di Kodi"
 
 msgctxt "#60608"
 msgid "Each time you start Kodi and daily"
-msgstr ""
+msgstr "Ad ogni avvio di Kodi e giornaliero"
 
 msgctxt "#60609"
 msgid "10 sec"
-msgstr ""
+msgstr "10 sec"
 
 msgctxt "#60610"
 msgid "20 sec"
-msgstr ""
+msgstr "20 sec"
 
 msgctxt "#60611"
 msgid "30 sec"
-msgstr ""
+msgstr "30 sec"
 
 msgctxt "#60612"
 msgid "60 sec"
-msgstr ""
+msgstr "60 sec"
 
 msgctxt "#60613"
 msgid "      Update time"
-msgstr ""
+msgstr "      Ora aggiornamento"
 
 msgctxt "#60614"
 msgid "      Search for new episodes"
-msgstr ""
+msgstr "      Cerca nuovi episodi"
 
 msgctxt "#60615"
 msgid "Never"
-msgstr ""
+msgstr "Mai"
 
 msgctxt "#60616"
 msgid "Always"
-msgstr ""
+msgstr "Sempre"
 
 msgctxt "#60617"
 msgid "Based on airing"
-msgstr ""
+msgstr "In base all'uscita"
 
 msgctxt "#60618"
 msgid "      Kodi video library update"
-msgstr ""
+msgstr "      Aggiornamento libreria di Kodi"
 
 msgctxt "#60619"
 msgid "Each TV show"
-msgstr ""
+msgstr "Per serie TV"
 
 msgctxt "#60620"
 msgid "All video library"
-msgstr ""
+msgstr "Tutta la videoteca"
 
 msgctxt "#60621"
 msgid "Links view"
-msgstr ""
+msgstr "Visualizzazione collegamenti"
 
 msgctxt "#60622"
 msgid "Pop-up window"
-msgstr ""
+msgstr "Finestra pop-up"
 
 msgctxt "#60623"
 msgid "Fullscreen window"
-msgstr "
+msgstr "Finestra a schermo intero"
 
 msgctxt "#60624"
 msgid "      Maximum number of links to display"
-msgstr ""
+msgstr "      Numero massimo di link da visualizzare"
 
 msgctxt "#60625"
 msgid "All"
-msgstr ""
+msgstr "Tutti"
 
 msgctxt "#60626"
 msgid "      Sort by whitelist"
-msgstr ""
+msgstr "      Ordina per whitelist"
 
 msgctxt "#60627"
 msgid "      Remove the channel name at the beginning"
-msgstr ""
+msgstr "      Rimuovi il nome del canale all'inizio"
 
 msgctxt "#60628"
 msgid "      Replace \'View in\' with \'[V]\' and \'Download in\' with \'[D]\'"
-msgstr ""
+msgstr "      Sostituisci \'Vedi in\' con \'[V]\' e \'Scarica in\' con \'[D]\'"
 
 msgctxt "#60629"
 msgid "Remote database"
@@ -2654,699 +2653,699 @@ msgstr "Database remoto"
 
 msgctxt "#60632"
 msgid "        Server name"
-msgstr ""
+msgstr "        Nome server"
 
 msgctxt "#60633"
 msgid "        Server port"
-msgstr ""
+msgstr "        Porta server"
 
 msgctxt "#60634"
 msgid "Automatically mark as watched"
-msgstr ""
+msgstr "Segna automaticamente come visto"
 
 msgctxt "#60635"
 msgid "      Video viewing time"
-msgstr ""
+msgstr "      Tempo di visione del video"
 
 msgctxt "#60636"
 msgid "0 seg"
-msgstr ""
+msgstr "0 sec"
 
 msgctxt "#60637"
 msgid "  Synchronizing with Trakt"
-msgstr ""
+msgstr "  Sincronizzazione con Trakt"
 
 msgctxt "#60638"
 msgid "      After mark as watched the episode"
-msgstr ""
+msgstr "      Dopo aver segnato come visto l'episodio"
 
 msgctxt "#60639"
 msgid "      Show notification"
-msgstr ""
+msgstr "      Mostra notifica"
 
 msgctxt "#60640"
 msgid "      On adding a TV show to the video library"
-msgstr ""
+msgstr "      All'aggiunta di una serie TV alla videoteca"
 
 msgctxt "#60641"
 msgid "      Wait until the TV show is added"
-msgstr ""
+msgstr "      Attendere finchè la serie TV sia aggiunta"
 
 msgctxt "#60642"
 msgid "Show option \'All Seasons\'"
-msgstr ""
+msgstr "Mostra l'opzione \'Tutte le stagioni\'"
 
 msgctxt "#60643"
 msgid "Do not combine the seasons of the TV shows"
-msgstr ""
+msgstr "Non unire le stagioni delle serie TV"
 
 msgctxt "#60644"
 msgid "Only if there is one season"
-msgstr ""
+msgstr "Solo se c'è una stagione"
 
 msgctxt "#60645"
 msgid "Show channel selection box"
-msgstr ""
+msgstr "Mostra la casella di selezione del canale"
 
 msgctxt "#60646"
 msgid "Create folders using original title"
-msgstr ""
+msgstr "Crea cartelle usando titolo originale"
 
 msgctxt "#60648"
 msgid "Never"
-msgstr ""
+msgstr "Mai"
 
 msgctxt "#60650"
 msgid "  Video library information providers"
-msgstr ""
+msgstr "  Provider informazioni videoteca"
 
 msgctxt "#60651"
 msgid "      Movies"
-msgstr ""
+msgstr "      Film"
 
 msgctxt "#60652"
 msgid "      TV show"
-msgstr ""
+msgstr "      Serie TV"
 
 msgctxt "#60653"
 msgid "      If there are no results search in English"
-msgstr ""
+msgstr "      Se non ci sono risultati cerca in inglese"
 
 msgctxt "#60654"
 msgid "Include in blacklist"
-msgstr ""
+msgstr "Includi in blacklist"
 
 msgctxt "#60655"
 msgid "Include in Favorites List"
-msgstr ""
+msgstr "Includi nella lista dei preferiti"
 
 msgctxt "#60656"
 msgid "Simultaneous search (multiprocessing)"
-msgstr ""
+msgstr "Ricerca contemporanea (multiprocessing)"
 
 msgctxt "#60657"
 msgid "Show results"
-msgstr ""
+msgstr "Mostra risultati"
 
 msgctxt "#60658"
 msgid "Grouped by content"
-msgstr ""
+msgstr "Raggruppati per contenuto"
 
 msgctxt "#60659"
 msgid "Grouped by channel"
-msgstr ""
+msgstr "Raggruppati per canale"
 
 msgctxt "#60660"
 msgid "Without group"
-msgstr ""
+msgstr "Senza raggruppare"
 
 msgctxt "#60661"
 msgid "News"
-msgstr ""
+msgstr "Novità"
 
 msgctxt "#60662"
 msgid "      Language"
-msgstr ""
+msgstr "      Lingua"
 
 msgctxt "#60663"
 msgid "Add the progress window"
-msgstr ""
+msgstr "Aggiungi la finestra di avanzamento"
 
 msgctxt "#60664"
 msgid "Eliminated unnecessary code."
-msgstr ""
+msgstr "Eliminato codice non necessario."
 
 msgctxt "#60665"
 msgid "Possibility to include other channels, through the configuration"
-msgstr ""
+msgstr "Possibilità di includere altri canali, attraverso la configurazione"
 
 msgctxt "#60666"
 msgid "Color Profile"
-msgstr ""
+msgstr "Profilo Colore"
 
 msgctxt "#60667"
 msgid "Cold"
-msgstr ""
+msgstr "Freddo"
 
 msgctxt "#60668"
 msgid "Hot"
-msgstr ""
+msgstr "Caldo"
 
 msgctxt "#60669"
 msgid "Lilac"
-msgstr ""
+msgstr "Lilla"
 
 msgctxt "#60670"
 msgid "Pastel"
-msgstr ""
+msgstr "Pastello"
 
 msgctxt "#60671"
 msgid "Vivid"
-msgstr ""
+msgstr "Vivido"
 
 msgctxt "#60672"
 msgid "Global Search"
-msgstr ""
+msgstr "Ricerca globale"
 
 msgctxt "#60673"
 msgid "Number of search threads"
-msgstr ""
+msgstr "Numero di threads di ricerca"
 
 msgctxt "#60674"
 msgid "Show Results:"
-msgstr ""
+msgstr "Mostra risultati:"
 
 msgctxt "#60675"
 msgid "Per channel"
-msgstr ""
+msgstr "Per canale"
 
 msgctxt "#60676"
 msgid "All Together"
-msgstr ""
+msgstr "Tutto insieme"
 
 msgctxt "#60677"
 msgid "Saved Searches:"
-msgstr ""
+msgstr "Ricerche salvate"
 
 msgctxt "#60678"
 msgid "Remember the latest search"
-msgstr ""
+msgstr "Ricorda l'ultima ricerca"
 
 msgctxt "#60679"
 msgid "Novelties in %s"
-msgstr ""
+msgstr "Novità in %s"
 
 msgctxt "#60680"
 msgid "documentaries"
-msgstr ""
+msgstr "documentari"
 
 msgctxt "#60681"
 msgid "movies"
-msgstr ""
+msgstr "film"
 
 msgctxt "#60682"
 msgid "TV show"
-msgstr ""
+msgstr "Serie TV"
 
 msgctxt "#60683"
 msgid "Loading streams..."
-msgstr ""
+msgstr "Caricamento stream..."
 
 msgctxt "#70000"
 msgid "Options"
-msgstr ""
+msgstr "Opzioni"
 
 msgctxt "#70001"
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 msgctxt "#70002"
 msgid "Cancel"
-msgstr ""
+msgstr "Annulla"
 
 msgctxt "#70003"
 msgid "Default"
-msgstr ""
+msgstr "Predefinito"
 
 msgctxt "#70004"
 msgid "Loading..."
-msgstr ""
+msgstr "Caricamento..."
 
 msgctxt "#70005"
 msgid "Previous"
-msgstr ""
+msgstr "Precedente"
 
 msgctxt "#70006"
 msgid "Next"
-msgstr ""
+msgstr "Successivo"
 
 msgctxt "#70007"
 msgid "Accept"
-msgstr ""
+msgstr "Accetta"
 
 msgctxt "#70008"
 msgid "Reload"
-msgstr ""
+msgstr "Ricarica"
 
 msgctxt "#70009"
 msgid "Main menu"
-msgstr ""
+msgstr "Menu principale"
 
 msgctxt "#70010"
 msgid "Where To Search"
-msgstr ""
+msgstr "Dove cercare"
 
 msgctxt "#70011"
 msgid "Search for actor"
-msgstr ""
+msgstr "Cerca attore"
 
 msgctxt "#70012"
 msgid "Beginning"
-msgstr ""
+msgstr "Inizio"
 
 msgctxt "#70013"
 msgid "Horror"
-msgstr ""
+msgstr "Orrore"
 
 msgctxt "#70014"
 msgid "Castellan"
-msgstr ""
+msgstr "Castigliano"
 
 msgctxt "#70015"
 msgid "Torrents"
-msgstr ""
+msgstr "Torrents"
 
 msgctxt "#70016"
 msgid "Active channels"
-msgstr ""
+msgstr "Canali attivi"
 
 msgctxt "#70017"
 msgid "TV show"
-msgstr ""
+msgstr "Serie TV"
 
 msgctxt "#70018"
 msgid "Children"
-msgstr ""
+msgstr "Bambini"
 
 msgctxt "#70019"
 msgid "Documentary"
-msgstr ""
+msgstr "Documentari"
 
 msgctxt "#70020"
 msgid "Search similar"
-msgstr ""
+msgstr "Cerca simili"
 
 msgctxt "#70021"
 msgid "Search %s in %s"
-msgstr ""
+msgstr "Cerca %s in %s"
 
 msgctxt "#70022"
 msgid " - Movies"
-msgstr ""
+msgstr " - Film"
 
 msgctxt "#70023"
 msgid " - TV shows"
-msgstr ""
+msgstr " - Serie TV"
 
 msgctxt "#70024"
 msgid "Search in Filmaffinity"
-msgstr ""
+msgstr "Cerca in Filmaffinity"
 
 msgctxt "#70025"
 msgid "Search in IMDB"
-msgstr ""
+msgstr "Cerca in IMDB"
 
 msgctxt "#70026"
 msgid "MyAnimeList"
-msgstr ""
+msgstr "MyAnimeList"
 
 msgctxt "#70027"
 msgid "Search engine settings"
-msgstr ""
+msgstr "Impostazioni motori di ricerca"
 
 msgctxt "#70028"
 msgid "Most popular"
-msgstr ""
+msgstr "Più popolari"
 
 msgctxt "#70029"
 msgid "Top rated"
-msgstr ""
+msgstr "Più Votati"
 
 msgctxt "#70030"
 msgid "On The Bill"
-msgstr ""
+msgstr "In Cartellone"
 
 msgctxt "#70031"
 msgid "Next"
-msgstr ""
+msgstr "In Uscita"
 
 msgctxt "#70032"
 msgid "Genres"
-msgstr ""
+msgstr "Generi"
 
 msgctxt "#70033"
 msgid "Actors/Actresses by popularity"
-msgstr ""
+msgstr "Attori/Attrici per popolarità"
 
 msgctxt "#70034"
 msgid "Coming Soon"
-msgstr ""
+msgstr "Prossimamente"
 
 msgctxt "#70035"
 msgid "Search %s"
-msgstr ""
+msgstr "Cerca %s"
 
 msgctxt "#70036"
 msgid "Search actor/actress"
-msgstr ""
+msgstr "Cerca attore/attrice"
 
 msgctxt "#70037"
 msgid "Search director, writer..."
-msgstr ""
+msgstr "Cerca regista, sceneggiatore..."
 
 msgctxt "#70038"
 msgid "Custom filter"
-msgstr ""
+msgstr "Filtro personalizzato"
 
 msgctxt "#70039"
 msgid "Keyword filter"
-msgstr ""
+msgstr "Filtro per parola chiave"
 
 msgctxt "#70040"
 msgid "Top Filmaffinity"
-msgstr ""
+msgstr "Top Filmaffinity"
 
 msgctxt "#70042"
 msgid "Year"
-msgstr ""
+msgstr "Anno"
 
 msgctxt "#70043"
 msgid "Coming Out"
-msgstr ""
+msgstr "Prossime Uscite"
 
 msgctxt "#70044"
 msgid "Sagas and Collections"
-msgstr ""
+msgstr "Saghe e Collezioni"
 
 msgctxt "#70045"
 msgid "Movies/TV shows/Documentaries"
-msgstr ""
+msgstr "Film/Serie TV/Documentari"
 
 msgctxt "#70046"
 msgid "Search Movies/TV shows"
-msgstr ""
+msgstr "Cerca Film/Serie TV"
 
 msgctxt "#70047"
 msgid "Search by director"
-msgstr ""
+msgstr "Cerca per regista"
 
 msgctxt "#70048"
 msgid "My Account"
-msgstr ""
+msgstr "Il Mio Account"
 
 msgctxt "#70049"
 msgid "Most Popular"
-msgstr ""
+msgstr "Più Popolari"
 
 msgctxt "#70050"
 msgid "Recommended Now"
-msgstr ""
+msgstr "Da Vedere"
 
 msgctxt "#70051"
 msgid "Most Anticipated "
-msgstr ""
+msgstr "Più Attesi"
 
 msgctxt "#70052"
 msgid "Custom recommendations"
-msgstr ""
+msgstr "Raccomandazioni personalizzate"
 
 msgctxt "#70053"
 msgid "Most Viewed"
-msgstr ""
+msgstr "Più Visti"
 
 msgctxt "#70054"
 msgid "Link your trakt account"
-msgstr ""
+msgstr "Collega il tuo account trakt"
 
 msgctxt "#70055"
 msgid "Watchlists"
-msgstr ""
+msgstr "Watchlist"
 
 msgctxt "#70056"
 msgid "Recently Watched"
-msgstr ""
+msgstr "Guardato di Recente"
 
 msgctxt "#70057"
 msgid "My lists"
-msgstr ""
+msgstr "Le Mie Liste"
 
 msgctxt "#70058"
 msgid "Top TV shows"
-msgstr ""
+msgstr "Top serie TV"
 
 msgctxt "#70059"
 msgid "Top Movies"
-msgstr ""
+msgstr "Top Film"
 
 msgctxt "#70060"
 msgid "Most Anticipated"
-msgstr ""
+msgstr "Più Attesi"
 
 msgctxt "#70061"
 msgid "Top Anime"
-msgstr ""
+msgstr "Top Anime"
 
 msgctxt "#70062"
 msgid "Anime by Seasons"
-msgstr ""
+msgstr "Anime per Stagioni"
 
 msgctxt "#70063"
 msgid "Anime by Genres"
-msgstr ""
+msgstr "Anime per Genere"
 
 msgctxt "#70064"
 msgid "Search TV shows/Movies/Anime"
-msgstr ""
+msgstr "Cerca serie TV/Film/Anime"
 
 msgctxt "#70065"
 msgid ">> Next Page"
-msgstr ""
+msgstr ">> Pagina successiva"
 
 msgctxt "#70066"
 msgid "    Search title in spanish: %s"
-msgstr ""
+msgstr "Cerca il suo titolo in italiano: %s"
 
 msgctxt "#70067"
 msgid "Info Seasons [%s]"
-msgstr ""
+msgstr "Info delle stagioni [%s]"
 
 msgctxt "#70068"
 msgid "In my Collection"
-msgstr ""
+msgstr "Nella mia Collezione"
 
 msgctxt "#70069"
 msgid "Search %s in S4Me: %s"
-msgstr ""
+msgstr "Cerca %s in S4Me: %s"
 
 msgctxt "#70070"
 msgid "Search original title: %s"
-msgstr ""
+msgstr "Cerca il titolo originale: %s"
 
 msgctxt "#70071"
 msgid "Cast"
-msgstr ""
+msgstr "Vedi Cast"
 
 msgctxt "#70072"
 msgid "Most Viewed"
-msgstr ""
+msgstr "Più Viste"
 
 msgctxt "#70073"
 msgid "Most Anticipated"
-msgstr ""
+msgstr "Più Attese"
 
 msgctxt "#70074"
 msgid "Viewed"
-msgstr ""
+msgstr "Viste"
 
 msgctxt "#70075"
 msgid "Most Anticipated"
-msgstr ""
+msgstr "Più Attese"
 
 msgctxt "#70076"
 msgid "Top rated"
-msgstr ""
+msgstr "Più Votate"
 
 msgctxt "#70077"
 msgid "Most Viewed"
-msgstr ""
+msgstr "Più Viste"
 
 msgctxt "#70078"
 msgid "Show only links of "
-msgstr ""
+msgstr "Mostra solo link di "
 
 msgctxt "#70079"
 msgid "Delete channel "
-msgstr ""
+msgstr "Elimina canale "
 
 msgctxt "#70081"
 msgid "The folder "%s" contains other files. Delete it anyway?"
-msgstr ""
+msgstr "La cartella "%s" contiene altri file. Eliminarla comunque?"
 
 msgctxt "#70082"
 msgid "Global Search"
-msgstr ""
+msgstr "Ricerca Globale"
 
 msgctxt "#70083"
 msgid "Show all links"
-msgstr ""
+msgstr "Mostra tutti i link"
 
 msgctxt "#70084"
 msgid "Delete movie"
-msgstr ""
+msgstr "Elimina film"
 
 msgctxt "#70085"
 msgid "Delete TV show"
-msgstr ""
+msgstr "Elimina serie TV"
 
 msgctxt "#70086"
 msgid "Delete channel %s"
-msgstr ""
+msgstr "Elimina canale %s"
 
 msgctxt "#70087"
 msgid "Deleted %s links from canal %s"
-msgstr ""
+msgstr "Eliminati %s link del canale %s"
 
 msgctxt "#70088"
 msgid "Are you sure you want to delete "%s" from video library?"
-msgstr ""
+msgstr "Vuoi davvero eliminare "%s" dalla videoteca?"
 
 msgctxt "#70089"
 msgid "Show only links of %s"
-msgstr ""
+msgstr "Mostra solo link di %s"
 
 msgctxt "#70090"
 msgid "    Exclude all streams with specific words"
-msgstr ""
+msgstr "Escludi streams con specifiche parole"
 
 msgctxt "#70091"
 msgid "    Words"
-msgstr ""
+msgstr "Parole"
 
 msgctxt "#70092"
 msgid "Add to video library"
-msgstr ""
+msgstr "Aggiungere alla videoteca"
 
 msgctxt "#70093"
 msgid "The Movie Database"
-msgstr ""
+msgstr "The Movie Database"
 
 msgctxt "#70094"
 msgid "Select the information provider for movies"
-msgstr ""
+msgstr "Seleziona il provider informazioni per i film"
 
 msgctxt "#70095"
 msgid "Universal Movie Scraper not found. Install it now?"
-msgstr ""
+msgstr "Universal Movie Scraper non trovato. Installarlo ora?"
 
 msgctxt "#70096"
 msgid "Universal Movie Scraper"
-msgstr ""
+msgstr "Universal Movie Scraper"
 
 msgctxt "#70097"
 msgid "Universal Movie Scraper has not been installed"
-msgstr ""
+msgstr "Universal Movie Scraper non è stato installato"
 
 msgctxt "#70098"
 msgid "The TVDB"
-msgstr ""
+msgstr "The TVDB"
 
 msgctxt "#70099"
 msgid "The TVDB has not been installed"
-msgstr ""
+msgstr "The TVDB non è stato installato"
 
 msgctxt "#70101"
 msgid "Error inserting the video library path in Kodi database"
-msgstr ""
+msgstr "Errore durante l'inserimento del percorso della videoteca nel database di Kodi"
 
 msgctxt "#70102"
 msgid "Video library %s not configured"
-msgstr ""
+msgstr "Videoteca %s non configurata"
 
 msgctxt "#70103"
 msgid "Video library %s configured"
-msgstr ""
+msgstr "Videoteca %s configurata"
 
 msgctxt "#70104"
 msgid "The Kodi video library has been successfully configured"
-msgstr ""
+msgstr "La libreria di Kodi è stata configurata correttamente"
 
 msgctxt "#70105"
 msgid "Do you want S4Me to configure the Kodi library? You will be asked to set up scrapers for movies and TV shows."
-msgstr ""
+msgstr "Vuoi che S4Me configuri la videoteca di Kodi? Ti verrà chiesto di installare i providers info per film e serie TV."
 
 msgctxt "#70106"
 msgid "If you choose 'No' you can do it later from 'Configuration > Preferences > Paths'."
-msgstr ""
+msgstr "Se Scegli 'No' potrai farlo in seguito da 'Impostazioni > Preferenze > Percorsi'."
 
 msgctxt "#70107"
 msgid "Select the information provider for TV shows"
-msgstr ""
+msgstr "Seleziona il provider informazioni per le serie TV"
 
 msgctxt "#70108"
 msgid "Icons set"
-msgstr ""
+msgstr "Set di icone"
 
 msgctxt "#70109"
 msgid "Syncronize with Trakt.tv"
-msgstr ""
+msgstr "Sincronizza con Trakt.tv"
 
 msgctxt "#70110"
 msgid "Priority method"
-msgstr ""
+msgstr "Priorità"
 
 msgctxt "#70111"
 msgid "Stop search when find an option"
-msgstr ""
+msgstr "Termina ricerca quando si trova un'opzione"
 
 msgctxt "#70112"
 msgid "Hide payment servers without an account"
-msgstr ""
+msgstr "Nascondere server senza account"
 
 msgctxt "#70113"
 msgid "Password (default 0000)"
-msgstr ""
+msgstr "Password (default 0000)"
 
 msgctxt "#70114"
 msgid "Only until Kodi restarts"
-msgstr ""
+msgstr "Fino al riavvio di Kodi"
 
 msgctxt "#70115"
 msgid "Trailer search in progress"
-msgstr ""
+msgstr "Ricerca trailer in corso"
 
 msgctxt "#70116"
 msgid "New password"
-msgstr ""
+msgstr "Nuova password"
 
 msgctxt "#70117"
 msgid "Confirm new password"
-msgstr ""
+msgstr "Conferma nuova password"
 
 msgctxt "#70118"
 msgid "TV shows folder"
-msgstr ""
+msgstr "Cartella serie TV"
 
 msgctxt "#70119"
 msgid "Movies folder"
-msgstr ""
+msgstr "Cartella film"
 
 msgctxt "#70120"
 msgid "Add S4Me contents to Kodi video library"
-msgstr ""
+msgstr "Aggiungi la videoteca di S4Me alla libreria di Kodi"
 
 msgctxt "#70121"
 msgid "Activate"
-msgstr ""
+msgstr "Attiva"
 
 msgctxt "#70122"
 msgid "Show channel (select it from homepage)"
-msgstr ""
+msgstr "Mostra canale (seleziona dalla homepage)"
 
 msgctxt "#70123"
 msgid "Show news"
-msgstr ""
+msgstr "Mostra novità"
 
 msgctxt "#70124"
 msgid "Category"
-msgstr ""
+msgstr "Categoria"
 
 msgctxt "#70125"
 msgid "Movie|TV shows|Anime|Children|Documentary|Horror|Castellan|Latin|Torrent"
-msgstr ""
+msgstr "Fim|Serie TV|Anime|Bambini|Documentari|Horror|Castigliano|Latino|Torrent"
 
 msgctxt "#70126"
 msgid "Customization"
-msgstr ""
+msgstr "Personalizzazione"
 
 msgctxt "#70128"
 msgid "InfoPlus animation"
@@ -3354,507 +3353,507 @@ msgstr "Animazione InfoPlus"
 
 msgctxt "#70129"
 msgid "Without animation"
-msgstr ""
+msgstr "Senza animazione"
 
 msgctxt "#70130"
 msgid "With animation"
-msgstr ""
+msgstr "Con animazione"
 
 msgctxt "#70131"
 msgid "Thumbnail for videos"
-msgstr ""
+msgstr "Thumbnail per i video"
 
 msgctxt "#70132"
 msgid "Poster"
-msgstr ""
+msgstr "Poster"
 
 msgctxt "#70133"
 msgid "Server logo"
-msgstr ""
+msgstr "Server logo"
 
 msgctxt "#70134"
 msgid "Intelligent Titles"
-msgstr ""
+msgstr "Titoli Intelligenti"
 
 msgctxt "#70135"
 msgid "Custom Colours"
-msgstr ""
+msgstr "Colori Personalizzati"
 
 msgctxt "#70136"
 msgid "TV shows"
-msgstr ""
+msgstr "Serie TV"
 
 msgctxt "#70137"
 msgid "Movies"
-msgstr ""
+msgstr "Film"
 
 msgctxt "#70138"
 msgid "Low Rating"
-msgstr ""
+msgstr "Valutazione Bassa"
 
 msgctxt "#70139"
 msgid "Average Rating"
-msgstr ""
+msgstr "Valutazione Media"
 
 msgctxt "#70140"
 msgid "High Rating"
-msgstr ""
+msgstr "Valutazione Alta"
 
 msgctxt "#70141"
 msgid "Quality"
-msgstr ""
+msgstr "Qualita"
 
 msgctxt "#70142"
 msgid "VOSE (Original Subtitled Spanish Version)"
-msgstr ""
+msgstr "VOSE (Versione Originale Sottotitolato Spagnolo)"
 
 msgctxt "#70143"
 msgid "VOS (Original Subtitled Version)"
-msgstr ""
+msgstr "VOS (Versione Originale Sottotitolato)"
 
 msgctxt "#70144"
 msgid "VO (Original Version)"
-msgstr ""
+msgstr "VO (Versione Originale)"
 
 msgctxt "#70145"
 msgid "Servers"
-msgstr ""
+msgstr "Server"
 
 msgctxt "#70146"
 msgid "Add to video library"
-msgstr ""
+msgstr "Aggiungi alla videoteca"
 
 msgctxt "#70147"
 msgid "Video library (update TV show)"
-msgstr ""
+msgstr "Videoteca (aggiorna serie TV)"
 
 msgctxt "#70148"
 msgid "Video library (do not update TV show)"
-msgstr ""
+msgstr "Videoteca (non aggiornare serie TV)"
 
 msgctxt "#70149"
 msgid "Others"
-msgstr ""
+msgstr "Altro"
 
 msgctxt "#70150"
 msgid "Contextual menu"
-msgstr ""
+msgstr "Menu contestuale"
 
 msgctxt "#70151"
 msgid "Show InfoPlus"
-msgstr ""
+msgstr "Mostra InfoPlus"
 
 msgctxt "#70152"
 msgid "Show ExtendedInfo"
-msgstr ""
+msgstr "Mostra ExtendedInfo"
 
 msgctxt "#70153"
 msgid "View mode saved"
-msgstr ""
+msgstr "Tipo di vista salvato"
 
 msgctxt "#70154"
 msgid "TMDB search"
-msgstr ""
+msgstr "Ricerca TMDB"
 
 msgctxt "#70155"
 msgid "Simultaneous searches"
-msgstr ""
+msgstr "Ricerche simultanee"
 
 msgctxt "#70156"
 msgid "Search actor's information"
-msgstr ""
+msgstr "Cerca informazioni sugli attori"
 
 msgctxt "#70157"
 msgid "Use cache"
-msgstr ""
+msgstr "Usa cache"
 
 msgctxt "#70158"
 msgid "every 1 day"
-msgstr ""
+msgstr "ogni 1 giorni"
 
 msgctxt "#70159"
 msgid "every 7 days"
-msgstr ""
+msgstr "ogni 7 giorni"
 
 msgctxt "#70160"
 msgid "every 15 days"
-msgstr ""
+msgstr "ogni 15 giorni"
 
 msgctxt "#70161"
 msgid "every 30 days"
-msgstr ""
+msgstr "ogni 30 giorni"
 
 msgctxt "#70162"
 msgid "Renew cache?"
-msgstr ""
+msgstr "Rinnovare la cache?"
 
 msgctxt "#70163"
 msgid "Clear cache"
-msgstr ""
+msgstr "Pulire la cache"
 
 msgctxt "#70164"
 msgid "Free First"
-msgstr ""
+msgstr "Free prima"
 
 msgctxt "#70165"
 msgid "Premium First"
-msgstr ""
+msgstr "Premium prima"
 
 msgctxt "#70166"
 msgid "Debriders First"
-msgstr ""
+msgstr "Debriders prima"
 
 msgctxt "#70167"
 msgid "Titles Options"
-msgstr ""
+msgstr "Opzioni per i Titoli"
 
 msgctxt "#70168"
 msgid "General"
-msgstr ""
+msgstr "Generale"
 
 msgctxt "#70169"
 msgid "Servers use"
-msgstr ""
+msgstr "Uso dei servers"
 
 msgctxt "#70170"
 msgid "No"
-msgstr ""
+msgstr "No"
 
 msgctxt "#70171"
 msgid "Torrent"
-msgstr ""
+msgstr "Torrent"
 
 msgctxt "#70172"
 msgid "      Plan B (If favourites fail try other links)"
-msgstr ""
+msgstr "      Piano B (Se i preferiti non vanno prova altri link)"
 
 msgctxt "#70173"
 msgid "No working links"
-msgstr ""
+msgstr "Nessun link funzionante"
 
 msgctxt "#70174"
 msgid "Server and Quality"
-msgstr ""
+msgstr "Servidor y Calidad"
 
 msgctxt "#70175"
 msgid "Quality and Server"
-msgstr ""
+msgstr "Calidad y Servidor"
 
 msgctxt "#70176"
 msgid "Wait"
-msgstr ""
+msgstr "Attendi"
 
 msgctxt "#70177"
 msgid "seconds for the video to start ..."
-msgstr ""
+msgstr "secondi che inizi il vídeo..."
 
 msgctxt "#70178"
 msgid "Trying with: %s"
-msgstr ""
+msgstr "Provando con: %s"
 
 msgctxt "#70179"
 msgid "Getting list of available servers ..."
-msgstr ""
+msgstr "Ottenimento lista servers disponibili..."
 
 msgctxt "#70180"
 msgid "Connecting with %s..."
-msgstr ""
+msgstr "Connessione con %s..."
 
 msgctxt "#70181"
 msgid "Available servers: %s"
-msgstr ""
+msgstr "Servers disponibili: %s"
 
 msgctxt "#70182"
 msgid "Identifying servers ..."
-msgstr ""
+msgstr "Identificazione servers..."
 
 msgctxt "#70183"
 msgid "Getting list of available servers"
-msgstr ""
+msgstr "Ottenimento lista servers disponibili"
 
 msgctxt "#70184"
 msgid "Getting list of available servers:"
-msgstr ""
+msgstr "Ottenimento lista servers disponibili:"
 
 msgctxt "#70185"
 msgid " chapters of: "
-msgstr ""
+msgstr " capitoli di: "
 
 msgctxt "#70186"
 msgid "Getting episodes..."
-msgstr ""
+msgstr "Ottenimento episodi..."
 
 msgctxt "#70187"
 msgid "For content %s -> %s"
-msgstr ""
+msgstr "Per contenuto %s -> %s"
 
 msgctxt "#70188"
 msgid "Obtaining data for the TV show"
-msgstr ""
+msgstr "Ottenimento dati della serie TV"
 
 msgctxt "#70189"
 msgid "Start the download now?"
-msgstr ""
+msgstr "Iniziare il download ora?"
 
 msgctxt "#70190"
 msgid "Add chapters..."
-msgstr ""
+msgstr "Aggiunta capitoli..."
 
 msgctxt "#70191"
 msgid "Obtaining data from the movie"
-msgstr ""
+msgstr "Ottenimento dati del film"
 
 msgctxt "#70192"
 msgid "Select server"
-msgstr ""
+msgstr "Seleziona il server"
 
 msgctxt "#70193"
 msgid "Open torrent with..."
-msgstr ""
+msgstr "Apri torrent con..."
 
 msgctxt "#70194"
 msgid "S4Me-torrent"
-msgstr ""
+msgstr "S4Me-torrent"
 
 msgctxt "#70195"
 msgid "S4Me - Torrent"
-msgstr ""
+msgstr "S4Me - Torrent"
 
 msgctxt "#70196"
 msgid "Beginning..."
-msgstr ""
+msgstr "Inizio..."
 
 msgctxt "#70197"
 msgid "Automatically stopping at: %ss"
-msgstr ""
+msgstr "Arresto automatico in: %ss"
 
 msgctxt "#70198"
 msgid "Do you want to start playback?"
-msgstr ""
+msgstr "Vuoi iniziare la riproduzione?"
 
 msgctxt "#70199"
 msgid "Do you want to cancel the process?"
-msgstr ""
+msgstr "Vuoi annullare il processo?"
 
 msgctxt "#70200"
 msgid "Finishing and deleting data"
-msgstr ""
+msgstr "Fine e cancellazione dati"
 
 msgctxt "#70201"
 msgid "Mass Testing Tools"
-msgstr ""
+msgstr "Strumenti di test massivo"
 
 msgctxt "#70202"
 msgid "- Test channels ..."
-msgstr ""
+msgstr "- Test canali ..."
 
 msgctxt "#70203"
 msgid "- Test servers ..."
-msgstr ""
+msgstr "- Test servers ..."
 
 msgctxt "#70204"
 msgid "- Test recent!"
-msgstr ""
+msgstr "- Test novità!"
 
 msgctxt "#70205"
 msgid "- Upload tests to web!"
-msgstr ""
+msgstr "- Upload tests su web!"
 
 msgctxt "#70206"
 msgid "Link found in %s"
-msgstr ""
+msgstr "%s"
 
 msgctxt "#70207"
 msgid "    - Movies 4K "
-msgstr ""
+msgstr "    - Film 4K "
 
 msgctxt "#70208"
 msgid "Movies 4K"
-msgstr ""
+msgstr "Film 4K"
 
 msgctxt "#70209"
 msgid "Horror movies!"
-msgstr ""
+msgstr "Horror movies!"
 
 msgctxt "#70210"
 msgid " (In %s and %s)"
-msgstr ""
+msgstr " (In %s e %s)"
 
 msgctxt "#70211"
 msgid " (In %s)"
-msgstr ""
+msgstr " (En %s)"
 
 msgctxt "#70212"
 msgid "    - Castellan"
-msgstr ""
+msgstr "    - Castigliano"
 
 msgctxt "#70213"
 msgid "    - Latin"
-msgstr ""
+msgstr "    - Latino"
 
 msgctxt "#70214"
 msgid "    - Torrent"
-msgstr ""
+msgstr "    - Torrent"
 
 msgctxt "#70215"
 msgid "TEST THIS CHANNEL"
-msgstr ""
+msgstr "TESTA QUESTO CANALE"
 
 msgctxt "#70216"
 msgid "Back"
-msgstr ""
+msgstr "Indietro"
 
 msgctxt "#70217"
 msgid "downloads"
-msgstr ""
+msgstr "downloads"
 
 msgctxt "#70218"
 msgid "Delete complete downloads"
-msgstr ""
+msgstr "Elimina i downloads completati"
 
 msgctxt "#70219"
 msgid "Restart download with error"
-msgstr ""
+msgstr "Reinizia i download con errori"
 
 msgctxt "#70220"
 msgid "Download all"
-msgstr ""
+msgstr "Scarica tutti"
 
 msgctxt "#70221"
 msgid "Delete all"
-msgstr ""
+msgstr "Elimina tutto"
 
 msgctxt "#70222"
 msgid "View downloaded files"
-msgstr ""
+msgstr "Vedi i files scaricati"
 
 msgctxt "#70223"
 msgid "Settings downloads..."
-msgstr ""
+msgstr "Configurazione downloads..."
 
 msgctxt "#70224"
 msgid "settings -- Downloads"
-msgstr ""
+msgstr "configurazione -- Download"
 
 msgctxt "#70225"
 msgid "Download"
-msgstr ""
+msgstr "Scarica"
 
 msgctxt "#70226"
 msgid "Remove from the list"
-msgstr ""
+msgstr "Elimina dalla lista"
 
 msgctxt "#70227"
 msgid "Restart download and delete data"
-msgstr ""
+msgstr "Reinizia il download ed elimina dati"
 
 msgctxt "#70228"
 msgid "Downloaded: %s"
-msgstr ""
+msgstr "Scaricato: %s"
 
 msgctxt "#70229"
 msgid "File location"
-msgstr ""
+msgstr "Posizione dei files"
 
 msgctxt "#70230"
 msgid "Add completed downloads to the video library "
-msgstr ""
+msgstr "Aggiungi download completi alla videoteca"
 
 msgctxt "#70231"
 msgid "Move downloaded files to the video library"
-msgstr ""
+msgstr "Sposta file scaricati nella videoteca"
 
 msgctxt "#70232"
 msgid "View downloaded files"
-msgstr ""
+msgstr "Visualizza file scaricati"
 
 msgctxt "#70233"
 msgid "  - Size per block"
-msgstr ""
+msgstr "  - Dimensione per blocco"
 
 msgctxt "#70234"
 msgid "  - Size by part"
-msgstr ""
+msgstr "  - Dimensione per parte"
 
 msgctxt "#70235"
 msgid "  - Maximum number of simultaneous connections"
-msgstr ""
+msgstr "  - Numero massimo di connnessioni simultanee"
 
 msgctxt "#70236"
 msgid "  - Maximum number of parts in memory"
-msgstr ""
+msgstr "  - Numero massimo di parti in memoria"
 
 msgctxt "#70237"
 msgid "Choice of the server"
-msgstr ""
+msgstr "Scelta del server"
 
 msgctxt "#70238"
 msgid "- Order of servers"
-msgstr ""
+msgstr "  - Ordine dei servers"
 
 msgctxt "#70240"
 msgid "Preferred quality"
-msgstr ""
+msgstr "Qualità preferita"
 
 msgctxt "#70241"
 msgid "Highest"
-msgstr ""
+msgstr "Più alta"
 
 msgctxt "#70242"
 msgid "Choose fastest servers"
-msgstr ""
+msgstr "Scegli server più veloci"
 
 msgctxt "#70243"
 msgid "Download"
-msgstr ""
+msgstr "Download"
 
 msgctxt "#70244"
 msgid "Keep"
-msgstr ""
+msgstr "Mantieni"
 
 msgctxt "#70245"
 msgid "Reorder"
-msgstr ""
+msgstr "Riordina"
 
 msgctxt "#70246"
 msgid "Preferred language"
-msgstr ""
+msgstr "Lingua preferita"
 
 msgctxt "#70247"
 msgid "Home page"
-msgstr ""
+msgstr "Home page"
 
 msgctxt "#70248"
 msgid "Use personal API key"
-msgstr ""
+msgstr "Usa chiave API personale"
 
 msgctxt "#70249"
 msgid "API key"
-msgstr ""
+msgstr "Chiave key"
 
 msgctxt "#70250"
 msgid "No home page has been defined. Please select one using the context menu."
-msgstr ""
+msgstr "Nessuna home page è stata definita. Per favore selezionane una utilizzando il menu contestuale."
 
 msgctxt "#70251"
 msgid "Check the log in %s for more details."
-msgstr ""
+msgstr "Controllare il log in %s per maggiori dettagli."
 
 msgctxt "#70252"
 msgid "Duration: %s minutes"
-msgstr ""
+msgstr "Durata: %s minuti"
 
 msgctxt "#70253"
 msgid "Torrent client settings"
-msgstr ""
+msgstr "Impostazioni client torrent"
 
 msgctxt "#70254"
 msgid "Internal Client"
-msgstr ""
+msgstr "Client interno"
 
 msgctxt "#70255"
 msgid "Internal client - MCT"
-msgstr ""
+msgstr "Client interno - MCT"
 
 msgctxt "#70256"
 msgid "What client do you want to use to play torrent?"
@@ -3862,1399 +3861,1399 @@ msgstr "Quale client vuoi usare per riprodurre il torrent?"
 
 msgctxt "#70257"
 msgid "Settings -- Torrent"
-msgstr ""
+msgstr "Impostazioni -- Torrent"
 
 msgctxt "#70258"
 msgid "S4Me started"
-msgstr ""
+msgstr "S4Me avviato"
 
 msgctxt "#70259"
 msgid "The URL to access is http://%s:%s"
-msgstr ""
+msgstr "URL per accedere: http://%s:%s"
 
 msgctxt "#70260"
 msgid "WebSocket Server started in ws: //% s:% s"
-msgstr ""
+msgstr "WebSocket Server avviato in ws://%s:%s"
 
 msgctxt "#70261"
 msgid "Stopping the HTTP server ..."
-msgstr ""
+msgstr "Arresto del server HTTP..."
 
 msgctxt "#70262"
 msgid "Stopping the Websocket server ..."
-msgstr ""
+msgstr "Arresto del WebSocket..."
 
 msgctxt "#70263"
 msgid "S4Me stopped"
-msgstr ""
+msgstr "S4Me arrestato"
 
 msgctxt "#70264"
 msgid "Enter the username and password to access S4Me"
-msgstr ""
+msgstr "Enter the ususername e password per accedere a S4Me"
 
 msgctxt "#70265"
 msgid "The data entered is not correct!"
-msgstr ""
+msgstr "I dati introdotti non sono corretti!"
 
 msgctxt "#70266"
 msgid "The search for %s did not match"
-msgstr ""
+msgstr "La ricerca di %s non ha dato risultati"
 
 msgctxt "#70268"
 msgid "The TV show "%s" is ended or has been canceled. Would you like to remove it from the video library update?"
-msgstr ""
+msgstr "La serie TV "%s" è terminata o è stata cancellata. Vuoi rimuoverla dall'aggiornamento della videoteca?"
 
 msgctxt "#70269"
 msgid "Search new episodes"
-msgstr ""
+msgstr "Cerca nuovi episodi"
 
 msgctxt "#70270"
 msgid "Movies video library"
-msgstr ""
+msgstr "Videoteca film"
 
 msgctxt "#70271"
 msgid "TV shows video library"
-msgstr ""
+msgstr "Videoteca serie TV"
 
 msgctxt "#70272"
 msgid "Activate premium account"
-msgstr ""
+msgstr "Attiva account premium"
 
 msgctxt "#70273"
 msgid "Choose included channels"
-msgstr ""
+msgstr "Scegli i canali inclusi"
 
 msgctxt "#70274"
 msgid "Alternative search"
-msgstr ""
+msgstr "Ricerca alternativa"
 
 msgctxt "#70275"
 msgid "Add Torrent channels in search"
-msgstr ""
+msgstr "Includere i canali Torrent nella ricerca"
 
 msgctxt "#70276"
 msgid "Search by Title"
-msgstr ""
+msgstr "Cerca per Titolo"
 
 msgctxt "#70277"
 msgid "MediaServer Language (Restart Required)"
-msgstr ""
+msgstr "Lingua MediaServer (Riavvio Richiesto)"
 
 msgctxt "#70278"
 msgid "Rename"
-msgstr ""
+msgstr "Rinomina"
 
 msgctxt "#70279"
 msgid "You can try downloading the 'libtorrent' module from Kodi or installing some addon like 'Quasar' or 'Torrenter', \nwhich will appear among the options in the pop-up \nwhen it appears when clicking on a torrent link. 'Torrenter 'It's more complex but also more complete \nand it always works.'"
-msgstr ""
+msgstr "Puoi provare a scaricare il modulo 'libtorrent' da Kodi o installare alcuni addon come 'Quasar' o 'Torrenter', che appariranno tra le opzioni nel pop-up .Quando appare quando fai clic su un collegamento torrent. 'Torrenter' È più complesso ma anche più completo e funziona sempre."
 
 msgctxt "#70280"
 msgid "    -  Torrent Links don't work."
-msgstr ""
+msgstr "    - I Link Torrent non funzionano."
 
 msgctxt "#70281"
 msgid "Do you want to show these links?"
-msgstr ""
+msgstr "Vuoi vedere questi links"
 
 msgctxt "#70282"
 msgid "Searching in %s"
-msgstr ""
+msgstr "Ricerca in %s"
 
 msgctxt "#70283"
 msgid "movie"
-msgstr ""
+msgstr "film"
 
 msgctxt "#70284"
 msgid "%.2f%% of %.1fMB %s | %.1f kB/s"
-msgstr ""
+msgstr "%.2f%% di %.1fMB %s | %.1f kB/s"
 
 msgctxt "#70285"
 msgid "Configure news"
-msgstr ""
+msgstr "Configura novità"
 
 msgctxt "#70286"
 msgid "Configure search"
-msgstr ""
+msgstr "Configura ricerca"
 
 msgctxt "#70287"
 msgid "Video library settings"
-msgstr ""
+msgstr "Impostazioni videoteca"
 
 msgctxt "#70288"
 msgid "Configure downloads"
-msgstr ""
+msgstr "Configura downloads"
 
 msgctxt "#70291"
 msgid "Error, during conversion"
-msgstr ""
+msgstr "Errore, in conversione"
 
 msgctxt "#70292"
 msgid "[%s] File no longer exist on this server."
-msgstr ""
+msgstr "[%s] Il file non è più presente nel server."
 
 msgctxt "#70293"
 msgid "[%s] The file is processing or has been deleted."
-msgstr ""
+msgstr "[%s] Il file video è ancora in elaborazione o è stato rimosso."
 
 msgctxt "#70294"
 msgid "[%s] Link Not valid."
-msgstr ""
+msgstr "[%s] URL Non valido."
 
 msgctxt "#70295"
 msgid "[%s] Premium account needed."
-msgstr ""
+msgstr "[%s] É Necessario un account premium."
 
 msgctxt "#70296"
 msgid "[%s] Internal server error."
-msgstr ""
+msgstr "[%s] Errore server interno."
 
 msgctxt "#70297"
 msgid "[%s] File is awaiting for moderation."
-msgstr ""
+msgstr "[%s] Il File è in attesa di moderazione."
 
 msgctxt "#70298"
 msgid "[%s] The number of allowed reproductions has been exceeded."
-msgstr ""
+msgstr "[%s] Il numero di riproduzioni concesse è stato superato."
 
 msgctxt "#70299"
 msgid "[%s] You do not have permission to access this file."
-msgstr ""
+msgstr "[%s] Non hai il permesso per accedere a questo file."
 
 msgctxt "#70300"
 msgid "[%s] Too many connections to the server, try later."
-msgstr ""
+msgstr "[%s] Troppe connessioni al server, riprova più tardi."
 
 msgctxt "#70301"
 msgid "[%s] File deleted for infringement."
-msgstr ""
+msgstr "[%s] File rimosso per infrazione."
 
 msgctxt "#70302"
 msgid "[%s] This server only works from Kodi 17."
-msgstr ""
+msgstr "[%s] Questo server funziona solo a partire da Kodi 17."
 
 msgctxt "#70303"
 msgid "[%s] This server does not work with your version of Plex, try to update it."
-msgstr ""
+msgstr "[%s] Questo server non funziona con la tua versione di Plex, prova ad aggiornare Plex."
 
 msgctxt "#70304"
 msgid "[%s] This server requires updating python to version 2.7.9 or higher."
-msgstr ""
+msgstr "[%s] Questo server richiede la versione 2.7.9 (O Maggiore) di Python."
 
 msgctxt "#70305"
 msgid "Search in channels"
-msgstr ""
+msgstr "Cerca nei canali"
 
 msgctxt "#70306"
 msgid "Movies by Genre"
-msgstr ""
+msgstr "Film per Genere"
 
 msgctxt "#70307"
 msgid "Most popular Movies"
-msgstr ""
+msgstr "Film più popolari"
 
 msgctxt "#70308"
 msgid "Top rated Movies"
-msgstr ""
+msgstr "Film più valutati"
 
 msgctxt "#70309"
 msgid "Movies Now in Theatres "
-msgstr ""
+msgstr "Film Ora in sala"
 
 msgctxt "#70310"
 msgid "TV shows by Genre"
-msgstr ""
+msgstr "Serie TV per Genere"
 
 msgctxt "#70311"
 msgid "TV shows most popular"
-msgstr ""
+msgstr "Serie TV più popolari"
 
 msgctxt "#70312"
 msgid "TV shows in progress"
-msgstr ""
+msgstr "Serie TV in corso"
 
 msgctxt "#70313"
 msgid "Top rated TV shows"
-msgstr ""
+msgstr "Serie TV più valutate"
 
 msgctxt "#70314"
 msgid "Actors/Actresses"
-msgstr ""
+msgstr "Attori/Attrici"
 
 msgctxt "#70315"
 msgid "Recommendations"
-msgstr ""
+msgstr "Raccomandati"
 
 msgctxt "#70316"
 msgid "List of Images"
-msgstr ""
+msgstr "Galleria di Immagini"
 
 msgctxt "#70317"
 msgid "Listen to BSO - List of songs"
-msgstr ""
+msgstr "Ascolta BSO - Lista di canzoni"
 
 msgctxt "#70318"
 msgid "Manage yor trakt account"
-msgstr ""
+msgstr "Gestisci il tuo account Trakt"
 
 msgctxt "#70319"
 msgid "Filming equipment"
-msgstr ""
+msgstr "Filming crew"
 
 msgctxt "#70320"
 msgid "Filter search"
-msgstr ""
+msgstr "Filtra la ricerca"
 
 msgctxt "#70321"
 msgid "[MAL] Add to your lists/%s"
-msgstr ""
+msgstr "[MAL] Aggiungi alle tue liste/%s"
 
 msgctxt "#70322"
 msgid "[MAL] in your list of %s Do you want to change?/%s"
-msgstr ""
+msgstr "[MAL] Nella tua lista di %s. Vuoi cambiare?/%s"
 
 msgctxt "#70323"
 msgid "[Trakt] Manage your account"
-msgstr ""
+msgstr "[Trakt] Gestisci il tuo account"
 
 msgctxt "#70324"
 msgid "[FA] My vote: %s  ---> Change?"
-msgstr ""
+msgstr "[FA] il Mio voto: %s  ---> Cambiare?"
 
 msgctxt "#70325"
 msgid "[FA] Vote %s"
-msgstr ""
+msgstr "[FA] Vota %s"
 
 msgctxt "#70326"
 msgid "[FA] Add or remove from a user list"
-msgstr ""
+msgstr "[FA] Aggiungi o rimuovi da un elenco utenti"
 
 msgctxt "#70327"
 msgid "It's part of: %s"
-msgstr ""
+msgstr "Fa parte di: %s"
 
 msgctxt "#70328"
 msgid "%ss similarar"
-msgstr ""
+msgstr "%s simili"
 
 msgctxt "#70329"
 msgid "User and/or passwords not configured"
-msgstr ""
+msgstr "Utente e/o password non configurati"
 
 msgctxt "#70330"
 msgid "Error in the user and/or password. Check your credentials"
-msgstr ""
+msgstr "Errore in username e/o password. Controlla le tue credenziali"
 
 msgctxt "#70331"
 msgid "Error during login. Check your credentials"
-msgstr ""
+msgstr "Errore durante il login. Controlla le tue credenziali"
 
 msgctxt "#70332"
 msgid "My votes"
-msgstr ""
+msgstr "I miei voti"
 
 msgctxt "#70333"
 msgid "Add new list"
-msgstr ""
+msgstr "Aggiungi una nuova lista"
 
 msgctxt "#70334"
 msgid "Action completed successfully"
-msgstr ""
+msgstr "Azione completata con successo"
 
 msgctxt "#70335"
 msgid "Error, something has failed during the process"
-msgstr ""
+msgstr "Errore, qualcosa è fallito durante il processo"
 
 msgctxt "#70336"
 msgid "Vote %s"
-msgstr ""
+msgstr "Vota %s"
 
 msgctxt "#70337"
 msgid "Vote completed successfully"
-msgstr ""
+msgstr "Voto inviato correttamente"
 
 msgctxt "#70338"
 msgid "List created correctly"
-msgstr ""
+msgstr "Lista creata correttamente"
 
 msgctxt "#70339"
 msgid "Fanart.tv website not available. Retry"
-msgstr ""
+msgstr "Sito Web di Fanart.tv non disponibile. Riprova"
 
 msgctxt "#70340"
 msgid "No images available"
-msgstr ""
+msgstr "Non sono disponibili immagini"
 
 msgctxt "#70341"
 msgid "[Trakt] Mark %s as not seen"
-msgstr ""
+msgstr "[Trakt] Segna %s come non vista"
 
 msgctxt "#70342"
 msgid "[Trakt] Mark %s as seen"
-msgstr ""
+msgstr "[Trakt] Segna %s come vista"
 
 msgctxt "#70343"
 msgid "[Trakt] Remove %s from your watchlist"
-msgstr ""
+msgstr "[Trakt] Rimuovi %s dalla tua watchlist"
 
 msgctxt "#70344"
 msgid "Add to %s your watchlist"
-msgstr ""
+msgstr "[Trakt] Aggiungi %s alla tua watchlist"
 
 msgctxt "#70345"
 msgid "[Trakt] Remove %s from your collection"
-msgstr ""
+msgstr "[Trakt] Rimuovi %s dalla tua collezione"
 
 msgctxt "#70346"
 msgid "[Trakt] Add %s to your collection"
-msgstr ""
+msgstr "[Trakt] Aggiungi %s alla tua collezione"
 
 msgctxt "#70347"
 msgid "Action performed correctly"
-msgstr ""
+msgstr "Azione completata correttamente"
 
 msgctxt "#70348"
 msgid "An error occurred in process"
-msgstr "Hubo error en el proceso"
+msgstr "Si è verificato un errore nel processo"
 
 msgctxt "#70349"
 msgid "List sorted by %s. Change order?"
-msgstr ""
+msgstr "Lista ordinata per %s. Cambiare ordine?"
 
 msgctxt "#70350"
 msgid "Search in S4Me: %s"
-msgstr ""
+msgstr "Cerca in S4Me: %s"
 
 msgctxt "#70351"
 msgid "Search alternative title: %s"
-msgstr ""
+msgstr "Cerca titolo alternativo: %s"
 
 msgctxt "#70352"
 msgid "Search title in english: %s"
-msgstr ""
+msgstr "Cerca titolo in inglese: %s"
 
 msgctxt "#70353"
 msgid "Vídeos (Episodes, Trailers...)"
-msgstr ""
+msgstr "Vídeo (Episodi, Trailers...)"
 
 msgctxt "#70354"
 msgid "Characters/Staff"
-msgstr ""
+msgstr "Personaggi/Staff"
 
 msgctxt "#70355"
 msgid "Prequel: %s"
-msgstr ""
+msgstr "Prequel: %s"
 
 msgctxt "#70356"
 msgid "Sequel: %s"
-msgstr ""
+msgstr "Sequel: %s"
 
 msgctxt "#70357"
 msgid "Alternative version: %s"
-msgstr ""
+msgstr "Versione alternativa: %s"
 
 msgctxt "#70358"
 msgid "Recommendations TMDB"
-msgstr ""
+msgstr "Raccomandazioni TMDB"
 
 msgctxt "#70359"
 msgid "Recommendations MyAnimeList"
-msgstr ""
+msgstr "Raccomandazioni MyAnimeList"
 
 msgctxt "#70360"
 msgid "  [Without subs in castellan]"
-msgstr ""
+msgstr "  [Senza subs in castigliano]"
 
 msgctxt "#70361"
 msgid ">> More Episodes"
-msgstr ""
+msgstr ">> Altri Episodi"
 
 msgctxt "#70362"
 msgid "Episodes"
-msgstr ""
+msgstr "Episodi"
 
 msgctxt "#70363"
 msgid "Trailers/Promotions"
-msgstr ""
+msgstr "Trailers/Promozionali"
 
 msgctxt "#70364"
 msgid "Winter"
-msgstr ""
+msgstr "Inverno"
 
 msgctxt "#70365"
 msgid "Spring"
-msgstr ""
+msgstr "Primavera"
 
 msgctxt "#70366"
 msgid "Summer"
-msgstr ""
+msgstr "Estate"
 
 msgctxt "#70367"
 msgid "Fall"
-msgstr ""
+msgstr "Autunno"
 
 msgctxt "#70368"
 msgid "(New)"
-msgstr ""
+msgstr "(Nuovi)"
 
 msgctxt "#70369"
 msgid "(Continuation)"
-msgstr ""
+msgstr "(Continuazione)"
 
 msgctxt "#70370"
 msgid "Characters/Benders"
-msgstr ""
+msgstr "Personaggi/Doppiatori"
 
 msgctxt "#70371"
 msgid "Principal"
-msgstr ""
+msgstr "Principale"
 
 msgctxt "#70372"
 msgid "Secondary"
-msgstr ""
+msgstr "Secondario"
 
 msgctxt "#70373"
 msgid "Animes where it appears:"
-msgstr ""
+msgstr "Anime dove appare:"
 
 msgctxt "#70374"
 msgid "Give voice to/in:"
-msgstr ""
+msgstr "Da voce a/in:"
 
 msgctxt "#70375"
 msgid "Staff in animes:"
-msgstr ""
+msgstr "Staff negli anime:"
 
 msgctxt "#70376"
 msgid "Info in AniDB %s"
-msgstr ""
+msgstr "Info in AniDB %s"
 
 msgctxt "#70377"
 msgid "  - Fansubs in spanish:"
-msgstr ""
+msgstr "  - Fansubs in spagnolo:"
 
 msgctxt "#70378"
 msgid "Complete"
-msgstr ""
+msgstr "Completa"
 
 msgctxt "#70379"
 msgid "Finished"
-msgstr ""
+msgstr "Terminada"
 
 msgctxt "#70380"
 msgid "Stalled"
-msgstr ""
+msgstr "In Pausa"
 
 msgctxt "#70381"
 msgid "Dropped"
-msgstr ""
+msgstr "Abbandonata"
 
 msgctxt "#70382"
 msgid "Currently watching"
-msgstr ""
+msgstr "In visione attualmente"
 
 msgctxt "#70383"
 msgid "Completed"
-msgstr ""
+msgstr "Completati"
 
 msgctxt "#70384"
 msgid "Pause"
-msgstr ""
+msgstr "in pausa"
 
 msgctxt "#70385"
 msgid "Descarted"
-msgstr ""
+msgstr "Scartati"
 
 msgctxt "#70386"
 msgid "See later"
-msgstr ""
+msgstr "Vedi dopo"
 
 msgctxt "#70387"
 msgid "E = In emission | F = Completed | P = Coming soon"
-msgstr ""
+msgstr "E=In uscita | F=Completato | P=Prossimamente"
 
 msgctxt "#70388"
 msgid ". Available actions:"
-msgstr ""
+msgstr ". Azioni disponibili:"
 
 msgctxt "#70389"
 msgid ". In your list %s"
-msgstr ""
+msgstr ". Nella tua lista %s"
 
 msgctxt "#70390"
 msgid "Anime: %s%s"
-msgstr ""
+msgstr "Anime: %s%s"
 
 msgctxt "#70391"
 msgid "Add to list %s"
-msgstr ""
+msgstr "Aggiungi alla lista %s"
 
 msgctxt "#70392"
 msgid "Rate with a %s"
-msgstr ""
+msgstr "Dai un punteggio con un %s"
 
 msgctxt "#70393"
 msgid "Myanimelist username and/or password blank"
-msgstr ""
+msgstr "Username e/o password di Myanimelist vuoti"
 
 msgctxt "#70394"
 msgid "Action"
-msgstr ""
+msgstr "Azione"
 
 msgctxt "#70395"
 msgid "Sport"
-msgstr ""
+msgstr "Sport"
 
 msgctxt "#70396"
 msgid "Documentary"
-msgstr ""
+msgstr "Documentari"
 
 msgctxt "#70397"
 msgid "Science fiction"
-msgstr ""
+msgstr "Fantascienza"
 
 msgctxt "#70398"
 msgid "Talk Show"
-msgstr ""
+msgstr "Talk Show"
 
 msgctxt "#70399"
 msgid "Family"
-msgstr ""
+msgstr "Famiglia"
 
 msgctxt "#70400"
 msgid "Film-Noir"
-msgstr ""
+msgstr "Film Noir"
 
 msgctxt "#70401"
 msgid "Game-Show"
-msgstr ""
+msgstr "Game Show"
 
 msgctxt "#70402"
 msgid "Mystery"
-msgstr ""
+msgstr "Mistero"
 
 msgctxt "#70403"
 msgid "Biography"
-msgstr ""
+msgstr "Biografía"
 
 msgctxt "#70404"
 msgid "Music"
-msgstr ""
+msgstr "Musica"
 
 msgctxt "#70405"
 msgid "History"
-msgstr ""
+msgstr "Storico"
 
 msgctxt "#70406"
 msgid "Reality-TV"
-msgstr ""
+msgstr "Reality Show"
 
 msgctxt "#70407"
 msgid "War"
-msgstr ""
+msgstr "Guerra"
 
 msgctxt "#70408"
 msgid "Musical"
-msgstr ""
+msgstr "Musical"
 
 msgctxt "#70409"
 msgid "Romance"
-msgstr ""
+msgstr "Romantico"
 
 msgctxt "#70410"
 msgid "Thriller"
-msgstr ""
+msgstr "Thriller"
 
 msgctxt "#70411"
 msgid "Western"
-msgstr ""
+msgstr "Western"
 
 msgctxt "#70412"
 msgid "Drama"
-msgstr ""
+msgstr "Drammatico"
 
 msgctxt "#70413"
 msgid "2. Enter this code on the page and click Allow:  %s"
-msgstr ""
+msgstr "2. Inserisci questo codice nella pagina e premi Allow:  %s"
 
 msgctxt "#70414"
 msgid "Authentication. Do not close this window!!"
-msgstr ""
+msgstr "Autenticazione. Non chiudere questa finestra!!"
 
 msgctxt "#70415"
 msgid "Trakt.tv"
-msgstr ""
+msgstr "Trakt.tv"
 
 msgctxt "#70416"
 msgid "=== Movies ==="
-msgstr ""
+msgstr "=== Film ==="
 
 msgctxt "#70417"
 msgid "=== TV shows ==="
-msgstr ""
+msgstr "=== Serie TV ==="
 
 msgctxt "#70418"
 msgid "Search language in TMDB"
-msgstr ""
+msgstr "Ligua di ricerca in TMDB"
 
 msgctxt "#70419"
 msgid "German"
-msgstr ""
+msgstr "Tedesco"
 
 msgctxt "#70420"
 msgid "French"
-msgstr ""
+msgstr "Francese"
 
 msgctxt "#70421"
 msgid "Portuguese"
-msgstr ""
+msgstr "Portoghese"
 
 msgctxt "#70422"
 msgid "Italian"
-msgstr ""
+msgstr "Italiano"
 
 msgctxt "#70423"
 msgid "Spanish Latin"
-msgstr ""
+msgstr "Spagnolo Latino"
 
 msgctxt "#70424"
 msgid "Catalan"
-msgstr ""
+msgstr "Catalano"
 
 msgctxt "#70425"
 msgid "English"
-msgstr ""
+msgstr "Inglese"
 
 msgctxt "#70426"
 msgid "Alternative language for TMDB (No main language synopsis)"
-msgstr ""
+msgstr "Linguaggio alternativo per TMDB (sinossi senza lingua principale)"
 
 msgctxt "#70427"
 msgid "Language of titles in IMDB"
-msgstr ""
+msgstr "Lingua per i titoli in IMDB"
 
 msgctxt "#70428"
 msgid "Filmaffinity website"
-msgstr ""
+msgstr "Sitio Web Filmaffinity"
 
 msgctxt "#70429"
 msgid "Colombia"
-msgstr ""
+msgstr "Colombia"
 
 msgctxt "#70430"
 msgid "Chile"
-msgstr ""
+msgstr "Cile"
 
 msgctxt "#70431"
 msgid "Argentina"
-msgstr ""
+msgstr "Argentina"
 
 msgctxt "#70432"
 msgid "Mexico"
-msgstr ""
+msgstr "Messico"
 
 msgctxt "#70433"
 msgid "US/UK"
-msgstr ""
+msgstr "US/UK"
 
 msgctxt "#70434"
 msgid "Spain"
-msgstr ""
+msgstr "Spagna"
 
 msgctxt "#70435"
 msgid "User Filmaaffinity (Optional)"
-msgstr ""
+msgstr "Username Filmaffinity (Opzionale)"
 
 msgctxt "#70436"
 msgid "Password Filmaffinity"
-msgstr ""
+msgstr "Password Filmaffinity"
 
 msgctxt "#70437"
 msgid "Order personal lists of Filmaffinity by:"
-msgstr ""
+msgstr "Ordina liste personali di Filmaffinity per:"
 
 msgctxt "#70438"
 msgid "Position"
-msgstr ""
+msgstr "Posizione"
 
 msgctxt "#70439"
 msgid "Vote"
-msgstr ""
+msgstr "Voto"
 
 msgctxt "#70440"
 msgid "Average grade"
-msgstr ""
+msgstr "Valutazione media"
 
 msgctxt "#70441"
 msgid "User MyAnimeList (Optional)"
-msgstr ""
+msgstr "Username MyAnimeList (Opzionale)"
 
 msgctxt "#70442"
 msgid "Password MyAnimeList"
-msgstr ""
+msgstr "Password MyAnimeList"
 
 msgctxt "#70443"
 msgid "Show Hentai in MyAnimeList"
-msgstr ""
+msgstr "Mostra Hentai in MyAnimeList"
 
 msgctxt "#70444"
 msgid "Profile 3"
-msgstr ""
+msgstr "Perofilo 3"
 
 msgctxt "#70445"
 msgid "Profile 2"
-msgstr ""
+msgstr "Profilo 2"
 
 msgctxt "#70446"
 msgid "Profile 1"
-msgstr ""
+msgstr "Profilo 1"
 
 msgctxt "#70447"
 msgid "[%s] The file has been deleted"
-msgstr ""
+msgstr "[%s] Il file è stato cancellato"
 
 msgctxt "#70448"
 msgid "[%s] The file is still in process"
-msgstr ""
+msgstr "[%s] Il file è ancora in elaborazione"
 
 msgctxt "#70449"
 msgid "[%s] The file does not exist or has been deleted"
-msgstr ""
+msgstr "[%s] Il file non esiste oppure è stato cancellato"
 
 msgctxt "#70450"
 msgid "Anyone"
-msgstr ""
+msgstr "Qualsiasi"
 
 msgctxt "#70451"
 msgid "Select one, none or more than one gender"
-msgstr "S"
+msgstr "Seleziona uno, nessuno o più di un genere"
 
 msgctxt "#70452"
 msgid "Year from"
-msgstr ""
+msgstr "Anno da:"
 
 msgctxt "#70453"
 msgid "Year until"
-msgstr ""
+msgstr "Anno fino a:"
 
 msgctxt "#70454"
 msgid "Minimum number of votes"
-msgstr ""
+msgstr "Numero minimo di voti"
 
 msgctxt "#70455"
 msgid "Order by"
-msgstr ""
+msgstr "Ordina per"
 
 msgctxt "#70456"
 msgid "Popularity Desc"
-msgstr ""
+msgstr "Popolarità Desc"
 
 msgctxt "#70457"
 msgid "Popularity Asc"
-msgstr ""
+msgstr "Popolarità Asc"
 
 msgctxt "#70458"
 msgid "Year Desc"
-msgstr ""
+msgstr "Anno Desc"
 
 msgctxt "#70459"
 msgid "Year Asc"
-msgstr ""
+msgstr "Anno Asc"
 
 msgctxt "#70460"
 msgid "Desc Rating"
-msgstr ""
+msgstr "Rating Desc"
 
 msgctxt "#70461"
 msgid "Asc Rating"
-msgstr ""
+msgstr "Rating Asc"
 
 msgctxt "#70462"
 msgid "Title [A-Z]"
-msgstr ""
+msgstr "Titolo [A-Z]"
 
 msgctxt "#70463"
 msgid "Title [Z-A]"
-msgstr ""
+msgstr "Titolo[Z-A]"
 
 msgctxt "#70464"
 msgid "Set as default filter"
-msgstr ""
+msgstr "Impostare come filtro di default"
 
 msgctxt "#70465"
 msgid "Key word"
-msgstr ""
+msgstr "Parola Chiave"
 
 msgctxt "#70466"
 msgid "Country"
-msgstr ""
+msgstr "Nazione"
 
 msgctxt "#70467"
 msgid "Select a genre"
-msgstr ""
+msgstr "Seleziona un genere"
 
 msgctxt "#70468"
 msgid "Indicate your vote"
-msgstr ""
+msgstr "Indica il tuo voto:"
 
 msgctxt "#70469"
 msgid "Added"
-msgstr ""
+msgstr "Aggiunto"
 
 msgctxt "#70470"
 msgid "Premiere"
-msgstr ""
+msgstr "Premiere"
 
 msgctxt "#70471"
 msgid "Duration"
-msgstr ""
+msgstr "Durata"
 
 msgctxt "#70472"
 msgid "Popularity"
-msgstr ""
+msgstr "Popolarità"
 
 msgctxt "#70473"
 msgid "Rating"
-msgstr ""
+msgstr "Rating"
 
 msgctxt "#70474"
 msgid "Votes"
-msgstr ""
+msgstr "Voti"
 
 msgctxt "#70475"
 msgid "upward"
-msgstr ""
+msgstr "ascendente"
 
 msgctxt "#70476"
 msgid "falling"
-msgstr ""
+msgstr "discendente"
 
 msgctxt "#70477"
 msgid "Upward"
-msgstr ""
+msgstr "Ascendente"
 
 msgctxt "#70478"
 msgid "Falling"
-msgstr ""
+msgstr "Discendente"
 
 msgctxt "#70479"
 msgid "Currently watching"
-msgstr ""
+msgstr "In visione attualmente"
 
 msgctxt "#70480"
 msgid "Completed"
-msgstr ""
+msgstr "Completati"
 
 msgctxt "#70481"
 msgid "Anticipated to see"
-msgstr ""
+msgstr "Da vedersi"
 
 msgctxt "#70482"
 msgid "Kind"
-msgstr ""
+msgstr "Tipo"
 
 msgctxt "#70483"
 msgid "Special"
-msgstr ""
+msgstr "Special"
 
 msgctxt "#70484"
 msgid "OVA"
-msgstr ""
+msgstr "OVA"
 
 msgctxt "#70485"
 msgid "Status"
-msgstr ""
+msgstr "Stato"
 
 msgctxt "#70486"
 msgid "(1) Grotesque"
-msgstr ""
+msgstr "(1) Grottesco"
 
 msgctxt "#70487"
 msgid "(2) Horrible"
-msgstr ""
+msgstr "(2) orribile"
 
 msgctxt "#70488"
 msgid "(3) Very bad"
-msgstr ""
+msgstr "(3) Bruttissimo"
 
 msgctxt "#70489"
 msgid "(4) Bad"
-msgstr ""
+msgstr "(4) Brutto"
 
 msgctxt "#70490"
 msgid "(5) Regular"
-msgstr ""
+msgstr "(5) Regulare"
 
 msgctxt "#70491"
 msgid "(6) Pasable"
-msgstr ""
+msgstr "(6) Passabile"
 
 msgctxt "#70492"
 msgid "(7) Good"
-msgstr ""
+msgstr "(7) Buono"
 
 msgctxt "#70493"
 msgid "(8) Very good"
-msgstr ""
+msgstr "(8) Ottimo"
 
 msgctxt "#70494"
 msgid "(9) Genial"
-msgstr ""
+msgstr "(9) Geniale"
 
 msgctxt "#70495"
 msgid "(10) Masterpiece"
-msgstr ""
+msgstr "(10) Capolavoro"
 
 msgctxt "#70496"
 msgid "The search for "
-msgstr ""
+msgstr "La ricerca di "
 
 msgctxt "#70497"
 msgid " did not match."
-msgstr ""
+msgstr " non ha dato risultati."
 
 msgctxt "#70498"
 msgid "Producer: "
-msgstr ""
+msgstr "Produzione: "
 
 msgctxt "#70499"
 msgid "Genre: "
-msgstr ""
+msgstr "Genere: "
 
 msgctxt "#70500"
 msgid "Notification(Update Kodi to its latest version, for best info,8000, 'http://i.imgur.com/mHgwcn3.png')"
-msgstr ""
+msgstr "Notification(Aggiorna Kodi alla sua ultima versione, per migliori info,8000, 'http://i.imgur.com/mHgwcn3.png')"
 
 msgctxt "#70501"
 msgid "Search did not match"
-msgstr ""
+msgstr "La ricerca non ha dato risultati"
 
 msgctxt "#70502"
 msgid ">> Next"
-msgstr ""
+msgstr ">> Successivo"
 
 msgctxt "#70503"
 msgid "There is no available video"
-msgstr ""
+msgstr "Nessun video disponibile"
 
 msgctxt "#70504"
 msgid "Loading trailers..."
-msgstr ""
+msgstr "Caricamento trailers..."
 
 msgctxt "#70505"
 msgid "Enter the title to search"
-msgstr ""
+msgstr "Inserisci il titolo da cercare"
 
 msgctxt "#70506"
 msgid "Searching: "
-msgstr ""
+msgstr "Ricerca: "
 
 msgctxt "#70507"
 msgid "Search in Youtube"
-msgstr ""
+msgstr "Ricerca in Youtube"
 
 msgctxt "#70508"
 msgid "Search in Mymovies"
-msgstr ""
+msgstr "Ricerca in Mymovies"
 
 msgctxt "#70510"
 msgid "Manual Search"
-msgstr ""
+msgstr "Ricerca Manuale"
 
 msgctxt "#70511"
 msgid "Goto page"
-msgstr ""
+msgstr "Vai a pagina"
 
 msgctxt "#70512"
 msgid "Searching in Mymovies"
-msgstr ""
+msgstr "Ricerca in Mymovies"
 
 msgctxt "#70513"
 msgid "Insert page number"
-msgstr ""
+msgstr "Inserisci numero di pagina"
 
 msgctxt "#70514"
 msgid "Notify current view saves"
-msgstr ""
+msgstr "Notifica i salvataggi della vista attuale"
 
 msgctxt "#70515"
 msgid "Completed %s"
-msgstr ""
+msgstr "Completata %s"
 
 msgctxt "#70516"
 msgid "In progress %s"
-msgstr ""
+msgstr "In Corso %s"
 
 msgctxt "#70517"
 msgid "Pre-selected currently activated"
-msgstr ""
+msgstr "Pre-seleziona attivati attuali"
 
 msgctxt "#70518"
 msgid "Pre-select all"
-msgstr ""
+msgstr "Pre-seleziona tutti"
 
 msgctxt "#70519"
 msgid "Do not pre-select any"
-msgstr ""
+msgstr "Non pre-selezionare nessuno"
 
 msgctxt "#70520"
 msgid "AutoPlay allows auto to reproduce the links directly, based on the configuration of your \nfavorite servers and qualities. "
-msgstr ""
+msgstr "AutoPlay consente di riprodurre automaticamente i collegamenti direttamente, in base alla configurazione dei tuoi \nservers e qualità preferite. "
 
 msgctxt "#70521"
 msgid "You can install the Trakt script below, \nonce installed and configured what \nyou see will be synchronized with your account automatically. \nDo you want to continue?"
-msgstr ""
+msgstr "Puoi installare lo script Trakt qui sotto, \nuna volta installato e configurato ciò che \nvedrai verrà sincronizzato automaticamente con il tuo account. \nVuoi continuare?"
 
 msgctxt "#70522"
 msgid "No filter"
-msgstr ""
+msgstr "Non Filtrare"
 
 msgctxt "#70523"
 msgid "%s: The data was restarted"
-msgstr ""
+msgstr "%s: I dati sono stati riavviati"
 
 msgctxt "#70524"
 msgid " Server error, try later."
-msgstr ""
+msgstr " Errore del server, riprova più tardi."
 
 msgctxt "#70525"
 msgid "Configure channel"
-msgstr ""
+msgstr "Configura canale"
 
 msgctxt "#70526"
 msgid "Verification of counters of videos seen / not seen (uncheck to verify)"
-msgstr ""
+msgstr "Verifica dei contatori di video visti/non visti (deselezionare per verificare)"
 
 msgctxt "#70527"
 msgid "My links"
-msgstr ""
+msgstr "I miei link"
 
 msgctxt "#70528"
 msgid "Default folder"
-msgstr ""
+msgstr "Cartella di Default"
 
 msgctxt "#70530"
 msgid "You already have this link in the folder"
-msgstr ""
+msgstr "C'è già un link nella cartella"
 
 msgctxt "#70531"
 msgid "Saved link"
-msgstr ""
+msgstr "Link salvato"
 
 msgctxt "#70532"
 msgid "Folder: %s"
-msgstr ""
+msgstr "Cartella: %s"
 
 msgctxt "#70533"
 msgid "Rename folder"
-msgstr ""
+msgstr "Cambia nome alla cartella"
 
 msgctxt "#70534"
 msgid "Delete folder"
-msgstr ""
+msgstr "Elimina la cartella"
 
 msgctxt "#70535"
 msgid "Move up all"
-msgstr ""
+msgstr "Sposta tutto in alto"
 
 msgctxt "#70536"
 msgid "Move up"
-msgstr ""
+msgstr "Sposta in su"
 
 msgctxt "#70537"
 msgid "Move down"
-msgstr ""
+msgstr "Sposta in giù"
 
 msgctxt "#70538"
 msgid "Move down all"
-msgstr ""
+msgstr "Sposta tutto in basso"
 
 msgctxt "#70539"
 msgid "* Create different folders to store your favorite links within Stream4Me. [CR]"
-msgstr ""
+msgstr "* Crea diverse cartelle per memorizzare i tuoi collegamenti preferiti all'interno di Stream4Me."
 
 msgctxt "#70540"
 msgid "* To add links to folders, access the context menu from any point in Stream4Me.[CR]"
-msgstr ""
+msgstr "* Per aggiungere collegamenti alle cartelle accedi al menu contestuale da qualsiasi punto di Stream4Me."
 
 msgctxt "#70541"
 msgid "* The links can be channels, sections within the channels, searches, and even movies and TV shows although for the latter it is preferable to use the video library."
-msgstr ""
+msgstr "* I collegamenti possono essere canali, sezioni all'interno dei canali, ricerche e persino film e serie TV, sebbene per quest'ultimo sia preferibile utilizzare la videoteca."
 
 msgctxt "#70542"
 msgid "Create new folder ..."
-msgstr "Creaa nuova cartella ..."
+msgstr "Crea nuova cartella ..."
 
 msgctxt "#70543"
 msgid "Move to another folder"
-msgstr ""
+msgstr "Sposta in altra cartella"
 
 msgctxt "#70544"
 msgid "Change title"
-msgstr ""
+msgstr "Cambia titolo"
 
 msgctxt "#70545"
 msgid "Change color"
-msgstr ""
+msgstr "Cambia colore"
 
 msgctxt "#70546"
 msgid "Save link in:"
-msgstr ""
+msgstr "Salva link in:"
 
 msgctxt "#70547"
 msgid "Change thumbnail"
-msgstr ""
+msgstr "Cambia thumbnail"
 
 msgctxt "#70548"
 msgid "Delete link"
-msgstr ""
+msgstr "Elimina link"
 
 msgctxt "#70549"
 msgid "Select folder"
-msgstr ""
+msgstr "Seleziona cartella"
 
 msgctxt "#70550"
 msgid "Create new folder"
-msgstr ""
+msgstr "Crea nuova cartella"
 
 msgctxt "#70551"
 msgid "Folder name"
-msgstr ""
+msgstr "Nome della cartella"
 
 msgctxt "#70552"
 msgid "Delete the folder and links it contains?"
-msgstr ""
+msgstr "Eliminare la cartella con tutti i link?"
 
 msgctxt "#70553"
 msgid "Change link title"
-msgstr ""
+msgstr "Cambia titolo del link"
 
 msgctxt "#70554"
 msgid "Select thumbnail:"
-msgstr ""
+msgstr "Seleziona thumbnail:"
 
 msgctxt "#70555"
 msgid "Move link to:"
-msgstr ""
+msgstr "Sposta link in:"
 
 msgctxt "#70556"
 msgid "%d links in folder"
-msgstr ""
+msgstr "%d link nella cartella"
 
 msgctxt "#70557"
 msgid "Save link"
-msgstr ""
+msgstr "Salva link"
 
 msgctxt "#70558"
 msgid "Select color:"
-msgstr ""
+msgstr "Seleziona colore:"
 
 msgctxt "#70559"
 msgid "Now in theatres "
-msgstr ""
+msgstr "Oggi in sala"
 
 msgctxt "#70560"
 msgid "Movies by genre"
-msgstr ""
+msgstr "Per genere"
 
 msgctxt "#70561"
 msgid "Search similar"
-msgstr ""
+msgstr "Cerca simili"
 
 msgctxt "#70562"
 msgid "Enable AutoPlay on all supported channels"
-msgstr ""
+msgstr "Abilita l'AutoPlay in tutti i canali supportati"
 
 msgctxt "#70563"
 msgid "Italian"
-msgstr ""
+msgstr "Italiano"
 
 msgctxt "#70564"
 msgid "Enable custom theme"
-msgstr ""
+msgstr "Abilita tema personalizzato"
 
 msgctxt "#70565"
 msgid "Custom theme path"
-msgstr ""
+msgstr "Percorso tema personalizzato"
 
 msgctxt "#70566"
 msgid "VOSI (Original Subtitled Italian Version)"
-msgstr ""
+msgstr "VOSI (Versione Originale Sottotitolato Italiano)"
 
 msgctxt "#70567"
 msgid "Type of content:"
-msgstr ""
+msgstr "Tipo di contenuto:"
 
 msgctxt "#70568"
 msgid "Languages:"
-msgstr ""
+msgstr "Lingue"
 
 msgctxt "#70569"
 msgid "Update external addon Quasar:"
-msgstr ""
+msgstr "Aggiorna L'addon esterno Quasar:"
 
 msgctxt "#70570"
 msgid "Search with current selection"
-msgstr ""
+msgstr "Cerca con la selezione corrente"
 
 msgctxt "#70571"
 msgid "Modify current selection"
-msgstr ""
+msgstr "Modifica la selezione corrente"
 
 msgctxt "#70572"
 msgid "Modify from All"
-msgstr ""
+msgstr "Modifica partendo da Tutto"
 
 msgctxt "#70573"
 msgid "Modify starting from None"
-msgstr ""
+msgstr "Modifica partendo da Nessuno"
 
 msgctxt "#70574"
 msgid "Modify starting from Castellano"
-msgstr ""
+msgstr "Modifica partendo da Castellano"
 
 msgctxt "#70575"
 msgid "Modify starting from Latino"
-msgstr ""
+msgstr "Modifica partendo da Latino"
 
 msgctxt "#70576"
 msgid "Modify starting from Italian"
-msgstr ""
+msgstr "Modifica partendo da Italiano"
 
 msgctxt "#70577"
 msgid "Modify starting from "
-msgstr ""
+msgstr "Modifica partendo da "
 
 msgctxt "#70578"
 msgid "Torrents"
-msgstr ""
+msgstr "Torrent"
 
 msgctxt "#70579"
 msgid "Updates"
-msgstr ""
+msgstr "Aggiornamenti"
 
 msgctxt "#70580"
 msgid "Server answer timeout (seconds)"
-msgstr ""
+msgstr "Timeout risposta server (secondi)"
 
 msgctxt "#70581"
 msgid "Check for updates"
-msgstr ""
+msgstr "Controlla aggiornamenti"
 
 msgctxt "#70582"
 msgid "Updates notification"
-msgstr ""
+msgstr "Notifiche aggiornamenti"
 
 msgctxt "#70583"
 msgid "Management of updates of other addons related to S4Me:"
-msgstr ""
+msgstr "Gestione degli aggiornamenti per gli altri addon relativi ad S4Me"
 
 msgctxt "#70584"
 msgid "Do you want to update Quasar to avoid errors?"
-msgstr ""
+msgstr "Vuoi aggiornare Quasar per evitare errori?"
 
 msgctxt "#70585"
 msgid "Renumbering"
-msgstr ""
+msgstr "Rinumerazione"
 
 msgctxt "#70586"
 msgid "Set up TV show renumbering..."
-msgstr ""
+msgstr "Configura la rinumerazione della serie TV..."
 
 msgctxt "#70587"
 msgid "Set up"
-msgstr ""
+msgstr "Configurazione"
 
 msgctxt "#70588"
 msgid "No TV show found, look for a TV show and click on contextual menu"
-msgstr ""
+msgstr "Nessuna serie TV trovata, cerca una serie TV e fai clic sul menu contestuale"
 
 msgctxt "#70589"
 msgid "Something found:"
-msgstr ""
+msgstr "ha trovato qualcosa:"
 
 msgctxt "#70590"
 msgid "Are you sure you want to eliminate renumbering?"
-msgstr ""
+msgstr "Sei sicuro di voler eliminare la rinumerazione?"
 
 msgctxt "#70591"
 msgid "Press 'Yes' to remove the renumbering of"
-msgstr ""
+msgstr "Premi 'Sì' per rimuovere la rinumerazione di"
 
 msgctxt "#70592"
 msgid "press 'No' or close the window to do nothing."
-msgstr ""
+msgstr "premere 'No' o chiudere la finestra per non fare nulla."
 
 msgctxt "#70593"
 msgid "Error saving to disk"
-msgstr ""
+msgstr "Errore al salvataggio sul disco"
 
 msgctxt "#70594"
 msgid "Enter the season number"
-msgstr ""
+msgstr "Inserisci il numero della stagione"
 
 msgctxt "#70595"
 msgid "Season is not added"
-msgstr ""
+msgstr "La stagione non è stata aggiunta"
 
 msgctxt "#70596"
 msgid "It already exists, edit the existing"
-msgstr ""
+msgstr "Esiste già, modifica l'esistente"
 
 msgctxt "#70597"
 msgid "Enter the number of episodes since the start of the season"
-msgstr ""
+msgstr "Inserisci il numero di episodi dall'inizio della stagione"
 
 msgctxt "#70598"
 msgid "Episodes:"
-msgstr ""
+msgstr "Episodi:"
 
 msgctxt "#70599"
 msgid "Remove"
-msgstr ""
+msgstr "Rimuovi"
 
 msgctxt "#70600"
 msgid "Add season"
-msgstr ""
+msgstr "Aggiungi stagione"
 
 msgctxt "#70601"
 msgid "Update from the Internet:"
-msgstr ""
+msgstr "Aggiorna da Internet"
 
 msgctxt "#70602"
 msgid "The first season that is added always starts in \"0 \" episodes, the second season that is added starts in the total number of episodes of the first season, the third season will be the sum of the episodes of the previous seasons and so on.\n  \nTV show example divided into several seasons: \n\nFairy Tail: \n - SEASON 1: EPISODE 48 -> [season 1, episode: 0] \n - SEASON 2: EPISODE 48 - -> [season 2, episode: 48] \n - SEASON 3: EPISODE 54 -> [season 3, episode: 96 ([48 = season2] + [48 = season1])] \n - SEASON 4: EPISODE 175 -> [season 4: episode: 150 ([54 = season3] + [48 = season2] + [48 = season3])]  \n  \nExample of a TV show that continues in the season of the original: \n \nFate / Zero 2nd Season: \n - SEASON 1: EPISODE 12 -> [season 1, episode: 13]  \n  \nExample which is the second season of the original: \n \nFate / kaleid liner Prism☆Illya 2wei!: \n - SEASON 1: EPISODE 12 -> [season 2, episode: 0]  \n"
-msgstr ""
+msgstr "La prima stagione che viene aggiunta inizia sempre dagli episodi \"0 \", la seconda stagione che viene aggiunta inizia nel numero totale di episodi della prima stagione, la terza stagione sarà la somma degli episodi delle stagioni precedenti e a seguire. \n  \nEsempio serie TV divisa in diverse stagioni: \n \nFairy Tail: \n - STAGIONE 1: EPISODIO 48 -> [stagione 1, episodio: 0] \n - STAGIONE 2: EPISODIO 48 - -> [stagione 2, episodio: 48] \n - STAGIONE 3: EPISODIO 54 -> [stagione 3, episodio: 96 ([48 = stagione2] + [48 = stagione1])] \n - STAGIONE 4: EPISODIO 175 -> [stagione 4: episodio: 150 ([54 = stagione3] + [48 = stagione2] + [48 = stagione3])]  \n  \nEsempio di serie TV che continua nella stagione dell'originale: \n \nFate/Zero 2a stagione: \n - STAGIONE 1: EPISODIO 12 -> [stagione 1, episodio: 13]  \n  \nEsempio che è la seconda stagione dell'originale: \n \nFate/kaleid liner Prism☆Illya 2wei!: \n - STAGIONE 1: EPISODIO 12 -> [stagione 2, episodio: 0]  \n"
 
 msgctxt "#70603"
 msgid "Manage link lists"
-msgstr ""
+msgstr "Gestisci le liste dei link"
 
 msgctxt "#70604"
 msgid "Set as active list"
-msgstr ""
+msgstr "Imposta come lista attiva"
 
 msgctxt "#70605"
 msgid "Share on tinyupload"
-msgstr ""
+msgstr "Condividi con tinyupload"
 
 msgctxt "#70606"
 msgid "Delete list"
-msgstr ""
+msgstr "Elimina lista"
 
 msgctxt "#70607"
 msgid "List informations"
-msgstr ""
+msgstr "Informazioni lista"
 
 msgctxt "#70608"
 msgid "Link lists"
-msgstr ""
+msgstr "Liste dei link"
 
 msgctxt "#70609"
 msgid "File_id of tinyupload link"
-msgstr ""
+msgstr "File_id del link tinyupload"
 
 msgctxt "#70610"
 msgid "URL where download the list"
-msgstr ""
+msgstr "URL da dove scaricare la lista"
 
 msgctxt "#70611"
 msgid ""
@@ -5265,711 +5264,712 @@ msgid ""
 "[CR]- If you want doing it manually, you can copy a list KODvorites-*.json that you added on the addon’s userdata folder; and you can upload these json on some server and send their url to your friends for sharing."
 "[CR]- The tinyupload.com service is used for sharing addon lists because it is free, private and quite fast. The files stay saved for 100 days they are not downloaded. They are private so you need a code for the access. The service has a limitation of 50MB but this is enough for the lists."
 msgstr ""
-
-
-
-
-
+"-Puoi avere liste diverse, ma solo una di esse è attiva. La lista attiva è quella mostrata sotto “I miei link” ed è quella dove sono memorizzati i link aggiunti."
+"[CR]- Puoi cambiare una lista attiva e passare da una lista all’altra."
+"[CR]- È possibile condividere una lista attraverso tinyupload e poi inviare il codice risultante ai tuoi amici in modo che possano scaricarlo."
+"[CR]- Puoi scaricare una lista se ti inviano un codice di tinyupload o un url dove esso è ospitato."
+"[CR]- Se vuoi farlo manualmente, puoi copiare una lista KODvorites-*.json che hai inserito nella cartella userdata dell’addon. E puoi caricare questi json su qualche server e inviare i loro url ai tuoi amici per condividerli."
+"[CR]- Il servizio tinyupload.com è utilizzato per condividere le liste degli addon perché è gratuito, privato e relativamente veloce. I file rimangono salvati per 100 giorni se nessuno li scarica, sono privati perché richiedono un codice per accedervi e il limite di 50MB è sufficiente per le liste."
 
 msgctxt "#70612"
 msgid "Name of the list"
-msgstr ""
+msgstr "Nome della lista"
 
 msgctxt "#70613"
 msgid "Error, there is already a list with this name!"
-msgstr ""
+msgstr "Errore, esiste già una lista con quel nome!"
 
 msgctxt "#70614"
 msgid "Error, unable to save list"
-msgstr ""
+msgstr "Errore, impossibile salvare la lista!"
 
 msgctxt "#70615"
 msgid "Repeated link"
-msgstr ""
+msgstr "Link ripetuto"
 
 msgctxt "#70616"
 msgid "You already have this link in the folder"
-msgstr ""
+msgstr "Possiedi già questo link nella cartella"
 
 msgctxt "#70617"
 msgid "Modify link"
-msgstr ""
+msgstr "Modifica link"
 
 msgctxt "#70618"
 msgid "Delete folder"
-msgstr ""
+msgstr "Elimina cartella"
 
 msgctxt "#70619"
 msgid "Delete the folder and the links it contains?"
-msgstr ""
+msgstr "Eliminare la cartella e tutti i link che contiene?"
 
 msgctxt "#70620"
 msgid "Change title"
-msgstr ""
+msgstr "Cambia titolo"
 
 msgctxt "#70621"
 msgid "Change color"
-msgstr ""
+msgstr "Cambia colore"
 
 msgctxt "#70622"
 msgid "Change thumbnail"
-msgstr ""
+msgstr "Cambia anteprima"
 
 msgctxt "#70623"
 msgid "Move to another folder"
-msgstr ""
+msgstr "Muovi verso un'altra cartella"
 
 msgctxt "#70624"
 msgid "Move to another list"
-msgstr ""
+msgstr "Muovi verso un'altra lista"
 
 msgctxt "#70625"
 msgid "Move up all"
-msgstr ""
+msgstr "Muovi tutte in su"
 
 msgctxt "#70626"
 msgid "Move up"
-msgstr ""
+msgstr "Muovi in su"
 
 msgctxt "#70627"
 msgid "Move down"
-msgstr ""
+msgstr "Muovi in già"
 
 msgctxt "#70628"
 msgid "Move down all"
-msgstr ""
+msgstr "Muovi tutte in giu"
 
 msgctxt "#70629"
 msgid "Rename list"
-msgstr ""
+msgstr "Rinomina lista"
 
 msgctxt "#70630"
 msgid "Error, list not found!"
-msgstr ""
+msgstr "Errore, lista non trovata!"
 
 msgctxt "#70631"
 msgid "Error, list could not be renamed"
-msgstr ""
+msgstr "Errore, la lista non può essere rinominata!"
 
 msgctxt "#70632"
 msgid "The active list can not be deleted"
-msgstr ""
+msgstr "La lista attiva non può essere cancellata"
 
 msgctxt "#70633"
 msgid "You are sure do you want to delete the list"
-msgstr ""
+msgstr "Sei sicuro di voler eliminare la lista"
 
 msgctxt "#70634"
 msgid "Created at"
-msgstr ""
+msgstr "Creata il"
 
 msgctxt "#70635"
 msgid "and modified at"
-msgstr ""
+msgstr "e modificata il"
 
 msgctxt "#70636"
 msgid "Downloaded at"
-msgstr ""
+msgstr "Scaricata il"
 
 msgctxt "#70637"
 msgid "since"
-msgstr ""
+msgstr "da"
 
 msgctxt "#70638"
 msgid "Shared in tinyupload at"
-msgstr ""
+msgstr "Condiviso in tinyupload il"
 
 msgctxt "#70639"
 msgid "with the code"
-msgstr ""
+msgstr "con il codice"
 
 msgctxt "#70640"
 msgid "Number of folders:"
-msgstr ""
+msgstr "Numero di cartelle:"
 
 msgctxt "#70641"
 msgid "links"
-msgstr ""
+msgstr "link"
 
 msgctxt "#70642"
 msgid "Create/download list / Info ..."
-msgstr ""
+msgstr "Crea/scarica lista / Info ..."
 
 msgctxt "#70643"
 msgid "Share list"
-msgstr ""
+msgstr "Condividi lista"
 
 msgctxt "#70644"
 msgid "Connecting with tinyupload"
-msgstr ""
+msgstr "Connessione a tinyupload ..."
 
 msgctxt "#70645"
 msgid "Uploading file"
-msgstr ""
+msgstr "Caricando il file"
 
 msgctxt "#70646"
 msgid "Wait a few seconds to finish uploading your list file to tinyupload"
-msgstr ""
+msgstr "Aspetta qualche secondo che finisca il caricamento della tua lista su tinyupload"
 
 msgctxt "#70647"
 msgid "Error, it was not possible to upload the file to tinyupload.com!"
-msgstr ""
+msgstr "Errore, non è stato possibile caricare il file su tinyupload.com!"
 
 msgctxt "#70648"
 msgid "Upload file"
-msgstr ""
+msgstr "Caricato file"
 
 msgctxt "#70649"
 msgid "at tinyupload.com. The code to download it is:"
-msgstr ""
+msgstr "su tinyupload.com. Il codice per scaricarlo è:"
 
 msgctxt "#70650"
 msgid "List uploaded to tinyupload. If you want to share it with someone, pass it this code:"
-msgstr ""
+msgstr "Lista caricata su tinyupload. Se intendi condividerla con altri, passagli questo codice:"
 
 msgctxt "#70651"
 msgid "Create a new list"
-msgstr ""
+msgstr "Crea una nuova lista"
 
 msgctxt "#70652"
 msgid "Download list using tinyupload code"
-msgstr ""
+msgstr "Scarica la lista utilizzando il codice tinyupload"
 
 msgctxt "#70653"
 msgid "Download list using direct url"
-msgstr ""
+msgstr "Scarica la lista da un link diretto"
 
 msgctxt "#70654"
 msgid "Information about lists"
-msgstr ""
+msgstr "Informazioni sulle liste"
 
 msgctxt "#70655"
 msgid "Error, the list can not be downloaded!"
-msgstr ""
+msgstr "Errore, la lista non può essere scaricata!"
 
 msgctxt "#70656"
 msgid "Error, the downloaded file does not have the expected format!"
-msgstr ""
+msgstr "Errore, il file scaricato non ha il formato corretto!"
 
 msgctxt "#70657"
 msgid "Name to save the list"
-msgstr ""
+msgstr "Nome per salvare la lista"
 
 msgctxt "#70658"
 msgid "Overwrite file?"
-msgstr ""
+msgstr "Sostituire il file?"
 
 msgctxt "#70659"
 msgid "Error, the list can not be recorded!"
-msgstr ""
+msgstr "Errore, lista lista non può essere registrata!"
 
 msgctxt "#70660"
 msgid "Ok, list downloaded correctly"
-msgstr ""
+msgstr "Ok, lista scaricata correttamente"
 
 msgctxt "#70661"
 msgid "No channel has been defined for the search"
-msgstr ""
+msgstr "Nessun canale è stato definito per questa ricerca."
 
 msgctxt "#70662"
 msgid "Use the context menu to add at least one"
-msgstr ""
+msgstr "Usa il menu contestuale e aggiungine almeno uno"
 
 msgctxt "#70663"
 msgid "Home page"
-msgstr ""
+msgstr "Pagina iniziale"
 
 msgctxt "#70664"
 msgid "Custom Start"
-msgstr ""
+msgstr "Inizio personalizzato"
 
 msgctxt "#70665"
 msgid "You have not defined any section to show in home page"
-msgstr ""
+msgstr "Non hai selezionato nessuna sezione da mostrare nella pagina iniziale"
 
 msgctxt "#70666"
 msgid "Use the context menu to define one"
-msgstr ""
+msgstr "Usa il menu contestuale per aggiungerne una"
 
 msgctxt "#70667"
 msgid "S4Me is already updated"
-msgstr ""
+msgstr "S4Me è già aggiornato"
 
 msgctxt "#70668"
 msgid "There is no urgent update"
-msgstr ""
+msgstr "Non c'è un aggiornamento urgente"
 
 msgctxt "#70669"
 msgid "No updates for version %s of the addon"
-msgstr ""
+msgstr "Nessun aggiornamento per la versione %s dell'addon"
 
 msgctxt "#70670"
 msgid "It is already updated with the latest changes. Version %s.fix%d"
-msgstr ""
+msgstr "È già aggiornato con le ultime modifiche. Versione %s.fix %d"
 
 msgctxt "#70671"
 msgid "Version %s.fix%d"
-msgstr "Versión %s.fix%d"
+msgstr "Versione %s.fix %d"
 
 msgctxt "#70672"
 msgid "Addon successfully updated to %s.fix %d"
-msgstr ""
+msgstr "Addon aggiornato correttamente a %s.fix%d"
 
 msgctxt "#70673"
 msgid "S4Me updated to"
-msgstr ""
+msgstr "S4Me aggiornato a"
 
 msgctxt "#70674"
 msgid "S4Me updates"
-msgstr ""
+msgstr "Aggiornamenti S4Me"
 
 msgctxt "#70675"
 msgid "Unable to check the updates"
-msgstr ""
+msgstr "Impossibile controllare gli aggiornamenti"
 
 msgctxt "#70676"
 msgid "Add a channel"
-msgstr ""
+msgstr "Aggiungi un canale"
 
 msgctxt "#70677"
 msgid "Episode"
-msgstr ""
+msgstr "Episodio"
 
 msgctxt "#70678"
 msgid "From local file"
-msgstr ""
+msgstr "Da file locale"
 
 msgctxt "#70679"
 msgid "From URL"
-msgstr ""
+msgstr "Da URL"
 
 msgctxt "#70680"
 msgid "S4Me - (Community)"
-msgstr ""
+msgstr "S4Me - (Community)"
 
 msgctxt "#70681"
 msgid "Enter the channel URL"
-msgstr ""
+msgstr "Inserisci l'URL del canale"
 
 msgctxt "#70682"
 msgid "It is not possible to add this type of channel"
-msgstr ""
+msgstr "Non è possibile aggiungere questo tipo di canale"
 
 msgctxt "#70683"
 msgid "%s has been added"
-msgstr ""
+msgstr "%s è stato aggiunto"
 
 msgctxt "#70684"
 msgid "%s has been deleted"
-msgstr ""
+msgstr "%s è stato eliminato"
 
 msgctxt "#70685"
 msgid "Community"
-msgstr ""
+msgstr "Community"
 
 msgctxt "#70686"
 msgid "Enter the number of the starting season"
-msgstr ""
+msgstr "Inserisci il numero della stagione di partenza"
 
 msgctxt "#70687"
 msgid "Special Episodes"
-msgstr ""
+msgstr "Episodi Speciali"
 
 msgctxt "#70688"
 msgid "Are there special episodes in the TV show \n(Episode 0 Excluded)?"
-msgstr ""
+msgstr "Sono presenti episodi speciali nella serie TV \n(Episodio 0 Escluso)?"
 
 msgctxt "#70689"
 msgid "Enable download"
-msgstr ""
+msgstr "Abilita download"
 
 msgctxt "#70690"
 msgid "Disclaimer"
-msgstr ""
+msgstr "Disclaimer"
 
 msgctxt "#70691"
 msgid "Using the download function you declare that you have a physical copy and use this function as a backup of the same."
-msgstr ""
+msgstr "Utilizzando la funzione di download dichiari di essere in possesso di una copia fisica e di utilizzare questa funzione come backup dello stesso."
 
 msgctxt "#70692"
 msgid "The S4Me team assumes no responsibility for the use that is made of this proposed function"
-msgstr ""
+msgstr "Il team di S4Me non si assume alcuna responsabilità dell'uso che viene fatto di questa funzione proposta"
 
 msgctxt "#70693"
 msgid "Search"
-msgstr ""
+msgstr "Ricerca"
 
 msgctxt "#70694"
 msgid "Similar to "
-msgstr ""
+msgstr "Simile a "
 
 msgctxt "#70695"
 msgid "Results"
-msgstr ""
+msgstr "Risultati"
 
 msgctxt "#70697"
 msgid " [Results of the %s channel] "
-msgstr ""
+msgstr " [Risultati del canale %s] "
 
 msgctxt "#70698"
 msgid "Press the key to be used to open the window"
-msgstr ""
+msgstr "Premere il tasto da utilizzare per aprire la finestra"
 
 msgctxt "#70699"
 msgid "You have %s seconds"
-msgstr ""
+msgstr "Hai %s secondi"
 
 msgctxt "#70700"
 msgid "The key has been saved"
-msgstr ""
+msgstr "Il tasto è stato salvato"
 
 msgctxt "#70701"
 msgid "The key has been deleted"
-msgstr ""
+msgstr "Il tasto è stato cancellato"
 
 msgctxt "#70702"
 msgid "Restart Kodi to apply the changes"
-msgstr ""
+msgstr "Riavvia Kodi per applicare le modifiche"
 
 msgctxt "#70703"
 msgid "Create folders with lowercase letters"
-msgstr ""
+msgstr "Crea cartelle con le lettere minuscole"
 
 msgctxt "#70704"
 msgid "TMDB ID (0 to cancel)"
-msgstr ""
+msgstr "TMDB ID (0 per annullare)"
 
 msgctxt "#70705"
 msgid "Use your custom channel URLs"
-msgstr ""
+msgstr "Utilizza URL personalizzati per i canali"
 
 msgctxt "#70706"
 msgid "Launch S4Me at Kodi start"
-msgstr ""
+msgstr "Esegui S4Me all'avvio di Kodi"
 
 msgctxt "#70707"
 msgid "Enable"
-msgstr ""
+msgstr "Attiva"
 
 msgctxt "#70708"
 msgid "Disable"
-msgstr ""
+msgstr "Disattiva"
+
+msgctxt "#70709"
+msgid "Your new settings has just been saved"
+msgstr "Le nuove impostazioni sono state salvate"
 
 msgctxt "#70710"
-msgid "Your new settings has just been saved"
-msgstr ""
-
-msgctxt "#70711"
 msgid "Ops! There's been a problem during saving your setting"
-msgstr ""
+msgstr "Ops! C'è stato un problema durante il salvataggio delle impostazioni"
 
 msgctxt "#70712"
 msgid "Enable Automatic Renumbering"
-msgstr ""
+msgstr "Abilita Rinumerazione Automatica"
 
 msgctxt "#70713"
 msgid "There is not enough information on TVDB for renumbering"
-msgstr ""
+msgstr "Non ci sono Abbastanza informazioni su TVDB per la Rinumerazione"
 
 msgctxt "#70714"
 msgid "Modify "
-msgstr " "
+msgstr "Modifica "
 
 msgctxt "#70715"
 msgid "Customized main menu"
-msgstr ""
+msgstr "Menu principale personalizzato"
 
 msgctxt "#70716"
 msgid "Main menu items"
-msgstr ""
+msgstr "Elementi menu principale"
 
 msgctxt "#70717"
 msgid "Are all the special episodes present?"
-msgstr ""
+msgstr "Sono presenti tutti gli episodi spaciali?"
 
 msgctxt "#70718"
 msgid "Ep. No (Empty for OK) "
-msgstr ""
+msgstr "N° Ep. (vuoto per OK) "
 
 msgctxt "#70719"
 msgid "I can't automatically find the special episode number, please enter it manually"
-msgstr ""
+msgstr "Non riesco a trovare automaticamente il numero dell'episodio speciale, per favore inseriscilo manualmente"
 
 msgctxt "#70720"
-msgid "Dear User\n,You are currently not connected to any modem/router. We advise you to check at least that the modem/router is switched on and/or your device is connected.\nS4Me WONT FIND ANYTHING until the problem is resolved".
-msgstr ""
+msgid "Dear User\n,You are currently not connected to any modem/router. We advise you to check at least that the modem/router is switched on and/or your device is connected.\nS4Me WON'T FIND ANYTHING until the problem is resolved."
+msgstr "Gentile Utente,\nAttualmente non risulti connesso a nessun Modem/Router.\nControlla quanto meno che il modem/router sia acceso e/o il tuo dispositivo connesso.\nS4Me NON TROVERÀ NIENTE finchè non risolverai il problema."
 
 msgctxt "#70721"
-msgid "Dear user, you seem to have problems with ADSL! We suggest you call your manager's toll-free number or check it out at least that the modem/router is on and/or your device is connected.\nS4Me WONT FIND ANYTHING until the problem is resolved"
-msgstr ""
+msgid "Dear user, you seem to have problems with ADSL! We suggest you call your manager's toll-free number or check it out at least that the modem/router is on and/or your device is connected.\nS4Me WON'T FIND ANYTHING until the problem is resolved"
+msgstr "Gentile Utente, sembra tu abbia problemi con l'ADSL!  Controlla quanto meno che il modem/router sia acceso e/o il tuo dispositivo connesso.\nS4Me NON TROVERÀ NIENTE finchè non risolverai il problema."
 
 msgctxt "#70722"
 msgid "Dear User, you have disabled the DNS override and your current DNS do not allow you to reach all sites, ergo, not all Channels will work, we recommend you, to take advantage of more, to set up the DNS or re-enable the override in settings.\nSearch your favorite search engine for\n 1. guides on how to choose a free DNS.\n 2. set it up on your device.\nWe recommend the cloudflare DNS 1.1.1.1 and 1.0.0.1\nAlternatively the Google DNS 8.8.8.8 and 8.8.4.4.\nIf you have a VODAFONE station, enter the modem panel and disable 'Secure DNS' before proceeding.\n"
-msgstr ""
+msgstr "Gentile Utente, hai disattivato l'override DNS ed i tuoi DNS attuali non ti permettono di raggiungere tutti i siti, ergo, non tutti i Canali funzioneranno, ti consigliamo, per usufruirne di un maggior numero, di impostare i DNS oppure di riattivare l'override dalle impostazioni.\nCerca sul tuo motore di ricerca preferito guide su come\n1. scegliere un DNS libero.\n2. impostarlo sul tuo dispositivo.\nNoi ti consigliamo i DNS di cloudflare 1.1.1.1 e 1.0.0.1\nIn alternativa i DNS di Google 8.8.8.8 e 8.8.4.4.\nSe hai una VODAFONE station, entra nel pannello del modem e disattiva la voce 'DNS sicuro' prima di procedere. E Ricordati 'Applica' in fondo alla pagina per salvare le impostazioni...\n"
 
 msgctxt "#70723"
 msgid "links in the folder"
-msgstr ""
+msgstr "collegamenti nella cartella"
 
 msgctxt "#70724"
 msgid "Channel"
-msgstr ""
+msgstr "Canale"
 
 msgctxt "#70725"
 msgid "Select the language of %s in %s"
-msgstr ""
+msgstr "Seleziona la lingua di %s su %s"
 
 msgctxt "#70726"
 msgid "Select the preferred quality of %s in %s"
-msgstr ""
+msgstr "Seleziona la qualità preferita di %s su %s"
 
 msgctxt "#70727"
 msgid "Include in News"
-msgstr ""
+msgstr "Includi in Novità"
 
 msgctxt "#70728"
 msgid "Include in Global Search"
-msgstr ""
+msgstr "Includi in Ricerca Globale"
 
 msgctxt "#70729"
 msgid "Always add the highest quality"
-msgstr ""
+msgstr "Aggiungi sempre la qualità più alta"
 
 msgctxt "#70730"
 msgid "Select the renumbering method"
-msgstr ""
+msgstr "Seleziona il metodo di rinumerazione"
 
 msgctxt "#70731"
 msgid "Semi-Automatic"
-msgstr ""
+msgstr "Semi-Automatico"
 
 msgctxt "#70732"
 msgid "Manual"
-msgstr ""
+msgstr "Manuale"
 
 msgctxt "#70733"
 msgid "Enter the Season Number"
-msgstr ""
+msgstr "Digita il numero della Stagione"
 
 msgctxt "#70734"
 msgid "Select Season Episodes"
-msgstr ""
+msgstr "Seleziona gli Episodi della Stagione"
 
 msgctxt "#70735"
 msgid "%s Special Episode Number"
-msgstr ""
+msgstr "Numero dell'Episodio Speciale %s"
 
 msgctxt "#70736"
 msgid "Completed TV show"
-msgstr ""
+msgstr "Serie TV completa"
 
 msgctxt "#70737"
 msgid "Side menu"
-msgstr ""
+msgstr "Menu laterale"
 
 msgctxt "#70738"
 msgid "Ready channels %d/%d"
-msgstr ""
+msgstr "Canali pronti %d/%d"
 
 msgctxt "#70739"
 msgid "Open in browser"
-msgstr ""
+msgstr "Apri nel browser"
 
 msgctxt "#70740"
 msgid "Your system does not have a web browser, so here's the link you can open in another device:\n%s"
-msgstr ""
+msgstr "Il tuo sistema non ha un browser, quindi ecco il link che puoi aprire in un altro dispositivo:\n%s"
 
 msgctxt "#70741"
 msgid "Search %s"
-msgstr ""
+msgstr "Cerca %s"
 
 msgctxt "#70742"
 msgid "Movies by Year"
-msgstr ""
+msgstr "Film per Anno"
 
 msgctxt "#70743"
 msgid "TV shows by Year"
-msgstr ""
+msgstr "Serie TV per Anno"
 
 msgctxt "#70744"
 msgid "%s channels remaining"
-msgstr ""
+msgstr "%s canali restanti"
 
 msgctxt "#70745"
 msgid "Enter another year..."
-msgstr ""
+msgstr "Inserisci un altro anno..."
 
 msgctxt "#70746"
 msgid "When playback ends"
-msgstr ""
+msgstr "Al termine della riproduzione"
 
 msgctxt "#70747"
 msgid "Hide server selection"
-msgstr ""
+msgstr "Nascondi la selezione del server"
 
 msgctxt "#70748"
 msgid "Go to the next episode"
-msgstr ""
+msgstr "Vai all'episodio successivo"
 
 msgctxt "#70749"
 msgid "Seconds before notification"
-msgstr ""
+msgstr "Secondi prima della notifica"
 
 msgctxt "#70750"
 msgid "Next Episode in"
-msgstr ""
+msgstr "Episodio Successivo fra"
 
 msgctxt "#70751"
 msgid "seconds"
-msgstr ""
+msgstr "secondi"
 
 msgctxt "#70752"
 msgid "Do nothing"
-msgstr ""
+msgstr "Non fare nulla"
 
 msgctxt "#70753"
 msgid "Playback"
-msgstr ""
+msgstr "Riproduzione"
 
 msgctxt "#70754"
 msgid "View types"
-msgstr ""
+msgstr "Tipi di vista"
 
 msgctxt "#70755"
 msgid "Default"
-msgstr ""
+msgstr "Predefinita"
 
 msgctxt "#70756"
 msgid "Extended"
-msgstr ""
+msgstr "Estesa"
 
 msgctxt "#70757"
 msgid "Compact"
-msgstr ""
+msgstr "Compatta"
 
 msgctxt "#70758"
 msgid "Buffer size to download before playback"
-msgstr ""
+msgstr "Dimensione del buffer da scaricare prima della riproduzione"
 
 msgctxt "#70759"
 msgid "Limit (in Kb's) of background download speed (DOES NOT affect RAR)"
-msgstr ""
+msgstr "Limite (in Kb) della velocità di download in background (NON influisce su RAR)"
 
 msgctxt "#70760"
 msgid "Do you want the RAR and ZIP files to be decompressed for playback?"
-msgstr ""
+msgstr "Vuoi che i file RAR e ZIP vengano decompressi per la riproduzione?"
 
 msgctxt "#70761"
 msgid "Uncompressing RARs in the background?"
-msgstr ""
+msgstr "Decomprimere i RAR in secondo piano?"
 
 msgctxt "#70762"
 msgid "Do you want to convert Magnets to Torrents to see sizes and store them?"
-msgstr ""
+msgstr "Vuoi convertire i Magnets to Torrents per vedere le dimensioni e memorizzarle?"
 
 msgctxt "#70763"
 msgid "HD 1080"
-msgstr ""
+msgstr "HD 1080"
 
 msgctxt "#70764"
 msgid "HD 720"
-msgstr ""
+msgstr "HD 720"
 
 msgctxt "#70765"
 msgid "SD"
-msgstr ""
+msgstr "SD"
 
 msgctxt "#70766"
 msgid "Installing Internal Torrent Client"
-msgstr ""
+msgstr "Installazione del Client Torrent Interno"
 
 msgctxt "#70767"
 msgid "You can ask for Superuser permissions"
-msgstr ""
+msgstr "Puoi richiedere le autorizzazioni Superuser"
 
 msgctxt "#70768"
 msgid "%.2f MB RAR file found"
-msgstr ""
+msgstr "File RAR di %.2f MB trovato"
 
 msgctxt "#70769"
 msgid "You can do other tasks in Kodi in the meantime. We will inform you..."
-msgstr ""
+msgstr "Nel frattempo puoi svolgere altre attività in Kodi. Ti informeremo..."
 
 msgctxt "#70770"
 msgid "RAR file found..."
-msgstr ""
+msgstr "File RAR Trovato..."
 
 msgctxt "#70771"
 msgid "Name: %s"
-msgstr ""
+msgstr "Nome: %s"
 
 msgctxt "#70772"
 msgid "Size: %.2f MB"
-msgstr ""
+msgstr "Dimensione: %.2f MB"
 
 msgctxt "#70773"
 msgid "Download in the background? Cancel in Downloads menu"
-msgstr ""
+msgstr "Scarica in background? Annulla nel menu Download"
 
 msgctxt "#70774"
 msgid "Client not supported on this device."
-msgstr ""
+msgstr "Client non supportato su questo dispositivo."
 
 msgctxt "#70775"
 msgid "Error: %s"
-msgstr ""
+msgstr "Errore: %s"
 
 msgctxt "#70776"
 msgid "Use a supported client."
-msgstr ""
+msgstr "Usa un client supportato."
 
 msgctxt "#70777"
 msgid "This external plugin does not support the extraction of RAR files online"
-msgstr ""
+msgstr "Questo plugin esterno non supporta l'estrazione di file RAR online"
 
 msgctxt "#70778"
 msgid "Do you want us to use the internal MCT client this time?"
-msgstr ""
+msgstr "Vuoi che questa volta utilizziamo il client MCT interno?"
 
 msgctxt "#70779"
 msgid "This will take %s + times the size of the video"
-msgstr ""
+msgstr "Questa operazione occuperà %s + volte la dimensione del video"
 
 msgctxt "#70780"
 msgid "Elementum with memory download does not support to extract online RAR files (disk occupation %s + times)"
-msgstr ""
+msgstr "Elementum con download di memoria non supporta l'estrazione di file RAR online (occupazione del disco %s + volte)"
 
 msgctxt "#70781"
 msgid "Do you want to call Elementum Settings to temporarily switch to Use Files?"
-msgstr ""
+msgstr "Vuoi aprire i settaggi di Elementum per passare temporaneamente a usare i file?"
 
 msgctxt "#70782"
 msgid "You must install an external Client to take advantage of the torrent support. Do you want to install Elementum?"
-msgstr ""
+msgstr "Per poter usufruire del supporto torrent devi installare un Client esterno. Vuoi installare Elementum?"
 
 msgctxt "#70783"
 msgid "Elementum is installed on your device, but is not active. Do you want to activate it?"
-msgstr ""
+msgstr "Elementum è installato sul tuo dispositivo, ma non è attivo. Vuoi Attivarlo?"
 
 msgctxt "#70784"
 msgid "Attention!"
-msgstr ""
+msgstr "Attenzione!"
 
 msgctxt "#70785"
 msgid "Install Elementum"
-msgstr ""
+msgstr "Installa Elementum"
 
 msgctxt "#70786"
 msgid "Autostart"
-msgstr ""
+msgstr "Avvio automatico"
 
 msgctxt "#70787"
 msgid "Network"
-msgstr ""
+msgstr "Rete"
 
 msgctxt "#70788"
 msgid "Logging"
-msgstr ""
+msgstr "Logging"
 
 msgctxt "#70789"
 msgid ""
@@ -5977,83 +5977,83 @@ msgstr ""
 
 msgctxt "#70790"
 msgid "RAR download in progress"
-msgstr ""
+msgstr "Download RAR in corso"
 
 msgctxt "#70791"
 msgid "A RAR file was detected in the download, but you have not installed the UnRAR extractor.\nDo you want to download it anyway?"
-msgstr ""
+msgstr "Un file RAR è stato rilevato nel download, ma non hai installato l'estrattore UnRAR.\nVuoi scaricarlo in ogni caso?"
 
 msgctxt "#70792"
 msgid "Delete downloaded files?"
-msgstr ""
+msgstr "Cancellare i file scaricati?"
 
 msgctxt "#70793"
 msgid "Starting extraction..."
-msgstr ""
+msgstr "Avvio dell'estrazione..."
 
 msgctxt "#70794"
 msgid "Enter the password (Look in %s)"
-msgstr ""
+msgstr "Inserisci la password (Cerca in %s)"
 
 msgctxt "#70795"
 msgid "Extracted"
-msgstr ""
+msgstr "Estratto"
 
 msgctxt "#70796"
 msgid "Error opening RAR File"
-msgstr ""
+msgstr "Errore durante l'apertura del file RAR"
 
 msgctxt "#70797"
 msgid "The RAR file is empty"
-msgstr ""
+msgstr "Il file RAR è vuoto"
 
 msgctxt "#70798"
 msgid "Or does not contain valid archives"
-msgstr ""
+msgstr "O non contiene archivi validi"
 
 msgctxt "#70799"
 msgid "Extraction error"
-msgstr ""
+msgstr "Errore di estrazione"
 
 msgctxt "#70800"
 msgid "Archive with errors"
-msgstr ""
+msgstr "Archivio con errori"
 
 msgctxt "#70801"
 msgid "Extract without playing"
-msgstr ""
+msgstr "Estrarre senza riprodurre"
 
 msgctxt "#70802"
 msgid "Wait some minutes..."
-msgstr ""
+msgstr "Aspetta qualche minuto..."
 
 msgctxt "#70803"
 msgid "Extracting files..."
-msgstr ""
+msgstr "Estrazione dei files..."
 
 msgctxt "#70804"
 msgid "Next extraction..."
-msgstr ""
+msgstr "Estrazione successiva..."
 
 msgctxt "#70805"
 msgid "Stay in seed"
-msgstr ""
+msgstr "Resta in seed"
 
 msgctxt "#70806"
 msgid "Changing this parameter permanently overwrites the Elementum settings.\nDo you want to continue?"
-msgstr ""
+msgstr "Modificando questo parametro vengono sovrascritte permanentemente le impostazioni di Elementum.\nVuoi continuare?"
 
 msgctxt "#70807"
 msgid "Elementum does not support network folder downloads, do you want to change the download location?"
-msgstr ""
+msgstr "Elementum non supporta i download su cartella di rete, vuoi cambiare il percorso di download?"
 
 msgctxt "#70808"
 msgid "In order to view this content you need to install Widevine CDM. Do you want to install it?"
-msgstr ""
+msgstr "Per poter visionare questo contenuto devi installare Widevine CDM. Vuoi installarlo?"
 
 msgctxt "#70809"
 msgid "An update of Widevine CDM is available. Do you want to install it?"
-msgstr ""
+msgstr "È disponibile un aggiornamento di Widevine CDM. Vuoi installarlo?"
 
 msgctxt "#70810"
 msgid "Update available"
@@ -6061,465 +6061,470 @@ msgstr "Aggiornamento disponibile"
 
 msgctxt "#70811"
 msgid "Extracting Widevine CDM"
-msgstr ""
+msgstr "Estrazione di Widevine CDM"
 
 msgctxt "#70812"
 msgid "Preparing downloaded image..."
-msgstr ""
+msgstr "Preparazione dell'immagine scaricata..."
 
 msgctxt "#70813"
 msgid "Identifying wanted partition..."
-msgstr ""
+msgstr "Identificazione della partizione desiderata..."
 
 msgctxt "#70814"
 msgid "Scanning the filesystem for the Widevine CDM..."
-msgstr "."
+msgstr "Scansione del filesystem per Widevine CDM..."
 
 msgctxt "#70815"
 msgid "Widevine CDM found, analyzing..."
-msgstr "W"
+msgstr "Widevine CDM trovato, analisi..."
 
 msgctxt "#70816"
 msgid "Extracting Widevine CDM from image..."
-msgstr ""
+msgstr "Estrazione di Widevine CDM dall'immagine..."
 
 msgctxt "#70817"
 msgid "Series "%s" is not managed by S4Me, Do you want to search for it?"
-msgstr ""
+msgstr "La Serie "%s" non è gestita da S4Me, Vuoi cercarla?"
 
 msgctxt "#70818"
 msgid "YouTube is installed on your device, but is not active. Do you want to activate it?"
-msgstr ""
+msgstr "YouTube è installato sul tuo dispositivo, ma non è attivo. Vuoi Attivarlo?"
+
 msgctxt "#70819"
-msgid "No results on channel %s"
-msgstr "Nessun risultato sul canale %s."
+msgid "No results on channel %s."
+msgstr "Nessun risultato sul canale %s?"
 
 msgctxt "#70820"
 msgid "No results on channel %s, would you like to try Global Search?"
-msgstr ""
+msgstr "Nessun risultato sul canale %s, vuoi provare con la Ricerca Globale?"
 
 msgctxt "#70821"
 msgid "Search results"
-msgstr ""
+msgstr "Risultati della ricerca"
 
 # RENUMBER
 msgctxt "#70822"
 msgid "Renumber new episodes of: "
-msgstr ""
+msgstr "Rinumera i nuovi episodi di: "
 
 msgctxt "#70823"
 msgid "Renumber episodes of: "
-msgstr ""
+msgstr "Rinumera gli episodi di: "
 
 msgctxt "#70824"
 msgid "Select the specials of: "
-msgstr ""
+msgstr "Seleziona gli speciali di: "
 
 msgctxt "#70825"
 msgid "Select Season"
-msgstr ""
+msgstr "Seleziona Stagione"
 
 msgctxt "#70826"
 msgid "Select Episode"
-msgstr ""
+msgstr "Seleziona Episodio"
 
 msgctxt "#70827"
 msgid "Select Specials"
-msgstr ""
+msgstr "Seleziona Speciali"
 
 msgctxt "#70828"
 msgid "Manual renumbering"
-msgstr ""
+msgstr "Rinumerazione Manuale"
 
 msgctxt "#70829"
 msgid "Delete Numbering for: "
-msgstr ""
+msgstr "Elimina Numerazione per: "
 
 msgctxt "#70830"
 msgid "The series / episode number should only be changed if the series has relative numbering."
-msgstr ""
+msgstr "Il numero della serie / episodio deve essere modificato solo se  la serie ha una numerazione relativa."
 
 msgctxt "#70831"
 msgid "This series has multiple types of numbering, choose the most suitable one "
-msgstr ""
+msgstr "Questa serie ha più tipi di numerazione, scegli quello più adatto"
 
 msgctxt "#70832"
 msgid "Disabled"
-msgstr ""
+msgstr "Disabilitato"
 
 msgctxt "#70833"
 msgid "Automatic"
-msgstr ""
+msgstr "Automatico"
 
 msgctxt "#70834"
 msgid "Playlist"
-msgstr ""
+msgstr "Playlist"
 
 msgctxt "#70835"
 msgid "Search information from TMDB..."
-msgstr ""
+msgstr "Ricerca informazioni da TMDB..."
 
 # DNS start [ settings and declaration ]
 msgctxt "#707401"
 msgid "Enable DNS check alert"
-msgstr ""
+msgstr "Abilita avviso check DNS"
 
 msgctxt "#707402"
-msgid "Connection or DNS problem"
-msgstr ""
+msgid "Connection or DNS problems"
+msgstr "Problema di connessione o DNS"
 
 msgctxt "#707403"
 msgid "Disable alert"
-msgstr ""
+msgstr "Disattiva avviso"
 
 msgctxt "#707404"
 msgid "Remind me"
-msgstr ""
+msgstr "Ricordami"
 
 msgctxt "#707405"
 msgid "Notice Activation"
-msgstr ""
+msgstr "Attivazione Notifica"
 
 msgctxt "#707406"
 msgid "By disabling the alert, you have activated a notice\nthat will appear at the top right"
-msgstr ""
+msgstr "Disattivando l'avviso, hai attivato una notifica\nche apparirà in alto a dx"
 
 msgctxt "#707407"
 msgid "For any change to the DNS you MUST restart Kodi!"
-msgstr ""
+msgstr "Per ogni modifica sui DNS DEVI riavviare Kodi!"
 
 msgctxt "#707408"
 msgid "Activate DNS override"
-msgstr ""
+msgstr "Attiva override DNS"
 
 msgctxt "#707409"
 msgid "Choose the DNS provider"
-msgstr ""
+msgstr "Scegli il fornitore DNS"
 
 msgctxt "#707410"
 msgid "DNS supplier."
-msgstr ""
+msgstr "Fornitore DNS"
 
 msgctxt "#707411"
 msgid "Insert your DNS"
-msgstr ""
+msgstr "Inserisci i tuoi DNS"
 
 msgctxt "#707412"
 msgid "DNS1"
-msgstr ""
+msgstr "DNS1"
 
 msgctxt "#707413"
 msgid "DNS2"
-msgstr ""
+msgstr "DNS2"
 
 msgctxt "#707414"
 msgid "You are using the DNS set on your device or modem"
-msgstr ""
+msgstr "Stai utilizzando i DNS impostati sul dispositivo o modem"
 
 msgctxt "#707415"
 msgid "You have not selected any choice, the cloudflare DNS will be used."
-msgstr ""
+msgstr "Non hai selezionato nessuna scelta!\nVerranno utilizzati i DNS di cloudflare."
 
 msgctxt "#707416"
 msgid "Updates check interval (hours)"
-msgstr ""
+msgstr "Intervallo controllo aggiornamenti (ore)"
 
 msgctxt "#707417"
 msgid "Favourite quality"
-msgstr ""
+msgstr "Qualità preferita"
 
 msgctxt "#707418"
 msgid "Follow the steps below:"
-msgstr ""
+msgstr "Segui i seguenti passi:"
 
 msgctxt "#707419"
 msgid "%s) click here to enable debug logging"
-msgstr ""
+msgstr "%s) clicca qui per attivare il logging di debug"
 
 msgctxt "#707420"
 msgid "%s) repeat what you did to cause the error"
-msgstr ""
+msgstr "%s) ripeti ciò che hai fatto per causare l'errore"
 
 msgctxt "#707421"
 msgid "%s) click here to create the report"
-msgstr ""
+msgstr "%s) clicca qui per creare il report"
 
 msgctxt "#707422"
 msgid "%s) click here to disable debug logging"
-msgstr ""
+msgstr "%s) clicca qui per disattivare il logging di debug"
 
 msgctxt "#707423"
 msgid "Explain the issue and share this link:"
-msgstr ""
+msgstr "Spiega il problema e condividi questo link:"
 
 msgctxt "#707424"
 msgid "Service not available. Try again later"
-msgstr ""
+msgstr "Servizio non disponibile Riprova più tardi"
 
 msgctxt "#707425"
 msgid "Debug should be active"
-msgstr ""
+msgstr "Il debug dovrebbe essere attivo"
 
 msgctxt "#707426"
 msgid "before generating the report"
-msgstr ""
+msgstr "prima di generare il report"
 
 msgctxt "#707427"
 msgid "Unable to read Kodi log"
-msgstr ""
+msgstr "Impossibile leggere il log di Kodi"
 
 msgctxt "#707428"
 msgid "Failed to upload report"
-msgstr ""
+msgstr "Impossibile caricare il report"
 
 msgctxt "#707429"
 msgid "Report an issue"
-msgstr ""
+msgstr "Segnala un problema"
 
 msgctxt "#707430"
 msgid "Debug logging"
-msgstr ""
+msgstr "Logging di debug"
 
 msgctxt "#707431"
 msgid "Enabled"
-msgstr ""
+msgstr "Attivato"
 
 msgctxt "#707432"
 msgid "Disabled"
-msgstr ""
+msgstr "Disattivato"
 
 msgctxt "#707433"
 msgid "Delete"
-msgstr ""
+msgstr "Cancella"
 
 msgctxt "#707434"
 msgid "reCaptcha verification failed"
-msgstr ""
+msgstr "Verifica reCaptcha fallita"
 
 msgctxt "#80000"
 msgid "Export video library"
-msgstr ""
+msgstr "Esporta videoteca"
 
 msgctxt "#80001"
 msgid "Import video library"
-msgstr ""
+msgstr "Importa videoteca"
 
 msgctxt "#80002"
 msgid "Select the folder where to export the video library"
-msgstr ""
+msgstr "Selezionare la cartella dove esportare la videoteca"
 
 msgctxt "#80003"
 msgid "Exporting video library..."
-msgstr ""
+msgstr "Esportazione videoteca..."
 
 msgctxt "#80004"
 msgid "The video library has been exported"
-msgstr ""
+msgstr "La videoteca è stata esportata"
 
 msgctxt "#80005"
 msgid "Select the zip file to be imported"
-msgstr ""
+msgstr "Selezionare il file zip da importare"
 
 msgctxt "#80006"
 msgid "Attention, the current video library will be overwritten. Proceed anyway?"
-msgstr ""
+msgstr "Attenzione, l'attuale videoteca verrà sovrascritta. Procedere comunque?"
 
 msgctxt "#80007"
 msgid "Importing video library..."
-msgstr ""
+msgstr "Importazione videoteca..."
 
 msgctxt "#80008"
 msgid "The video library has been imported"
-msgstr ""
+msgstr "La videoteca è stata importata"
 
 msgctxt "#80009"
 msgid "Would you like to search for new episodes and update video library?"
-msgstr ""
+msgstr "Vuoi cercare i nuovi episodi ed aggiornare la videoteca?"
 
 msgctxt "#80010"
 msgid "Select the video library path"
-msgstr ""
+msgstr "Seleziona il percorso della videoteca"
 
 msgctxt "#80011"
 msgid "Verifying folders..."
-msgstr ""
+msgstr "Verifica cartelle..."
 
 msgctxt "#80012"
 msgid "Moving video library..."
-msgstr ""
+msgstr "Spostamento videoteca..."
 
 msgctxt "#80013"
 msgid "Updating database..."
-msgstr ""
+msgstr "Aggiornamento database..."
 
 msgctxt "#80014"
 msgid "The video library has been moved"
-msgstr ""
+msgstr "La videoteca è stata spostata"
 
 msgctxt "#80015"
 msgid "Do you want to configure the Kodi video library?"
-msgstr ""
+msgstr "Vuoi configurare la libreria di Kodi?"
 
 msgctxt "#80016"
 msgid "Would you like to use custom or default settings?"
-msgstr ""
+msgstr "Desideri utilizzare impostazioni personalizzate o predefinite?"
 
 msgctxt "#80017"
 msgid "Custom"
-msgstr ""
+msgstr "Personalizzate"
 
 msgctxt "#80018"
 msgid "Default"
-msgstr ""
+msgstr "Predefinite"
 
 msgctxt "#80019"
 msgid "Select the video library path"
-msgstr ""
+msgstr "Seleziona il percorso della videoteca"
 
 msgctxt "#80020"
 msgid "Folder name for movies"
-msgstr ""
+msgstr "Nome della cartella per i film"
 
 msgctxt "#80021"
 msgid "Folder name for TV shows"
-msgstr ""
+msgstr "Nome della cartella per le serie TV"
 
 msgctxt "#80022"
 msgid "You can configure the Kodi video library later from S4Me settings"
-msgstr ""
+msgstr "Potrai configurare la libreria di Kodi in seguito dalle impostazioni di S4Me"
 
 msgctxt "#80023"
 msgid "You will be asked to choose and configure the information providers for movies and TV shows"
-msgstr ""
+msgstr "Ti verrà chiesto di scegliere e configurare i provider delle informazioni per film e serie TV"
 
 msgctxt "#80024"
 msgid "An error has occurred during the configuration of the Kodi video library. Please check the log and try again from S4Me settings"
-msgstr ""
+msgstr "Si è verificato un errore durante la configurazione della libreria di Kodi. Si prega di controllare il log e riprovare dalle impostazioni di S4Me"
 
 msgctxt "#80025"
 msgid "Cleaning database..."
-msgstr ""
+msgstr "Pulizia database..."
 
 msgctxt "#80026"
 msgid "Configuration of Kodi video library"
-msgstr ""
+msgstr "Configurazione della libreria di Kodi"
 
 msgctxt "#80027"
 msgid "You will be asked to configure The Movie Database for movies and tvshows"
-msgstr ""
+msgstr "Ti verrà chiesto di configurare The Movie Database sia per i film che per le serie TV"
 
 msgctxt "#80028"
 msgid "The selected folders are already used by the Kodi library. Please change them properly"
-msgstr ""
+msgstr "Le cartelle selezionate sono già utilizzate dalla libreria di Kodi. Si prega di cambiarle opportunamente"
 
 msgctxt "#80029"
 msgid "The selected folders are already used by the Kodi library. Please change them properly from S4Me settings"
-msgstr ""
+msgstr "Le cartelle selezionate sono già utilizzate dalla libreria di Kodi. Si prega di cambiarle opportunamente dalle impostazioni di S4Me"
 
 msgctxt "#80030"
 msgid "The default path and folders will be used. You will be asked to choose and configure the information providers for movies and TV shows"
-msgstr ""
+msgstr "Verranno utilizzati il percorso e le cartelle predefiniti. Ti verrà chiesto di scegliere e configurare i provider delle informazioni per film e serie TV"
 
 msgctxt "#80031"
 msgid "Unable to connect to github. This is probably due to a lack of connection or github is currently offline. Please check and try again"
-msgstr ""
+msgstr "Impossibile connettersi a github. Questo è probabilmente dovuto ad una mancanza di connessione oppure github è attualmente offline. Per favore verifica e riprova"
 
 msgctxt "#80032"
 msgid "Installing..."
-msgstr ""
+msgstr "Installazione..."
 
 msgctxt "#80033"
 msgid "Choose the version of S4Me to install"
-msgstr ""
+msgstr "Scegli la versione di S4Me da installare"
 
 msgctxt "#80034"
 msgid "release (stable version)"
-msgstr ""
+msgstr "release (versione stabile)"
 
 msgctxt "#80035"
 msgid "master (beta version under development)"
-msgstr ""
+msgstr "master (versione beta in fase di sviluppo)"
 
 msgctxt "#80036"
 msgid "Delete video library"
-msgstr ""
+msgstr "Elimina videoteca"
 
 msgctxt "#80037"
 msgid "Attention, the entire video library will be deleted. Proceed anyway?"
-msgstr ""
+msgstr "Attenzione, l'intera videoteca verrà eliminata. Procedere comunque?"
 
 msgctxt "#80038"
 msgid "Deleting video library..."
-msgstr ""
+msgstr "Eliminazione videoteca..."
 
 msgctxt "#80039"
 msgid "The video library has been deleted"
-msgstr ""
+msgstr "La videoteca è stata eliminata"
 
 msgctxt "#80040"
 msgid "Add-on updated to commit %s"
-msgstr ""
+msgstr "Add-on aggiornato al commit %s"
 
 msgctxt "#80041"
 msgid "Latest updates:\n"
-msgstr ""
+msgstr "Ultimi aggiornamenti:\n"
 
 msgctxt "#80042"
 msgid "Include local episodes when adding a TV shows"
-msgstr ""
+msgstr "Includere episodi in locale all'aggiunta di una serie TV"
 
 msgctxt "#80043"
 msgid "Attention, in order to watch local episodes you have to configure the Kodi video library from S4Me settings"
-msgstr ""
+msgstr "Attenzione, per guardare gli episodi in locale devi configurare la libreria di Kodi dalle impostazioni di S4Me"
 
 msgctxt "#80044"
 msgid "Do you want to include local episodes for the TV show "%s"?"
-msgstr ""
+msgstr "Vuoi includere degli episodi in locale per la serie TV "%s"?"
 
 msgctxt "#80045"
 msgid "The folder of the local episodes has to be different from the TV show one in the S4Me video library"
-msgstr ""
+msgstr "La cartella degli episodi in locale deve essere diversa da quella della serie TV nella videoteca di S4Me"
 
 msgctxt "#80046"
 msgid "Select the folder containing the local episodes"
-msgstr ""
+msgstr "Seleziona la cartella contenente gli episodi in locale"
 
 msgctxt "#80047"
 msgid "The TV show "% s" includes local episodes. They will be only removed from the Kodi video library without being deleted"
-msgstr ""
+msgstr "La serie TV "%s" include degli episodi in locale. Verranno solo rimossi dalla libreria di Kodi senza essere cancellati"
 
 msgctxt "#80048"
 msgid "Add local episodes"
-msgstr ""
+msgstr "Aggiungi episodi in locale"
 
 msgctxt "#80049"
 msgid "Remove local episodes"
-msgstr ""
+msgstr "Rimuovi episodi in locale"
 
 msgctxt "#80050"
 msgid "Downloading..."
-msgstr ""
+msgstr "Download in corso..."
 
 msgctxt "#90001"
 msgid "S4Me options"
-msgstr "S4Me options..."
+msgstr "Opzioni di S4Me..."
 
 msgctxt "#90002"
 msgid "No TMDB found"
-msgstr "No TmdbId found, cannot continue"
+msgstr "Non sono riuscito a trovare le informazioni su TMDB"
 
 msgctxt "#90003"
 msgid "Already on S4Me, continue searching on other channels?"
-msgstr "Item is coming from S4Me, continue searching on other channels?"
+msgstr "Preferisci cercare su altri canali?"
 
 msgctxt "#90004"
 msgid "No contextmenu option"
-msgstr "No options"
+msgstr "Nessuna opzione possibile"
 
 msgctxt "#90005"
 msgid "Search on S4Me"
-msgstr "Search with S4Me"
+msgstr "Cerca con S4Me"
 
 msgctxt "#90006"
 msgid "Elementum is already installed"
-msgstr "Elementum is already installed"
+msgstr "Elementum è già installato"
+
+msgctxt "#70991"
+msgid "Modalita' Tiny: mostra solo i canali essenziali"
+msgstr ""
