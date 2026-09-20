@@ -4,18 +4,33 @@
 #
 # ffmpeg (se presente) : remux .mp4 con -c copy (via preferita)
 # fallback Python      : segmenti IN PARALLELO -> .ts
-#                        AES-128 SUPPORTATO: decifra con pycryptodome
-#                        (namespace 'Cryptodome' di Kodi o 'Crypto')
-#                        o cryptography
+#                        AES-128 SUPPORTATO: pycryptodome con discovery
+#                        multi-livello (Cryptodome / Crypto / addon Kodi
+#                        / lib dell'addon) o cryptography
+#
+# RESUME [RESUME]: sidecar <file>.hlsdl con i segmenti completati.
+#   Crash/riavvio -> al rilancio salta i segmenti gia' scritti e
+#   APPENDE. Sidecar atomico ogni 10 segmenti. Rimosso al completamento.
+#
+# MEMORIA [MEM-FIX]: finestra scorrevole — solo ~workers*3 segmenti
+#   in volo; i buffer vengono liberati appena scritti.
+#
+# PATIENT: retry con backoff ~40s per segmento.
+#
+# COSMETIC: popup con "[xx%]" nell'heading.
+#
+# AES-FIX [AES]: su Windows Kodi il pacchetto e' sotto il namespace
+#   'Cryptodome' (non 'Crypto'): discovery in ordine Cryptodome ->
+#   Crypto -> addon Kodi (script.module.pycryptodome / lib dell'addon)
+#   -> cryptography. Ogni tentativo e' loggato: nel kodi.log si vede
+#   SEMPRE quale backend e' stato trovato (o perche' no).
 # ------------------------------------------------------------
 
 import os, re, time, subprocess, traceback
 from platformcode import logger
 
 FFMPEG = 'ffmpeg'      # percorso completo se un giorno lo installi
-WORKERS = 6            # connessioni parallele nel fallback Python
-
-_AES_BACKEND = None
+WORKERS = 6            # connessioni parallele (6 = safe per il CDN)
 
 
 def _notify(msg):
@@ -26,11 +41,53 @@ def _notify(msg):
     except Exception:
         pass
 
+_AES_BACKEND = None
+
+
+class _ProgressWithPct(object):
+    """DialogProgressBG che mostra 'Titolo [xx%]' nell'heading,
+    aggiornato a ogni update(pct)."""
+
+    def __init__(self):
+        try:
+            import xbmcgui
+            self._d = xbmcgui.DialogProgressBG()
+            self._heading = 'HLS download'
+        except Exception:
+            self._d = None
+
+    def create(self, title=None, msg=''):
+        if self._d is None:
+            return
+        try:
+            if title:
+                self._heading = str(title)
+            self._d.create('HLS download', self._heading)
+        except Exception:
+            pass
+
+    def update(self, pct, msg=''):
+        if self._d is None:
+            return
+        try:
+            p = max(0, min(100, int(pct)))
+            self._d.update(p, '%s [%d%%]' % (self._heading, p),
+                           msg if msg else '')
+        except Exception:
+            pass
+
+    def close(self):
+        if self._d is None:
+            return
+        try:
+            self._d.close()
+        except Exception:
+            pass
+
 
 def _progress():
     try:
-        import xbmcgui
-        return xbmcgui.DialogProgressBG()
+        return _ProgressWithPct()
     except Exception:
         class _N:
             def create(self, *a, **k): pass
@@ -51,13 +108,11 @@ def _abs(base, u):
 
 # ---------------------------------------------------------- AES-128 ----
 
-# Addon che possono fornire pycryptodome. NON includiamo
-# 'script.module.cryptography' perche' di solito non esiste su Kodi.
-# NB: nella maggior parte dei casi NON serve: il fork 'Cryptodome' e'
-# gia' presente in system/Python/Lib/site-packages ed e' importabile
-# direttamente.
+# [AES-FIX] addon che possono fornire pycryptodome (oltre al namespace
+# gia' presente nel Python di Kodi). Includiamo anche la nostra lib/:
 _AES_ADDON_CANDIDATES = (
-    ('script.module.pycryptodome',),
+    'script.module.pycryptodome',
+    'plugin.video.s4me',        # la nostra lib/ se il fork la bundla
 )
 
 
@@ -71,8 +126,8 @@ def _safe_addon_path(addon_id):
 
 
 def _find_package_dir(base, package_name):
-    """Cerca ricorsivamente `package_name` sotto `base`.
-    Ritorna il path della directory che CONTIENE il package, oppure None."""
+    """Cerca ricorsivamente `package_name` sotto `base` (max 3 livelli).
+    Ritorna il path della directory che CONTIENE il package, o None."""
     target = os.path.join(base, package_name)
     if os.path.isdir(target):
         return base
@@ -90,34 +145,35 @@ def _find_package_dir(base, package_name):
 
 
 def _try_import_pycryptodome():
-    """Import di pycryptodome. Ordine di tentativi:
-       1) 'Cryptodome' (fork ufficiale, namespace dedicato, gia' in Kodi)
+    """[AES-FIX] Ordine di tentativi:
+       1) 'Cryptodome' (fork ufficiale, E' quello che Kodi spedisce su
+          Windows/Android in system/Python/Lib/site-packages)
        2) 'Crypto'     (namespace classico)
-       3) come addon Kodi script.module.pycryptodome, cercando
-          sia 'Cryptodome' sia 'Crypto' nel suo path.
+       3) come addon Kodi: 'Cryptodome' o 'Crypto' nel path dell'addon
+          (script.module.pycryptodome, o la lib del nostro addon)
     Ritorna il modulo AES oppure None."""
-    # 1) Cryptodome (di solito gia' importabile da Kodi)
+    # 1) Cryptodome
     try:
         from Cryptodome.Cipher import AES as _AES
         logger.info('hlsdl: pycryptodome trovato come Cryptodome')
         return _AES
-    except ImportError:
+    except Exception:
         pass
 
-    # 2) Crypto (pycryptodome classico)
+    # 2) Crypto
     try:
         from Crypto.Cipher import AES as _AES
         logger.info('hlsdl: pycryptodome trovato come Crypto')
         return _AES
-    except ImportError:
+    except Exception:
         pass
 
-    # 3) come addon Kodi: cerca 'Cryptodome' o 'Crypto' sotto il suo path
+    # 3) come addon Kodi
     import sys
-    for (addon_id,) in _AES_ADDON_CANDIDATES:
+    for addon_id in _AES_ADDON_CANDIDATES:
         base = _safe_addon_path(addon_id)
         if not base:
-            logger.error('hlsdl: addon %s non trovato' % addon_id)
+            logger.info('hlsdl: addon %s non presente' % addon_id)
             continue
         logger.info('hlsdl: addon %s trovato in %s' % (addon_id, base))
 
@@ -138,7 +194,7 @@ def _try_import_pycryptodome():
                 else:
                     from Crypto.Cipher import AES as _AES
                 return _AES
-            except ImportError as e:
+            except Exception as e:
                 logger.error('hlsdl: import %s.Cipher fallito: %s'
                              % (pkg_name, e))
 
@@ -146,18 +202,17 @@ def _try_import_pycryptodome():
 
 
 def _try_import_cryptography():
-    """Import di cryptography dal path normale (non come addon Kodi)."""
     try:
         from cryptography.hazmat.primitives.ciphers import (Cipher as _C,
                                                             algorithms as _al,
                                                             modes as _mo)
         return (_C, _al, _mo)
-    except ImportError:
+    except Exception:
         return None
 
 
 def _aes_backend():
-    """Trova un backend AES: pycryptodome (Cryptodome/Crypto) o cryptography.
+    """[AES-FIX] Trova un backend AES con discovery multi-livello.
     Ritorna (nome, obj) oppure (None, None). Cachato in _AES_BACKEND."""
     global _AES_BACKEND
     if _AES_BACKEND is not None:
@@ -175,9 +230,11 @@ def _aes_backend():
         logger.info('hlsdl: AES backend = cryptography')
         return _AES_BACKEND
 
-    logger.error('hlsdl: nessun backend AES disponibile. '
-                 'Verifica che Cryptodome sia in system/Python/Lib/site-packages, '
-                 'oppure installa ffmpeg.')
+    logger.error('hlsdl: nessun backend AES disponibile (Cryptodome/Crypto/'
+                 'cryptography). Su Windows: verifica che esista '
+                 'system/Python/Lib/site-packages/Cryptodome, oppure '
+                 'installa script.module.pycryptodome, oppure ffmpeg.')
+    _notify('playlist cifrata: nessun backend AES')
     _AES_BACKEND = (None, None)
     return _AES_BACKEND
 
@@ -220,10 +277,8 @@ def download_hls_ffmpeg(m3u8_url, dest, headers=None, ua=None):
     cmd = [FFMPEG, '-hide_banner', '-loglevel', 'error', '-nostdin', '-y']
     if ua:
         cmd += ['-user_agent', ua]
-    if headers:
-        # ffmpeg vuole TUTTI gli header in UNA sola stringa, CRLF-terminati.
-        hdr = ''.join('%s: %s\r\n' % (k, v) for k, v in headers)
-        cmd += ['-headers', hdr]
+    for k, v in (headers or []):
+        cmd += ['-headers', '%s: %s\r\n' % (k, v)]     # CRLF obbligatorio
     cmd += ['-reconnect', '1', '-reconnect_streamed', '1',
             '-reconnect_delay_max', '5']
     cmd += ['-i', m3u8_url, '-c', 'copy',
@@ -261,11 +316,28 @@ def download_hls_ffmpeg(m3u8_url, dest, headers=None, ua=None):
 # ------------------------------------------------------------ python ----
 
 def download_hls_python(m3u8_url, dest_ts, headers=None, ua=None, workers=WORKERS):
-    """Fallback senza ffmpeg: segmenti IN PARALLELO, scritti IN ORDINE
-    (map() preserva l'ordine -> .ts coerente). AES-128 supportato."""
+    """Fallback senza ffmpeg: segmenti IN PARALLELO, scritti IN ORDINE.
+    AES-128 supportato (discovery multi-livello).
+    [RESUME] sidecar <dest>.hlsdl: al rilancio salta i segmenti gia'
+    scritti e APPENDE — niente ripartenza da 0 dopo crash/riavvio.
+    [MEM-FIX] finestra scorrevole: solo ~workers*3 segmenti in volo.
+    [PATIENT] retry con backoff ~40s per segmento."""
     import requests
+    from collections import deque
     from requests.adapters import HTTPAdapter
     from concurrent.futures import ThreadPoolExecutor
+
+    sidecar = dest_ts + '.hlsdl'
+
+    # --- [RESUME] segmenti gia' scritti? ---
+    resume_from = 0
+    if os.path.isfile(sidecar) and os.path.isfile(dest_ts):
+        try:
+            resume_from = int(open(sidecar).read().strip() or 0)
+        except Exception:
+            resume_from = 0
+    if resume_from < 0:
+        resume_from = 0
 
     s = requests.Session()
     s.headers.update({'User-Agent': ua or 'Mozilla/5.0'})
@@ -275,16 +347,19 @@ def download_hls_python(m3u8_url, dest_ts, headers=None, ua=None, workers=WORKER
     s.mount('http://', adapter)
     s.mount('https://', adapter)
 
-    def get(u, binary=False, tries=3):
+    def get(u, binary=False, tries=6):
+        """[PATIENT] retry con backoff: 1+2+4+8+16+20s ≈ 40s di tolleranza
+        per segmento — assorbe blip VPN e pause del CDN senza abortire."""
         last = None
-        for _ in range(tries):
+        for attempt in range(tries):
+            if attempt:
+                time.sleep(min(20, 2 ** (attempt - 1)))
             try:
                 r = s.get(u, timeout=30)
                 r.raise_for_status()
                 return r.content if binary else r.text
             except Exception as e:
                 last = e
-                time.sleep(1)
         raise last
 
     data = get(m3u8_url)
@@ -326,19 +401,23 @@ def download_hls_python(m3u8_url, dest_ts, headers=None, ua=None, workers=WORKER
         logger.error('hlsdl: nessun segmento nella playlist')
         return None
 
-    # --- chiavi AES: scaricate una volta per URI ---
+    # --- [RESUME] sanity: il sidecar non puo' superare la playlist ---
+    if resume_from >= len(segs):
+        logger.info('hlsdl: sidecar (%d) >= playlist (%d): reset'
+                    % (resume_from, len(segs)))
+        resume_from = 0
+
+    # --- chiavi AES: scaricate una volta per URI (solo per i segmenti da fare) ---
     keys = {}
-    encrypted = any(k is not None for _, k, _ in segs)
+    encrypted = any(k is not None for _, k, _ in segs[resume_from:])
     if encrypted:
         name, _o = _aes_backend()
         if name is None:
             logger.error('hlsdl: playlist cifrata ma nessun backend AES '
-                         '(pycryptodome/cryptography). Installa ffmpeg o '
-                         'verifica che Cryptodome sia disponibile.')
-            _notify('playlist cifrata: manca pycryptodome o ffmpeg')
+                         '(vedi log discovery qui sopra).')
             return None
         logger.info('hlsdl: playlist cifrata AES-128, backend: %s' % name)
-        for _, k, _sq in segs:
+        for _, k, _sq in segs[resume_from:]:
             if k and k['uri'] not in keys:
                 kb = get(_abs(m3u8_url, k['uri']), binary=True)
                 if len(kb) != 16:
@@ -357,30 +436,88 @@ def download_hls_python(m3u8_url, dest_ts, headers=None, ua=None, workers=WORKER
         iv = k['iv'] or sq.to_bytes(16, 'big')   # IV assente -> media sequence
         return _aes_decrypt(keys[k['uri']], iv, b)
 
-    logger.info('hlsdl: %d segmenti (%s), %d worker paralleli'
-                % (len(segs), 'cifrati' if encrypted else 'in chiaro', workers))
+    todo = segs[resume_from:]
+    INFLIGHT = max(4, workers * 3)
+    logger.info('hlsdl: %d segmenti (%s), %d worker, finestra %d, resume da %d'
+                % (len(segs), 'cifrati' if encrypted else 'in chiaro',
+                   workers, INFLIGHT, resume_from))
+
+    # [COSMETIC] titolo del film nell'heading (senza estensione)
     prog = _progress()
-    prog.create('HLS download', os.path.basename(dest_ts))
-    ok = 0
+    prog.create(os.path.basename(dest_ts).rsplit('.', 1)[0], '')
+
+    ok = 0                      # segmenti scritti IN QUESTA sessione
+    t0 = time.time()
+    bytes_done = 0
+    next_ms = 0.1 if resume_from == 0 else (float(resume_from + 1) / len(segs))
+    ex = ThreadPoolExecutor(max_workers=workers)
+    window = deque()
+    seg_iter = iter(todo)
+
+    def _submit_more(n):
+        added = 0
+        while added < n:
+            try:
+                a = next(seg_iter)
+            except StopIteration:
+                return
+            window.append(ex.submit(fetch_one, a))
+            added += 1
+
+    def _save_sidecar():
+        try:
+            tmp = sidecar + '.tmp'
+            with open(tmp, 'w') as _sf:
+                _sf.write(str(resume_from + ok))
+            os.replace(tmp, sidecar)
+        except Exception:
+            pass
+
     try:
-        with open(dest_ts, 'wb') as f:
-            if init_uri:
+        mode = 'ab' if resume_from else 'wb'    # append se riprendiamo
+        with open(dest_ts, mode) as f:
+            if resume_from == 0 and init_uri:
                 f.write(get(init_uri, binary=True))
-            with ThreadPoolExecutor(max_workers=workers) as ex:
-                for content in ex.map(fetch_one, segs):
-                    f.write(content)
-                    ok += 1
-                    prog.update(int(100.0 * ok / len(segs)))
+            _submit_more(INFLIGHT)
+            while window:
+                fut = window.popleft()
+                content = fut.result()
+                f.write(content)
+                ok += 1
+                bytes_done += len(content)
+                del content                     # [MEM-FIX] libera subito
+                _submit_more(1)                 # tieni la finestra piena
+                if ok % 10 == 0:
+                    _save_sidecar()
+                pct = (resume_from + ok) / float(len(segs))
+                prog.update(int(pct * 100))     # [COSMETIC] -> "[xx%]" nell'heading
+                if pct >= next_ms:
+                    dt = time.time() - t0
+                    if dt > 0:
+                        logger.info('hlsdl: %d%% (%.1f MB/s medi)' %
+                                    (int(pct * 100), bytes_done / dt / 1e6))
+                    next_ms += 0.1
     except Exception:
         logger.error('hlsdl segmento %d/%d: %s'
-                     % (ok + 1, len(segs), traceback.format_exc()[-300:]))
+                     % (resume_from + ok + 1, len(segs),
+                        traceback.format_exc()[-300:]))
     finally:
+        ex.shutdown(wait=True)
+        _save_sidecar()
         prog.close()
-    logger.info('hlsdl: %d/%d segmenti -> %s' % (ok, len(segs), dest_ts))
-    if ok == len(segs):
+
+    if resume_from + ok == len(segs):
+        # completo: il sidecar non serve piu'
+        try:
+            os.remove(sidecar)
+        except Exception:
+            pass
+        logger.info('hlsdl: %d/%d segmenti -> %s' % (len(segs), len(segs), dest_ts))
         return dest_ts
-    if ok:
-        logger.info('hlsdl: download parziale (file lasciato, stato=errore)')
+    logger.info('hlsdl: %d/%d segmenti (resume da %d) -> %s'
+                % (resume_from + ok, len(segs), resume_from, dest_ts))
+    if resume_from + ok:
+        logger.info('hlsdl: download parziale (riprendibile)')
     return None
 
 
