@@ -2,7 +2,7 @@
     "id": "1337x",
     "name": "1337x",
     "language": ["ita", "sub-ita", "eng"],
-    "active": true,
+    "active": false,
     "thumbnail": "1337x.png",
     "banner": "1337x.png",
     "categories": ["movie", "tvshow", "torrent"],
