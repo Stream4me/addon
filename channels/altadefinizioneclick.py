@@ -22,8 +22,8 @@ from core import support
 from platformcode import config, logger
 import re, html, json, traceback, urllib.parse, time, threading
 
-host = 'https://altadefinizionex.live'
-if host.endswith('/'):
+host = support.config.get_channel_url()
+if host and host.endswith('/'):
     host = host[:-1]
 
 FETCH_TIMEOUT = 45          # prima fetch embed (puo' includere sweep TLS a freddo)
