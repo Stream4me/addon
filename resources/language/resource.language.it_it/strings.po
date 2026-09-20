@@ -6524,3 +6524,7 @@ msgstr "Cerca con S4Me"
 msgctxt "#90006"
 msgid "Elementum is already installed"
 msgstr "Elementum è già installato"
+
+msgctxt "#70991"
+msgid "Modalita' Tiny: mostra solo i canali essenziali"
+msgstr ""
