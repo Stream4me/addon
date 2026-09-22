@@ -89,9 +89,13 @@ def search(item, text):
 
     page = item.page if hasattr(item, 'page') and item.page else 0
 
-    # Aggiungi "ita" alla query se il filtro è attivo
-    only_ita = config.get_setting('only_ita', channel=item.channel, default=False)
-    search_text = text + ' ita' if only_ita else text
+    # Filtro ITA sempre attivo (se impostazione attiva)
+    only_ita = config.get_setting('itaSearch', channel=item.channel, default=False)
+
+    if only_ita and "user:" not in text:
+        search_text = text + ' ita'
+    else:
+        search_text = text
 
     if page > 0:
         api_url = "https://apibay.org/q.php?q=%s:%s" % (urllib.parse.quote(search_text), page)

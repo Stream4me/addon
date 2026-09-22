@@ -9,9 +9,9 @@
     "not_active": ["include_in_newest"],
     "settings": [
         {
-            "id": "only_ita",
+            "id": "itaSearch",
             "type": "bool",
-            "label": "Cerca solo contenuti in italiano",
+            "label": "Cerca contenuti in italiano",
             "default": false,
             "enabled": true,
             "visible": true
