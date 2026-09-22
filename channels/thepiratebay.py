@@ -7,8 +7,8 @@ import json
 import urllib.parse
 import re
 
-from core import support, httptools
-from platformcode import logger
+from core import support, httptools, tmdb
+from platformcode import logger, config
 
 host = ''
 
@@ -19,9 +19,50 @@ def mainlist(item):
     return locals()
 
 
+def estrai_titolo(title):
+    """
+    Estrae il titolo pulito dal nome del torrent per TMDB.
+    Gestisce film, serie TV e stagioni complete.
+    """
+    titolo = title
+
+    # 1. Serie TV: pattern S01E03 / S01 / 1x05 / Season 2 / Stagione 2
+    m = re.search(
+        r'\s*(?:'
+        r'S\d{1,2}(?:E\d{1,3})?'
+        r'|\d{1,2}x\d{1,3}'
+        r'|[Ss]eason\s*\d{1,2}'
+        r'|[Ss]tagione\s*\d{1,2}'
+        r'|[Ss]\d{1,2}\s*-\s*[Ee]?\d{1,3}'
+        r')\b',
+        title
+    )
+    if m:
+        titolo = title[:m.start()]
+    else:
+        # 2. Film: prendi tutto prima dell'anno
+        m = re.match(r'^(.+?)\s*[\(\[]?(?:19|20)\d{2}[\)\]]?', title)
+        if m:
+            titolo = m.group(1)
+
+    # 3. Sostituisci punti con spazi
+    titolo = titolo.replace('.', ' ')
+
+    # 4. Rimuovi anno finale residuo
+    titolo = re.sub(r'\s*[\(\[]?(?:19|20)\d{2}[\)\]]?\s*$', '', titolo)
+
+    # 5. Rimuovi separatori finali orfani
+    titolo = re.sub(r'[\s\.\-_\[\]\(\)]+$', '', titolo)
+
+    return titolo.strip()
+
+
 def search(item, text):
     logger.info("text=" + text)
     itemlist = []
+
+    # ⭐ Replica ilcorsaronero: segna che è una ricerca
+    item.args = 'search'
 
     page = item.page if hasattr(item, 'page') and item.page else 0
 
@@ -72,13 +113,19 @@ def search(item, text):
 
         title_formatted = "%s [S:%s L:%s] [%s]" % (title, seed_color, leech, size)
 
+        # Titolo pulito per TMDB
+        title_clean = estrai_titolo(title)
+
         new_item = item.clone(
             title=title_formatted,
             url=magnet,
             action="findvideos",
             server="torrent",
             folder=False,
-            contentTitle=title,
+            contentTitle=title_clean,    # <-- SOLO titolo pulito
+            # NIENTE contentType → S4Me usa 'undefined' di default
+            # NIENTE infoLabels → li crea S4Me
+            # NIENTE year → non forzato
             info_hash=info_hash,
             seeders=seeds,
             leechers=leech,
@@ -86,6 +133,13 @@ def search(item, text):
         )
 
         itemlist.append(new_item)
+
+    # --- Arricchimento TMDB (come fa @support.scrape automaticamente) ---
+    if itemlist and config.get_setting('tmdb_active'):
+        try:
+            tmdb.set_infoLabels(itemlist, seekTmdb=True)
+        except Exception as e:
+            logger.error("Errore arricchimento TMDB: %s" % str(e))
 
     itemlist.sort(key=lambda x: int(x.seeders) if hasattr(x, 'seeders') else 0, reverse=True)
 
@@ -103,7 +157,8 @@ def search(item, text):
                         title="[COLOR FF65B3DA]Successivo >[/COLOR]",
                         page=next_page,
                         action="search",
-                        folder=False
+                        folder=False,
+                        thumbnail=''
                     )
                     next_item.text = text
                     itemlist.append(next_item)
