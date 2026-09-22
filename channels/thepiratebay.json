@@ -7,6 +7,14 @@
     "banner": "https://torrindex.net/images/tpb.jpg",
     "categories": ["movie", "tvshow", "torrent", "anime", "music", "games", "software"],
     "not_active": ["include_in_newest"],
-    "default_off": ["include_in_global_search"],
-    "settings": []
+    "settings": [
+        {
+            "id": "only_ita",
+            "type": "bool",
+            "label": "Cerca solo contenuti in italiano",
+            "default": false,
+            "enabled": true,
+            "visible": true
+        }
+    ]
 }

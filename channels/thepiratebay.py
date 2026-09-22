@@ -71,6 +71,7 @@ def next_page(item):
     if not text:
         logger.error("Nessun testo per pagina successiva")
         return []
+    item.args = 'search'
     return search(item, text)
 
 
@@ -86,14 +87,16 @@ def search(item, text):
         logger.error("Nessun testo di ricerca")
         return itemlist
 
-    item.args = 'search'
-
     page = item.page if hasattr(item, 'page') and item.page else 0
 
+    # Aggiungi "ita" alla query se il filtro è attivo
+    only_ita = config.get_setting('only_ita', channel=item.channel, default=False)
+    search_text = text + ' ita' if only_ita else text
+
     if page > 0:
-        api_url = "https://apibay.org/q.php?q=%s:%s" % (urllib.parse.quote(text), page)
+        api_url = "https://apibay.org/q.php?q=%s:%s" % (urllib.parse.quote(search_text), page)
     else:
-        api_url = "https://apibay.org/q.php?q=%s" % urllib.parse.quote(text)
+        api_url = "https://apibay.org/q.php?q=%s" % urllib.parse.quote(search_text)
 
     logger.info("API URL: %s" % api_url)
 
@@ -154,7 +157,6 @@ def search(item, text):
                 title=title_formatted,
                 url=magnet,
                 action="findvideos",
-                server="torrent",
                 folder=False,
                 info_hash=info_hash,
                 seeders=seeds,
@@ -172,7 +174,6 @@ def search(item, text):
                 title=title_formatted,
                 url=magnet,
                 action="findvideos",
-                server="torrent",
                 folder=False,
                 contentTitle=title_clean,
                 contentType=content_type,
@@ -198,7 +199,7 @@ def search(item, text):
 
     if "user:" in text:
         next_page_num = page + 1
-        check_url = "https://apibay.org/q.php?q=%s:%s" % (urllib.parse.quote(text), next_page_num)
+        check_url = "https://apibay.org/q.php?q=%s:%s" % (urllib.parse.quote(search_text), next_page_num)
         check_data = httptools.downloadpage(check_url).data
 
         if check_data:
