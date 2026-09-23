@@ -387,9 +387,14 @@ def resolve_video_urls_for_playing(server, url, video_password="", muestra_dialo
                 error_messages.append(
                     config.get_localized_string(60009) % (server, " o ".join(listapremium)))
 
-            # If we do not have urls or error messages, we put a generic one
+            # If we do not have urls or error messages, we put a generic one,
+            # tranne per vidxgo: quel server mostra gia' una notifica toast
+            # dedicata ("Contenuto al momento non disponibile"), quindi non
+            # vogliamo aggiungere anche il messaggio generico che farebbe
+            # apparire il popup centrale "Errore inaspettato sul server".
             elif not video_urls and not error_messages:
-                error_messages.append(config.get_localized_string(60014))
+                if server != 'vidxgo':
+                    error_messages.append(config.get_localized_string(60014))
             video_exists = len(video_urls) > 0
 
     return video_urls, video_exists, "<br/>".join(error_messages)

@@ -15,12 +15,15 @@ UA_CHROME = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
 UA_FF = 'Mozilla/5.0 (X11; Linux x86_64; rv:155.0) Gecko/20100101 Firefox/155.0'
 
 PLAY_HEADERS = {
-    'User-Agent':      UA_CHROME,
-    'Referer':         HOST + '/',
-    'Origin':          'https://v.vidxgo.co',
-    'Sec-Fetch-Dest':  'empty',
-    'Sec-Fetch-Mode':  'cors',
-    'Sec-Fetch-Site':  'cross-site',
+    'User-Agent':               UA_CHROME,
+    'Referer':                  HOST + '/',
+    'Origin':                   'https://v.vidxgo.co',
+    'Accept':                   '*/*',
+    'Accept-Language':          'it-IT,it;q=0.9,en;q=0.8',
+    'Sec-Fetch-Dest':           'empty',
+    'Sec-Fetch-Mode':           'cors',
+    'Sec-Fetch-Site':           'cross-site',
+    'Sec-Fetch-Storage-Access': 'active',
 }
 
 WD_POLL = 3
@@ -31,8 +34,19 @@ REFRESH_GRACE = 60
 
 CDN_MIN_INTERVAL = 1.0
 
-RELAY_CONNECT_TIMEOUT = 10
+RELAY_CONNECT_TIMEOUT = 15
 RELAY_READ_TIMEOUT = 30
+
+_PROXY_SERVERS = [
+    'media-498.d2b.you',
+]
+_PROXY_PORT = 8443
+
+# Backend CDN di vidxgo noti per essere bloccati dall'ISP italiano (Piracy Shield).
+# Quando un contenuto viene assegnato a uno di questi backend, la riproduzione
+# diretta fallisce e serve la conversione in modalità proxy (porta 8443).
+# Aggiungi qui i backend man mano che vengono scoperti bloccati.
+_BLOCKED_BACKENDS = {'173'}
 
 _PROXY = {'server': None, 'port': 0, 'base': '',
           't_url': '', 'imdb': '', 'fresh_query': '', 'dur': 0,
@@ -58,8 +72,22 @@ _REFRESH_LOCK = threading.Lock()
 _HEAL = {'t': 0.0, 'busy': False}
 _PATH_MAP = ['', '']
 
-
 _RATELIMIT_FILE = os.path.join(tempfile.gettempdir(), 'alfa_vidxgo_ratelimit.json')
+
+_CDN_HOST_RE = re.compile(r'cdn\.v\d+\.media-(\d+)\.d2b\.you')
+
+
+def _notify_unavailable():
+    try:
+        import xbmcgui
+        xbmcgui.Dialog().notification(
+            'Vidxgo',
+            'Contenuto al momento non disponibile',
+            xbmcgui.NOTIFICATION_WARNING,
+            4000
+        )
+    except Exception:
+        logger.error('vidxgo notify failed: ' + traceback.format_exc())
 
 
 def _net_down():
@@ -377,25 +405,100 @@ def _maybe_refresh_by_expire():
         _refresh_token()
 
 
+def _refetch_embed_token():
+    try:
+        if not _PROXY.get('imdb'):
+            return False
+        embed_url = HOST + '/' + _PROXY['imdb']
+        logger.info('vidxgo refetch: provo a ri-fetchare embed %s' % embed_url)
+
+        page = get_embed_page(embed_url)
+        if not page:
+            logger.error('vidxgo refetch: embed page vuota')
+            return False
+
+        try:
+            stream_url = extract_m3u8_from_embed(_vidxgo_session(), embed_url,
+                                                  referer=REF_SITE + '/')
+            if stream_url:
+                u = urllib.parse.urlparse(stream_url)
+                old_base = _PROXY.get('base', '')
+                new_base = u.scheme + '://' + u.netloc
+                if new_base != old_base:
+                    logger.info('vidxgo refetch: CDN %s -> %s' % (old_base, new_base))
+                    _PROXY['base'] = new_base
+                    _PROXY['master_path'] = u.path
+                    _PROXY['host'] = u.netloc
+                    _PLCACHE.clear()
+                _PROXY['fresh_query'] = u.query
+                return True
+        except Exception as e:
+            logger.error('vidxgo refetch extract failed: %s' % str(e)[:150])
+
+        return False
+    except Exception:
+        logger.error('vidxgo refetch crashed: ' + traceback.format_exc())
+        return False
+
+
+def _convert_to_proxy_mode(stream_url):
+    try:
+        parsed = urllib.parse.urlparse(stream_url)
+
+        path_match = re.match(r'/hls/(.+)$', parsed.path)
+        if not path_match:
+            logger.error('vidxgo proxy_convert: path non riconosciuto %s'
+                         % parsed.path)
+            return None
+
+        inner_path = path_match.group(1)
+        query = parsed.query
+
+        host_match = _CDN_HOST_RE.search(parsed.netloc)
+        if not host_match:
+            logger.error('vidxgo proxy_convert: impossibile estrarre media-N da %s'
+                         % parsed.netloc)
+            return None
+        cdn_num = host_match.group(1)
+
+        proxy_server = _PROXY_SERVERS[0]
+        new_url = 'https://%s:%d/proxy/media-%s/hls/%s?%s' % (
+            proxy_server, _PROXY_PORT, cdn_num, inner_path, query
+        )
+
+        logger.info('vidxgo proxy_convert: media-%s, path=/hls/%s'
+                    % (cdn_num, inner_path))
+        logger.info('vidxgo proxy_convert: nuovo URL = %s' % new_url[:120])
+
+        return new_url
+    except Exception:
+        logger.error('vidxgo proxy_convert crashed: ' + traceback.format_exc())
+        return None
+
+
 def _hot_heal(old_host):
     try:
-        if not _PROXY.get('t_url'):
-            return False
         if _net_down():
             return False
         if time.time() - _HEAL['t'] < 30.0:
             return False
         _HEAL['t'] = time.time()
 
+        if not _PROXY.get('t_url'):
+            logger.info('vidxgo hot-heal: t_url mancante, provo refetch embed')
+            return _refetch_embed_token()
+
         hdrs = {'User-Agent': UA_FF, 'Referer': HOST + '/',
                 'Accept': 'application/json, text/plain, */*'}
         r, t_url, _s = _vidxgo_resolve([_PROXY['t_url']], hdrs)
         if r is None:
-            return False
+            logger.info('vidxgo hot-heal: resolve fallito, provo refetch embed')
+            return _refetch_embed_token()
         data = r.json()
         new_url = data.get('url') or ''
         if not new_url:
-            return False
+            logger.info('vidxgo hot-heal: nessun url nella risposta, provo refetch embed')
+            return _refetch_embed_token()
         exp = data.get('expire')
         if exp:
             try:
@@ -404,6 +507,14 @@ def _hot_heal(old_host):
                 pass
         _PROXY['t_url'] = t_url
         _PROXY['fresh_query'] = urllib.parse.urlparse(new_url).query
+
+        m = _CDN_HOST_RE.search(new_url)
+        if m and m.group(1) in _BLOCKED_BACKENDS:
+            proxy_url = _convert_to_proxy_mode(new_url)
+            if proxy_url:
+                new_url = proxy_url
+                logger.info('vidxgo hot-heal: convertito in proxy (media-%s)'
+                            % m.group(1))
 
         u = urllib.parse.urlparse(new_url)
         new_base = u.scheme + '://' + u.netloc
@@ -424,7 +535,10 @@ def _hot_heal(old_host):
         return True
     except Exception:
         logger.error('vidxgo hot-heal: ' + traceback.format_exc())
-        return False
+        try:
+            return _refetch_embed_token()
+        except Exception:
+            return False
 
 
 def _maintenance_due():
@@ -733,6 +847,19 @@ def _start_proxy():
                         _net_fail()
                         logger.error('vidxgo relay: rete irraggiungibile '
                                      '(backoff #%d, %s)' % (_NET_FAIL[1], str(e)[:90]))
+                        cur_host = urllib.parse.urlparse(_PROXY['base']).netloc
+                        if cur_host and cur_host not in _RELAY_DIRECT \
+                                and not _HEAL.get('busy'):
+                            _HEAL['busy'] = True
+                            import threading as _th
+                            def _heal_worker(host=cur_host):
+                                try:
+                                    _hot_heal(host)
+                                finally:
+                                    _HEAL['busy'] = False
+                            _th.Thread(target=_heal_worker, daemon=True).start()
+                            logger.info('vidxgo heal in background (timeout di rete verso %s)'
+                                        % cur_host)
                     else:
                         logger.error('vidxgo relay exc: %s' % str(e)[:150])
                     try:
@@ -833,7 +960,9 @@ def extract_m3u8_from_embed(session, embed_url, referer=None):
         'Accept-Language': 'it-IT,it;q=0.9,en;q=0.8',
         'Referer': referer or REF_SITE + '/',
         'Sec-Fetch-Dest': 'iframe', 'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'same-origin', 'Upgrade-Insecure-Requests': '1',
+        'Sec-Fetch-Site': 'same-origin',
+        'Sec-Fetch-Storage-Access': 'active',
+        'Upgrade-Insecure-Requests': '1',
     }
     resp = session.get(embed_url, headers=headers, timeout=10)
     if resp.status_code != 200:
@@ -856,7 +985,9 @@ def get_embed_page(page_url, referer=None):
         'Accept-Language': 'it-IT,it;q=0.9,en;q=0.8',
         'Referer': referer or (REF_SITE + '/'),
         'Sec-Fetch-Dest': 'iframe', 'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'same-origin', 'Upgrade-Insecure-Requests': '1',
+        'Sec-Fetch-Site': 'same-origin',
+        'Sec-Fetch-Storage-Access': 'active',
+        'Upgrade-Insecure-Requests': '1',
     }
     try:
         r, _u, _s = _vidxgo_resolve([page_url], headers)
@@ -975,6 +1106,7 @@ def get_video_url(page_url, premium=False, user='', password='', video_password=
         token = path_parts[0] if path_parts and path_parts[0] else ''
         if not token:
             logger.error('vidxgo: token non trovato')
+            _notify_unavailable()
             return []
         is_episode = len(path_parts) >= 3 and path_parts[1].isdigit() and path_parts[2].isdigit()
 
@@ -996,11 +1128,14 @@ def get_video_url(page_url, premium=False, user='', password='', video_password=
             candidates = [HOST + '/t/' + token]
 
         stream_url = None
+        _not_found = False
         try:
             hdrs = {'User-Agent': UA_FF, 'Referer': page_url,
                     'Accept': 'application/json, text/plain, */*'}
             r, t_url, _s = _vidxgo_resolve(candidates, hdrs)
-            if r is not None:
+            if r is None:
+                _not_found = True
+            else:
                 try:
                     data = r.json()
                     stream_url = data.get('url')
@@ -1058,11 +1193,62 @@ def get_video_url(page_url, premium=False, user='', password='', video_password=
                                                      referer=REF_SITE + '/')
                 _PROXY['t_url'] = ''
             except Exception as e:
-                logger.error('vidxgo embed extraction failed: %s' % e)
+                msg = str(e)
+                logger.error('vidxgo embed extraction failed: %s' % msg)
+                if '404' in msg or '410' in msg:
+                    _not_found = True
 
         if not stream_url:
-            logger.error('vidxgo: nessun URL trovato')
+            if _not_found:
+                logger.error('vidxgo: contenuto non trovato (404/410)')
+            else:
+                logger.error('vidxgo: nessun URL trovato')
+            _notify_unavailable()
             return []
+
+        m = _CDN_HOST_RE.search(stream_url)
+        if m and m.group(1) in _BLOCKED_BACKENDS:
+            blocked_num = m.group(1)
+            logger.info('vidxgo: stream_url punta a CDN bloccato (media-%s)' % blocked_num)
+
+            logger.info('vidxgo: richiedo token fresco al server...')
+            try:
+                if is_episode:
+                    fresh_candidates = [HOST + '/t/' + '/'.join(path_parts[:3]) + '?se=1']
+                else:
+                    fresh_candidates = [HOST + '/t/' + token + '?se=1']
+
+                hdrs = {'User-Agent': UA_FF, 'Referer': page_url,
+                        'Accept': 'application/json, text/plain, */*'}
+                r_fresh, t_url_fresh, _s = _vidxgo_resolve(fresh_candidates, hdrs)
+                if r_fresh is not None:
+                    data_fresh = r_fresh.json()
+                    fresh_url = data_fresh.get('url') or ''
+                    if fresh_url:
+                        logger.info('vidxgo: token fresco ottenuto, CDN = %s'
+                                    % urllib.parse.urlparse(fresh_url).netloc)
+                        stream_url = fresh_url
+                        _PROXY['t_url'] = t_url_fresh
+                        _PROXY['fresh_query'] = urllib.parse.urlparse(fresh_url).query
+                        exp = data_fresh.get('expire')
+                        if exp:
+                            try:
+                                _PROXY['expire_ms'] = int(exp)
+                            except Exception:
+                                pass
+            except Exception as e:
+                logger.error('vidxgo: refresh token fallito: %s' % str(e)[:150])
+
+            m2 = _CDN_HOST_RE.search(stream_url)
+            if m2 and m2.group(1) in _BLOCKED_BACKENDS:
+                logger.info('vidxgo: il server restituisce ancora media-%s' % m2.group(1))
+                logger.info('vidxgo: converto in modalità proxy (porta 8443)...')
+                proxy_url = _convert_to_proxy_mode(stream_url)
+                if proxy_url:
+                    stream_url = proxy_url
+                    logger.info('vidxgo: conversione proxy riuscita')
+                else:
+                    logger.error('vidxgo: conversione proxy fallita')
 
         _reset_relay_sessions()
 
@@ -1075,6 +1261,7 @@ def get_video_url(page_url, premium=False, user='', password='', video_password=
 
         port = _start_proxy()
         if not port:
+            _notify_unavailable()
             return []
 
         proxy_url = 'http://127.0.0.1:%d%s' % (port, u.path)
@@ -1091,4 +1278,5 @@ def get_video_url(page_url, premium=False, user='', password='', video_password=
         return [['vidxgo', proxy_url]]
     except Exception:
         logger.error('vidxgo: ' + traceback.format_exc())
+        _notify_unavailable()
         return []

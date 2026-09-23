@@ -1378,6 +1378,13 @@ def get_dialogo_opciones(item, default_action, strm, autoplay):
     elif puedes == False:
         if not autoplay:
             if item.server != "":
+                # vidxgo mostra gia' una propria notifica toast quando il
+                # contenuto non e' disponibile ("Contenuto al momento non
+                # disponibile"), quindi evitiamo di mostrare anche il dialog
+                # centrale generico con i pulsanti "Apri nel browser" / "ok".
+                if item.server.lower() == 'vidxgo':
+                    error = True
+                    return opciones, video_urls, seleccion, error
                 if "<br/>" in motivo:
                     ret = dialog_yesno(config.get_localized_string(60362) % item.server, motivo.split("<br/>")[0] + '\n' + motivo.split("<br/>")[1], nolabel='ok', yeslabel=config.get_localized_string(70739))
                 else:
@@ -1487,8 +1494,7 @@ def get_video_seleccionado(item, seleccion, video_urls, autoplay=False):
         else:
             alert_no_disponible_server(item.server)
 
-    # If there is a timeout (like in megaupload), impose it now
-    if wait_time > 0:
+    # If there is a timeout (like in megaupload), impose it now    if wait_time > 0:
         continuar = handle_wait(wait_time, item.server, config.get_localized_string(60365))
         if not continuar:
             mediaurl = ""
@@ -1621,7 +1627,7 @@ def play_torrent(item, xlistitem, mediaurl):
             if item.contentType == 'episode' and "elementum" not in torr_client:
                 mediaurl += "&episode=%s&season=%s&show=%s&tmdb=%s&type=episode" % (item.infoLabels['episode'], item.infoLabels['season'], item.infoLabels['tmdb_id'], item.infoLabels['tmdb_id'])
             elif item.contentType == 'movie':
-                mediaurl += "&tmdb=%s&type=movie" % (item.infoLabels['tmdb_id'])
+                mediaurl += "&tmdb=%s&type=movie" % item.infoLabels['tmdb_id']
 
         if torr_client in ['elementum'] and item.downloadFilename:
             torrent.elementum_download(item)
