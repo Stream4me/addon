@@ -1,15 +1,6 @@
 # -*- coding: utf-8 -*-
 # ------------------------------------------------------------
-# Canale per Altadefinizione Click (nuovo dominio: altadefinizionex.live)
-#
-# Build 2026-09-19-NEXT-ONLY
-#
-# - mainlist / search / genres / peliculas / peliculas_genere : invariati
-# - episodios : SOLO parsing payload Next.js (self.__next_f).
-#       Nessuna discovery, nessun Plan A, nessun TMDB, nessun probe.
-#       Se Next.js non espone le seasons -> lista vuota.
-# - findvideos: iframe vidxgo (skip trailer) -> server='vidxgo' (invariato)
-# - play      : RIMOSSO. Playback di servers/vidxgo.py.
+# Canale per Altadefinizione Click
 # ------------------------------------------------------------
 
 from core import support
@@ -20,10 +11,9 @@ host = support.config.get_channel_url()
 if host and host.endswith('/'):
     host = host[:-1]
 
-EP_CACHE = {}   # item.url -> {'token', 'pairs', 'titles', 'meta'}
+EP_CACHE = {}
 
 
-# ---------------------------------- MAIN MENU ----------------------------------
 @support.menu
 def mainlist(item):
     logger.debug(item)
@@ -35,7 +25,6 @@ def mainlist(item):
     return locals()
 
 
-# ---------------------------------- SEARCH ----------------------------------
 def search(item, texto):
     logger.debug("search: " + texto)
     item.args = 'search'
@@ -48,7 +37,6 @@ def search(item, texto):
         return []
 
 
-# ---------------------------------- GENRES ----------------------------------
 def genres(item):
     logger.debug("genres called with item.url: %s", item.url)
     itemlist = []
@@ -95,7 +83,6 @@ def genres(item):
     return itemlist
 
 
-# ---------------------------------- MAIN LISTING ----------------------------------
 @support.scrape
 def peliculas(item):
     logger.debug(item)
@@ -130,7 +117,6 @@ def peliculas(item):
     return locals()
 
 
-# ---------------------------------- GENRE LISTING + Search ----------------------------------
 @support.scrape
 def peliculas_genere(item):
     logger.debug("peliculas_genere: %s", item)
@@ -199,15 +185,7 @@ def peliculas_genere(item):
     return locals()
 
 
-# ------------------------- NEXT.JS: payload self.__next_f -------------------------
-
 def _estrai_next_json(data):
-    """
-    Legge i chunk iniettati da Next.js (self.__next_f.push).
-    Ritorna (token, seasons):
-      - token: stringa numerica oppure None
-      - seasons: lista di dict {number, name, episodes:[{number,title,plot,still}]}
-    """
     token = None
     seasons = []
 
@@ -242,11 +220,6 @@ def _estrai_next_json(data):
 
 
 def _next_pairs_and_meta(seasons):
-    """
-    Converte le seasons Next.js in:
-      - pairs: [(s,e), ...] ordinati
-      - meta:  {(s,e): {'title':..., 'plot':..., 'still':...}}
-    """
     pairs = []
     meta = {}
     for st in seasons or []:
@@ -268,7 +241,6 @@ def _next_pairs_and_meta(seasons):
     return pairs, meta
 
 
-# ---------------------------------- EPISODES ----------------------------------
 @support.scrape
 def episodios(item):
     cached = EP_CACHE.get(item.url)
@@ -311,7 +283,6 @@ def episodios(item):
         it.is_folder = False
         it.server = 'vidxgo'
 
-        # s/e dall'URL sintetica: deterministico
         m = re.search(r'v\.vidxgo\.co/\d+/(\d+)/(\d+)', it.url or '')
         if m:
             s, e = int(m.group(1)), int(m.group(2))
@@ -319,12 +290,10 @@ def episodios(item):
             s = int(getattr(it, 'contentSeason', None) or getattr(it, 'season', 0) or 0)
             e = int(getattr(it, 'contentEpisode', None) or getattr(it, 'episode', 0) or 0)
 
-        # titolo dal Next.js
         t = TITLES.get((s, e))
         if t:
             it.title = (it.title + ' - ' + t) if it.title else t
 
-        # plot + still dal Next.js
         meta = META.get((s, e), {})
         plot = (meta.get('plot') or '').strip()
         if plot:
@@ -344,9 +313,25 @@ def episodios(item):
     return locals()
 
 
-# ---------------------------------- FIND VIDEOS ----------------------------------
 def findvideos(item):
     logger.info("=== findvideos: " + item.url)
+
+    m = re.match(r'^https?://[^/]+/(\d+)(?:/(\d+)/(\d+))?/?$', item.url)
+    if m:
+        token = m.group(1)
+        s, e = m.group(2), m.group(3)
+        if s and e:
+            embed_url = 'https://v.vidxgo.co/%s/%s/%s' % (token, s, e)
+        else:
+            embed_url = 'https://v.vidxgo.co/%s' % token
+
+        logger.info("findvideos: URL sintetica libreria rilevata -> %s" % embed_url)
+
+        it = item.clone(action='play', url=embed_url, server='vidxgo')
+        it.title = '[COLOR lime]vidxgo[/COLOR]'
+        it.contentTitle = getattr(item, 'contentTitle', '') or \
+                          getattr(item, 'fulltitle', '') or item.title
+        return support.server(item, itemlist=[it])
 
     page = ''
     for attempt in (1, 2, 3):
