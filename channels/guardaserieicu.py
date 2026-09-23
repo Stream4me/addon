@@ -1,25 +1,6 @@
 # -*- coding: utf-8 -*-
 # ------------------------------------------------------------
-# Canale per 'GuardaSerieX'
-# By: Napster32 (adattato)
-# ------------------------------------------------------------
-# Rev: 1.4
-# Update: 2026-09-19
-# Note:
-#   - Token dal meta "keywords" (es. tt20516590), formato server: '20516590'.
-#   - v.vidxgo.co: accesso diretto = challenge CF; via proxy workers.dev =
-#     403 applicativo. L'UNICA via che funziona e' get_embed_page() di
-#     servers/vidxgo.py (sessione TLS-rotata, la stessa del playback).
-#   - probe() del server: appeso ANCHE a TLS caldo -> RIMOSSO da ogni flusso.
-#   - Stratiglia episodios:
-#       1) data-episode / Stagione / Episodio dalla pagina del sito
-#       2) PIANO A: get_embed_page + parse locale; se copre una sola
-#          stagione, DISCOVERY: /{token}/{s}/1 fino alla prima assente
-#       3) PIANO B: sito gemello altadefinizionex (HTML data-episode)
-#       4) fetch diretto del player via bypass CF del fork
-#   - Titoli episodi da TMDB (lingua it); degrada a '1x01' se non mappata.
-#   - Click episodio: url diretta v.vidxgo.co/{token}/{s}/{e} ->
-#     server='vidxgo' (la via del play che funziona).
+# Canale per GuardaSerieX
 # ------------------------------------------------------------
 
 import re, sys, json, time, threading, traceback
@@ -34,11 +15,10 @@ if host.endswith('/'):
 
 headers = [['Referer', host]]
 
-# ------------------------- cache / timing -------------------------
-TOKEN_CACHE = {}            # url pagina sito -> token
-PAIRS_CACHE = {}            # token -> [(s, e), ...]
-FETCH_TIMEOUT = 45          # bypass CF del fork: ~15-20s nel peggiore dei casi
-MAX_SEASON = 30             # discovery: limite difensivo
+TOKEN_CACHE = {}
+PAIRS_CACHE = {}
+FETCH_TIMEOUT = 45
+MAX_SEASON = 30
 
 ALT_HOST = 'https://altadefinizionex.live'
 
@@ -52,9 +32,6 @@ def mainlist(item):
 
 @support.scrape
 def genres(item):
-    """Menu generi: dal dropdown 'Genere' del sito.
-    Esclusi Netflix (netflix-gratis) e In Arrivo (coming-soon):
-    blacklist per titolo + filtro per slug nell'hook."""
     action = 'peliculas'
     blacklist = ['Netflix', 'In Arrivo']
     patronBlock = r'>Genere</span>(?P<block>.*?)</ul>'
@@ -94,7 +71,7 @@ def peliculas(item):
             it.contentType = 'tvshow'
             it.contentTitle = (it.fulltitle or it.title).strip()
             it.fulltitle = it.contentTitle
-            it.action = 'episodios'      # invocazione diretta dal launcher
+            it.action = 'episodios'
             out.append(it)
         return out
 
@@ -114,10 +91,7 @@ def search(item, text):
     return []
 
 
-# ------------------------- rete -------------------------
-
 def _get_data(item):
-    """Pagina del sito (non bloccata: fetch normale)."""
     try:
         res = httptools.downloadpage(item.url, headers=headers, cloudscraper=True)
         data = res.data or ''
@@ -130,7 +104,6 @@ def _get_data(item):
 
 
 def _fetch_with_timeout(url, seconds=FETCH_TIMEOUT):
-    """downloadpage con watchdog (per tier 3 e 4)."""
     result = {}
     t0 = time.time()
 
@@ -156,8 +129,6 @@ def _fetch_with_timeout(url, seconds=FETCH_TIMEOUT):
 
 
 def _get_embed(url):
-    """get_embed_page del server (sessione TLS-rotata, la via del playback).
-    L'UNICA fetch verso v.vidxgo.co che funziona."""
     result = {}
 
     def worker():
@@ -182,10 +153,7 @@ def _get_embed(url):
     return page
 
 
-# ------------------------- token -------------------------
-
 def _token_from_data(item, data):
-    """Token: cache -> meta keywords (tt...) -> tmdb -> qualsiasi tt."""
     token = TOKEN_CACHE.get(item.url)
     if token:
         return token
@@ -209,18 +177,15 @@ def _token_from_data(item, data):
     return token
 
 
-# ------------------------- titoli episodi (TMDB) -------------------------
 TMDB_API = 'https://api.themoviedb.org/3'
-TMDB_KEY = 'a1ab8b8669da03637a4b98fa39c39228'   # la stessa chiave gia' usata dal fork
+TMDB_KEY = 'a1ab8b8669da03637a4b98fa39c39228'
 TMDB_LANG = 'it'
 
-TMDB_ID_CACHE = {}      # token vidxgo -> tmdb id (o False)
-SEASON_TITLES = {}      # (tmdb_id, stagione) -> {n_episodio: titolo}
+TMDB_ID_CACHE = {}
+SEASON_TITLES = {}
 
 
 def _tmdb_id_from_token(token):
-    """TMDB id della serie: diretto per token 'tmN',
-    lookup find() per token IMDb ('20516590' -> 'tt20516590')."""
     if token in TMDB_ID_CACHE:
         return TMDB_ID_CACHE[token]
     tmdb_id = False
@@ -241,7 +206,6 @@ def _tmdb_id_from_token(token):
 
 
 def _season_titles(tmdb_id, s):
-    """{numero_episodio: titolo} della stagione s (cache di sessione)."""
     key = (tmdb_id, s)
     if key in SEASON_TITLES:
         return SEASON_TITLES[key]
@@ -251,7 +215,6 @@ def _season_titles(tmdb_id, s):
             TMDB_API, tmdb_id, s, TMDB_KEY, TMDB_LANG)
         for ep in json.loads(httptools.downloadpage(url).data or '{}').get('episodes', []):
             n, name = ep.get('episode_number'), (ep.get('name') or '').strip()
-            # scarta i segnaposto "Episodio 3" / "Episode 3": sono solo rumore
             if n is not None and name and not re.match(r'^(episodio|episode)\s*\d+$', name, re.I):
                 out[int(n)] = name
     except Exception:
@@ -261,7 +224,6 @@ def _season_titles(tmdb_id, s):
 
 
 def _episode_titles(token, pairs):
-    """{(s, e): titolo} da TMDB; {} se la serie non e' mappata."""
     titles = {}
     tmdb_id = _tmdb_id_from_token(token)
     if not tmdb_id:
@@ -273,10 +235,7 @@ def _episode_titles(token, pairs):
     return titles
 
 
-# ------------------------- parsing episodi -------------------------
-
 def _pairs_from_html(data):
-    """Pattern del sito (italiano) + varianti generiche."""
     pairs = {(int(a), int(b)) for a, b in
              re.findall(r'data-episode="(\d+)-(\d+)"', data)}
     if pairs:
@@ -292,23 +251,17 @@ def _pairs_from_html(data):
 
 
 def _parse_page_pairs(page, token, quiet=False):
-    """Estrae (s, e) da una pagina player. [] se formato ignoto."""
     pairs = set()
-    # JSON "season":N,"episodes":[...]
     for s, eps_s in re.findall(r'"season"\s*:\s*(\d+)\s*,\s*"episodes"\s*:\s*\[([^\]]*)\]', page):
         pairs.update((int(s), int(e)) for e in re.findall(r'\d+', eps_s))
-    # JSON piatto
     if not pairs:
         pairs = {(int(a), int(b)) for a, b in
                  re.findall(r'"season"\s*:\s*(\d+)\s*,\s*"episode"\s*:\s*(\d+)', page)}
-    # path /token/s/e
     if not pairs:
         pairs = {(int(a), int(b)) for a, b in
                  re.findall(r'/' + re.escape(token) + r'/(\d+)/(\d+)', page)}
-    # pattern del sito
     if not pairs:
         pairs = set(_pairs_from_html(page))
-    # oggetto stagioni {"1":[...],"2":[...]}
     if not pairs:
         m = re.search(
             r'\{"\d{1,2}"\s*:\s*\[[\d\s,]+\](?:\s*,\s*"\d{1,2}"\s*:\s*\[[\d\s,]+\])*\}',
@@ -333,10 +286,6 @@ def _parse_page_pairs(page, token, quiet=False):
 
 
 def _pairs_via_server(token):
-    """PIANO A: pagina embed via TLS del server + DISCOVERY stagioni.
-    1) /{token} -> parse (di norma la stagione 1)
-    2) finche' esiste, /{token}/{s+1}/1 -> parse della stagione successiva
-       (la pagina deve citare '/{token}/{s}/', altrimenti ci fermiamo)"""
     page = _get_embed('https://v.vidxgo.co/' + token)
     if not page:
         return []
@@ -372,8 +321,6 @@ def _pairs_via_server(token):
 
 
 def _pairs_from_altadefinizione(title):
-    """PIANO B: episodi dal sito gemello (HTML data-episode, stesso backend
-    vidxgo). Ritorna (pairs, token)."""
     try:
         queries = []
         for q in (title.strip(), title.split('(')[0].strip()):
@@ -400,14 +347,11 @@ def _pairs_from_altadefinizione(title):
 
 
 def _pairs_from_player(token):
-    """Tier 4: fetch diretto del player via bypass CF del fork."""
     data = _fetch_with_timeout('https://v.vidxgo.co/' + token)
     if not data:
         return []
     return _parse_page_pairs(data, token)
 
-
-# ------------------------- azioni -------------------------
 
 def episodios(item):
     logger.info('episodios INIZIO url={}'.format(item.url))
@@ -421,15 +365,12 @@ def episodios(item):
         pairs = PAIRS_CACHE[token]
         logger.info('episodi da cache: {} coppie'.format(len(pairs)))
     else:
-        # 1) pagina del sito
         pairs = _pairs_from_html(data)
 
-        # 2) PIANO A: embed via TLS del server + discovery stagioni
         if not pairs:
             logger.info('tier 2: PIANO A (get_embed_page + discovery)')
             pairs = _pairs_via_server(token)
 
-        # 3) PIANO B: sito gemello
         if not pairs:
             logger.info('tier 3: piano B altadefinizionex')
             alt_pairs, alt_token = _pairs_from_altadefinizione(
@@ -439,7 +380,6 @@ def episodios(item):
                 if alt_token:
                     token = alt_token
 
-        # 4) player via bypass del fork
         if not pairs:
             logger.info('tier 4: fetch diretto player (bypass CF)')
             pairs = _pairs_from_player(token)
@@ -451,7 +391,6 @@ def episodios(item):
         logger.error('episodios: nessun episodio (sito+server+gemello+player)')
         return []
 
-    # titoli TMDB: un problema qui non deve mai cancellare la lista
     try:
         titles = _episode_titles(token, pairs)
     except Exception:
@@ -472,7 +411,6 @@ def episodios(item):
             it.title += ' - ' + t
         itemlist.append(it)
 
-    # voce videoteca (commentare per escluderla)
     cl = item.clone(action='addToLibrary')
     cl.contentType = 'tvshow'
     cl.contentTitle = item.contentTitle or item.fulltitle
@@ -501,14 +439,12 @@ def findvideos(item):
     s = int(getattr(item, 'contentSeason', 0) or 0)
     e = int(getattr(item, 'contentEpisode', 0) or 0)
 
-    # episodio: URL diretta, NESSUN probe, play via server vidxgo
     if s and e:
         it = item.clone(action='play', server='vidxgo',
                         url='https://v.vidxgo.co/%s/%d/%d' % (token, s, e))
         it.contentTitle = item.contentTitle or item.fulltitle
         return support.server(item, itemlist=[it])
 
-    # niente s/e (entry dirette/videoteca): tv o film SENZA probe()
     pairs = _pairs_via_server(token)
     if pairs:
         itemlist = []
@@ -522,7 +458,6 @@ def findvideos(item):
             itemlist.append(it)
         return itemlist
 
-    # film (o pagina non leggibile): play del token nudo, il server decide
     it = item.clone(action='play', url='https://v.vidxgo.co/' + token)
     it.contentTitle = item.contentTitle or item.fulltitle
     logger.info('findvideos: play token nudo (token {})'.format(token))
@@ -530,6 +465,5 @@ def findvideos(item):
 
 
 def addToLibrary(item):
-    """Esposta l'azione per la voce 'Aggiungi alla Videoteca'."""
     from core import videolibrarytools
     return videolibrarytools.add_to_videolibrary(item, sys.modules[__name__])
