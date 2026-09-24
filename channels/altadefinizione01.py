@@ -32,7 +32,7 @@ def peliculas(item):
     support.info('peliculas', item)
     action = "check"
 
-    if item.text:  # ricerca
+    if item.text:
         url = host + "/?do=search&subaction=search&titleonly=3&story=" + item.text
         data = httptools.downloadpage(
             url,
@@ -54,12 +54,13 @@ def peliculas(item):
     elif item.args == 'update':
         patronBlock = r'<div class="widget-title">Ultimi Film Aggiunti/Aggiornati</div>(?P<block>.*?)<div id="alt_menu">'
         patron = (
-            r'style="background-image:url\((?P<thumb>[^\)]+).+?'
-            r'<p class="h4">(?P<title>.*?)</p>[^>]+> [^>]+> [^>]+>'
-            r'[^>]+>[^>]+>[^>]+>[^>]+>[^>]+> [^>]+> [^>]+>[^>]+>'
-            r'(?P<year>\d{4})[^>]+>[^>]+> [^>]+>[^>]+>'
-            r'(?P<duration>\d+|N/A)?.+?>.*?(?:>Film (?P<quality>Sub ITA)</a></p> )?'
-            r'<p>(?P<plot>[^<]+)<.*?href="(?P<url>[^"]+)'
+            r'<li> <a href="(?P<url>https?://[^"]+)" class="ml-mask">(?P<title>[^<]+)</a>.*?'
+            r'<div class="ml-item-body" style="background-image:url\((?P<thumb>[^\)]+)\);">.*?'
+            r'<li> <span class="ml-imdb"><b>(?P<rating>[^<]+)</b>.*?'
+            r'<li><span class="ml-label">(?P<year>\d{4})</span></li>.*?'
+            r'<li><span class="ml-label">(?P<duration>[^<]+)</span></li>.*?'
+            r'<p class="ml-cat">(?P<genre>.*?)</p>.*?'
+            r'<p>(?P<plot>[^<]+)</p>'
         )
         patronNext = ''
 
@@ -72,10 +73,9 @@ def peliculas(item):
             r'<td class="mlnh-4">(?P<quality>[^<]*)</td>.*?'
             r'<td class="mlnh-5">(?P<genre>.*?)</td>'
         )
-        
         patronNext = r'<div[^>]*class="[^"]*page[^"]*"[^>]*>.*?<a href="([^"]+)"[^>]*>(?:Next|Avanti|\d+|>)</a>'
 
-    else:  # lista normale
+    else:
         patronBlock = r'<div class="cover_kapsul ml-mask">(?P<block>.*)<div class="page_nav">'
         patron = (
             r'<div class="cover boxcaption"> +<h2>\s*<a href="(?P<url>[^"]+)">(?P<title>[^<]+).*?'
@@ -87,7 +87,6 @@ def peliculas(item):
         )
         patronNext = '<span>\d</span> <a href="([^"]+)">'
 
-    #debug = True
     return locals()
 
 
@@ -123,32 +122,94 @@ def genres(item):
     return locals()
 
 
-@support.scrape
 def episodios(item):
-    patronBlock = r'<div class="tab-pane fade" id="season-(?P<season>\d+)"(?P<block>.*?)</ul>\s*</div>'
-    patron = (
-        r'(?P<data><a href="#" allowfullscreen data-link="[^"]+.*?'
-        r'title="(?P<title>[^"]+)(?P<lang>[sS][uU][bB]-?[iI][tT][aA])?\s*">'
-        r'(?P<episode>[^<]+).*?</li>)'
-    )
-    action = 'findvideos'
+    """
+    Genera la lista episodi 12x24 e replica il comportamento di StreamingCommunity:
+    - contentSeason e contentEpisodeNumber sugli item
+    - arricchimento TMDB
+    - check Trakt
+    - videoteca
+    """
+    support.info('episodios', item)
 
-    def itemHook(item):
-        item.contentType = 'episode'
-        if item.episode:
-            item.title = f"{item.title} - {item.episode}"
-        return item
+    # Scarica la pagina per ottenere IMDB ID
+    data = item.data if hasattr(item, 'data') and item.data else httptools.downloadpage(item.url).data
 
-    return locals()
+    # Estrai IMDB ID
+    imdb_id = None
+    match = support.match(data, patron=r'<p id="imdb">(tt\d+)</p>').match
+    if match:
+        imdb_id = match
+    if not imdb_id:
+        match = support.match(data, patron=r"var imdb = '(tt\d+)'").match
+        if match:
+            imdb_id = match
+
+    if not imdb_id:
+        support.info('IMDB ID non trovato per la serie!')
+        return []
+
+    support.info(f'IMDB ID serie: {imdb_id}')
+
+    # Genera la lista episodi 12x24 (come fa il sito)
+    max_seasons = 12
+    max_episodes = 24
+
+    itemlist = []
+    for season in range(1, max_seasons + 1):
+        for episode in range(1, max_episodes + 1):
+            new_item = item.clone()
+            new_item.action = 'findvideos'
+            new_item.contentType = 'episode'
+            new_item.season = season
+            new_item.episode = episode
+            # Campi che Stream4Me usa per identificare l'episodio
+            new_item.contentSeason = season
+            new_item.contentEpisodeNumber = episode
+            # Titolo in formato riconosciuto
+            new_item.title = f"{season}x{episode:02d}"
+            # Serie di appartenenza
+            new_item.contentSerieName = item.fulltitle if item.fulltitle else item.title
+            # Eredita thumbnail e fanart dalla serie
+            new_item.thumbnail = item.thumbnail
+            new_item.contentThumbnail = item.thumbnail
+            new_item.fanart = item.fanart
+            new_item.contentFanart = item.fanart
+            new_item.imdb_id = imdb_id
+            new_item.url = f"https://vixsrc.to/tv/{imdb_id}/{season}/{episode}?lang=it"
+            itemlist.append(new_item)
+
+    support.info(f'Generati {len(itemlist)} episodi (12x24)')
+
+    # Stesso comportamento di StreamingCommunity:
+    # 1) Arricchisci con TMDB (solo se abilitato nelle impostazioni)
+    if config.get_setting('episode_info') and not support.stackCheck(['add_tvshow', 'get_newest']):
+        support.tmdb.set_infoLabels_itemlist(itemlist, seekTmdb=True)
+
+    # 2) Verifica Trakt
+    support.check_trakt(itemlist)
+
+    # 3) Abilita "Aggiungi alla videoteca"
+    support.videolibrary(itemlist, item)
+
+    return itemlist
 
 
 def check(item):
     support.info('CHECK chiamata per:', item)
     item.data = httptools.downloadpage(item.url).data
-    # Controlla se ci sono stagioni nella pagina
-    if 'tab-pane fade' in item.data and 'season-' in item.data:
+
+    is_tvshow = False
+    if 'show_id' in item.data:
+        is_tvshow = True
+    elif 'Serie TV' in item.data and 'Durata episodio' in item.data:
+        is_tvshow = True
+    elif 'vixsrc.to/tv/' in item.data:
+        is_tvshow = True
+
+    if is_tvshow:
         item.contentType = 'tvshow'
-        support.info('Rilevata serie TV (trovate stagioni), chiamando episodios')
+        support.info('Rilevata serie TV, chiamando episodios')
         return episodios(item)
     else:
         item.contentType = 'movie'
@@ -166,7 +227,7 @@ def newest(categoria):
             item.action = "peliculas"
             item.contentType = 'movie'
             itemlist = peliculas(item)
-            if itemlist[-1].action == "peliculas":
+            if itemlist and itemlist[-1].action == "peliculas":
                 itemlist.pop()
     except:
         import sys
@@ -175,24 +236,47 @@ def newest(categoria):
         return []
     return itemlist
 
+
 def findvideos(item):
+    """
+    Server vixsrc.to
+    """
     support.info('findvideos', item)
 
-    if item.contentType == 'episode':
-        # Per gli episodi, usa i dati della pagina per trovare i link
-        data = item.data if hasattr(item, 'data') else httptools.downloadpage(item.url).data
-        urls = support.match(data, patron=r'data-link="([^"]+)').matches
-        return support.server(item, urls)
-
-    # Per i film
-    data = httptools.downloadpage(item.url).data
     urls = []
 
-    # Trova tutti gli iframe
-    matches = support.match(data, patron=r'<iframe.*?src="([^"]+)').matches
-    for m in matches:
-        if 'youtube' not in m and not m.endswith('.js'):
-            urls += support.match(m, patron=r'data-link="([^"]+)').matches
+    if 'vixsrc.to' in item.url:
+        urls.append(item.url)
+        return support.server(item, urls)
 
-    urls += support.match(data, patron=r'id="urlEmbed" value="([^"]+)').matches
+    data = item.data if hasattr(item, 'data') and item.data else httptools.downloadpage(item.url).data
+
+    imdb_id = None
+    match = support.match(data, patron=r'<p id="imdb">(tt\d+)</p>').match
+    if match:
+        imdb_id = match
+    if not imdb_id:
+        match = support.match(data, patron=r"var imdb = '(tt\d+)'").match
+        if match:
+            imdb_id = match
+    if not imdb_id:
+        match = support.match(data, patron=r'itemprop="imdb"[^>]*content="(tt\d+)"').match
+        if match:
+            imdb_id = match
+
+    if not imdb_id:
+        support.info('IMDB ID non trovato!')
+        return []
+
+    support.info(f'IMDB ID trovato: {imdb_id}')
+
+    if item.contentType == 'episode' or (hasattr(item, 'season') and item.season):
+        season = getattr(item, 'season', 1) or 1
+        episode = getattr(item, 'episode', 1) or 1
+        url = f"https://vixsrc.to/tv/{imdb_id}/{season}/{episode}?lang=it"
+    else:
+        url = f"https://vixsrc.to/movie/{imdb_id}?lang=it"
+
+    urls.append(url)
+    support.info(f'URL generati: {urls}')
     return support.server(item, urls)
