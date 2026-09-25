@@ -3,6 +3,7 @@
     "name": "Altadefinizione01",
     "language": ["ita", "sub-ita"],
     "active": true,
+    "tiny": true,
     "thumbnail": "altadefinizione01.png",
     "banner": "altadefinizione01.png",
     "categories": ["tvshow","movie", "vos"],

@@ -1,30 +1,46 @@
 # -*- coding: utf-8 -*-
 # ------------------------------------------------------------
-# Canale per Altadefinizione Click
+# Canale per Altadefinizione Click (altadefinizionex.live)
+# Build 2026-09-25-HYBRID
+#
+# - check(): UNA pagina scaricata, smista film/serie e riusa item.data
+# - episodios IBRIDO:
+#       livello 1: stagioni REALI via oracolo API vixsrc (404 = non esiste)
+#       livello 2: episodi REALI della stagione, titoli dal parametro 'd'
+#       fallback:  griglia 12x24 (modello altadefinizione01) se rete giu'
+#       cache su disco 3 giorni -> istantaneo dalle volte successive
+#   + TMDB enrichment (plot/still reali), Trakt, videolibrary
+# - IMDb: var imdb del player DLE -> iframe vixsrc/vidxgo -> poster ttXXXX.jpg
+# - Listing: 3 layout (attuale: card class="movie"); filtro nuovo tipo=1/2
+# - findvideos: popup con vixsrc (diretto) e vixsrc_alt (proxy)
 # ------------------------------------------------------------
 
-from core import support
+from core import support, httptools
 from platformcode import config, logger
-import re, html, json, traceback, urllib.parse, time
+import re, html, json, base64, os, tempfile, traceback, urllib.parse, time
 
 host = support.config.get_channel_url()
 if host and host.endswith('/'):
     host = host[:-1]
 
-EP_CACHE = {}
+MAX_SEASONS  = 12        # bound dichiarato dal player DLE del sito
+MAX_EPISODES = 24        # idem
 
 
+# ---------------------------------- MAIN MENU ----------------------------------
 @support.menu
 def mainlist(item):
-    logger.debug(item)
-    film = ['/film/',
+    film = ['/film/?tipo=1',
             ('Generi', ['/film/', 'genres', 'genres'])]
-    tvshow = ['/serie-tv/',
+
+    tvshow = ['/film/?tipo=2',
               ('Generi', ['/serie-tv/', 'genres', 'genres'])]
+
     search = ''
     return locals()
 
 
+# ---------------------------------- SEARCH ----------------------------------
 def search(item, texto):
     logger.debug("search: " + texto)
     item.args = 'search'
@@ -37,13 +53,12 @@ def search(item, texto):
         return []
 
 
+# ---------------------------------- GENRES ----------------------------------
 def genres(item):
     logger.debug("genres called with item.url: %s", item.url)
     itemlist = []
 
-    if '/film/' in item.url:
-        tipo = 'film'
-    elif '/serie-tv/' in item.url:
+    if '/serie-tv/' in item.url:
         tipo = 'serie-tv'
     else:
         tipo = 'film'
@@ -84,11 +99,71 @@ def genres(item):
 
 
 @support.scrape
+def paese(item):
+    action = 'peliculas_genere'
+    patronBlock = r'<span class="filter-name">Paese</span>.*?<div class="filter-values">(?P<block>.*?)</div></div></div>'
+    patron = r'<input[^>]+name="paese"[^>]+value="(?P<url>[^"]+)"'
+
+    def itemHook(it):
+        it.cat_id = it.url
+        it.title = it.url
+        return it
+
+    return locals()
+
+
+# ------------------------- COMMON -------------------------
+
+def _listing_hook(it):
+    """Titolo unescape, thumbnail assoluta, IMDb dal poster ttXXXX.jpg."""
+    try:
+        t = html.unescape(it.title or '').strip()
+        if t:
+            it.title = t
+        th = it.thumbnail or ''
+        if th.startswith('//'):
+            th = 'https:' + th
+        elif th.startswith('/'):
+            th = host + th
+        it.thumbnail = th
+        m = re.search(r'(tt\d+)\.jpg', th)
+        if m:
+            il = dict(getattr(it, 'infoLabels', {}) or {})
+            il['imdb_id'] = m.group(1)
+            it.infoLabels = il
+    except Exception:
+        pass
+    return it
+
+
+def _get_data(item):
+    """UN solo download, riusabile: item.data se presente (stile check())."""
+    if hasattr(item, 'data') and item.data:
+        return item.data
+    return support.httptools.downloadpage(item.url, cloudscraper=True).data or ''
+
+
+def _estrai_imdb(data):
+    """Gerarchia: var imdb del player DLE -> iframe -> poster."""
+    for pat in (r"var\s+imdb\s*=\s*'(tt\d+)'",
+                r'vixsrc\.to/(?:tv|movie)/(tt\d+)',
+                r'v\.vidxgo\.co/(tt\d+)',
+                r'/uploads/[^"\']*/(tt\d+)\.jpg'):
+        m = re.search(pat, data or '')
+        if m:
+            return m.group(1)
+    return ''
+
+
+# ---------------------------------- MAIN LISTING ----------------------------------
+@support.scrape
 def peliculas(item):
     logger.debug(item)
 
     if item.args == 'search':
         url = item.url
+    elif 'tipo=' in (item.url or ''):
+        url = item.url                      # nuovo filtro tipo=1 (film) / tipo=2 (serie)
     elif '/serie-tv/' in item.url or (hasattr(item, 'contentType') and item.contentType == 'tvshow'):
         url = host + '/serie-tv/'
     else:
@@ -103,12 +178,23 @@ def peliculas(item):
                   r'[\s\S]*?<h2[^>]*>\s*<a href="[^"]+"[^>]*>(?P<title>[^<]+)</a>'
                   r'[\s\S]*?<td class="text-center d-none d-lg-table-cell">(?P<year>\d{4})</td>'
                   r'[\s\S]*?<span class="badge[^"]*">(?P<rating>[0-9.]+)</span>')
-    else:
+    elif 'data-title=' in data:
         patron = (r'<a href="(?P<url>/(?P<type>[^"/]+)/[^"]+-streaming\.html)"[^>]*'
                   r'data-title="(?P<title>[^"]+)"[^>]*data-year="(?P<year>\d+)"[^>]*'
                   r'data-imdb="(?P<rating>[^"]+)"[^>]*>\s*<img[^>]+src="(?P<thumb>[^"]+)"')
+    elif 'class="movie"' in data and 'data-link=' in data:
+        patron = (r'<div class="movie"[^>]*?'
+                  r'data-imdb="(?P<rating>[^"]*)"[^>]*?'
+                  r'data-year="(?P<year>\d{4})"[^>]*?'
+                  r'data-link="(?P<url>https?://[^"]+?/(?P<type>[^"/]+)/[^"]+-streaming\.html)"'
+                  r'[\s\S]*?<img[^>]+src="(?P<thumb>[^"]+)"'
+                  r'[\s\S]*?<h2 class="movie-title">\s*<a[^>]*>(?P<title>[^<]+)</a>')
+    else:
+        patron = ''
+        logger.error('peliculas: layout non riconosciuto su ' + url)
 
-    action = 'findvideos'
+    itemHook = _listing_hook
+    action = 'check'                        # modello altadefinizione01
     typeActionDict = {'episodios': ['serie-tv']}
     typeContentDict = {'tvshow': ['serie-tv']}
     pagination = 12
@@ -117,32 +203,42 @@ def peliculas(item):
     return locals()
 
 
+# ---------------------------------- GENRE LISTING + Search ----------------------------------
 @support.scrape
 def peliculas_genere(item):
     logger.debug("peliculas_genere: %s", item)
 
-    cat = getattr(item, 'cat_id', '').strip('/')
-    tipo = getattr(item, 'type', '')
+    from urllib.parse import quote
 
-    for t in ('film', 'serie-tv'):
-        if cat.endswith('/' + t):
-            cat = cat[:-(len(t) + 1)]
-            tipo = t
-            break
+    cat         = getattr(item, 'cat_id', '').strip('/')
+    tipo        = getattr(item, 'type', '')
+    filter_type = getattr(item, 'filter_type', '')
 
-    if cat and ('/' + cat) not in item.url:
-        candidates = []
-        if tipo in ('film', 'serie-tv'):
-            candidates.append(host + '/' + cat + '/' + tipo)
-        candidates.append(host + '/' + cat + '/')
+    if filter_type == 'paese':
+        url = host + '/film/?paese=' + quote(cat)
+        if 'serie-tv' in (item.url or ''):
+            url = host + '/serie-tv/?paese=' + quote(cat)
+        candidates = [url]
     else:
-        candidates = [item.url]
+        for t in ('film', 'serie-tv'):
+            if cat.endswith('/' + t):
+                cat  = cat[:-(len(t) + 1)]
+                tipo = t
+                break
+        if cat and ('/' + cat) not in item.url:
+            candidates = []
+            if tipo in ('film', 'serie-tv'):
+                candidates.append(host + '/' + cat + '/' + tipo)
+            candidates.append(host + '/' + cat + '/')
+        else:
+            candidates = [item.url]
 
     data = ''
     url = candidates[-1]
     for u in candidates:
         data = support.httptools.downloadpage(u, cloudscraper=True).data or ''
-        if 'class="mlnew"' in data or 'data-title=' in data:
+        if 'class="mlnew"' in data or 'data-title=' in data \
+                or ('class="movie"' in data and 'data-link=' in data):
             url = u
             break
     logger.info("peliculas_genere uso: " + url)
@@ -159,220 +255,364 @@ def peliculas_genere(item):
         patron = (r'<a href="(?P<url>/(?P<type>[^"/]+)/[^"]+-streaming\.html)"[^>]*'
                   r'data-title="(?P<title>[^"]+)"[^>]*data-year="(?P<year>\d+)"[^>]*'
                   r'data-imdb="(?P<rating>[^"]+)"[^>]*>\s*<img[^>]+src="(?P<thumb>[^"]+)"')
+    elif 'class="movie"' in data and 'data-link=' in data:
+        patronBlock = ''
+        patron = (r'<div class="movie"[^>]*?'
+                  r'data-imdb="(?P<rating>[^"]*)"[^>]*?'
+                  r'data-year="(?P<year>\d{4})"[^>]*?'
+                  r'data-link="(?P<url>https?://[^"]+?/(?P<type>[^"/]+)/[^"]+-streaming\.html)"'
+                  r'[\s\S]*?<img[^>]+src="(?P<thumb>[^"]+)"'
+                  r'[\s\S]*?<h2 class="movie-title">\s*<a[^>]*>(?P<title>[^<]+)</a>')
     else:
         patronBlock = ''
         patron = ''
         logger.error("peliculas_genere: layout non riconosciuto su " + url)
 
+    itemHook = _listing_hook
+
     actLike = 'peliculas'
-    action = 'findvideos'
-    typeActionDict = {'episodios': ['serie-tv']}
-    typeContentDict = {'tvshow': ['serie-tv']}
+    action = 'check'
+    typeActionDict  = {'episodios': ['serie-tv']}
+    typeContentDict = {'tvshow':    ['serie-tv']}
 
     PAGE_SIZE = 12
 
     def itemlistHook(itemlist):
-        pag = int(getattr(item, 'page', 0) or 1)
+        pag   = int(getattr(item, 'page', 0) or 1)
         start = (pag - 1) * PAGE_SIZE
         paged = itemlist[start:start + PAGE_SIZE]
         if start + PAGE_SIZE < len(itemlist):
             nxt = item.clone(action='peliculas_genere')
-            nxt.page = pag + 1
-            nxt.title = '[B][COLOR cyan]>> Pagina successiva <<[/COLOR][/B]'
+            nxt.page        = pag + 1
+            nxt.filter_type = filter_type
+            nxt.title       = '[B][COLOR cyan]>> Pagina successiva <<[/COLOR][/B]'
             paged.append(nxt)
         return paged
 
     return locals()
 
 
-def _estrai_next_json(data):
-    token = None
-    seasons = []
+# ---------------------------------- CHECK (stile altadefinizione01) ----------------------------------
+def check(item):
+    logger.info('check: %s' % item.url)
+    item.data = _get_data(item)
+    if not item.data:
+        logger.error('check: pagina non scaricata')
+        return []
 
-    if not data:
-        return token, seasons
+    is_tvshow = False
+    if 'var imdb' in item.data and 'vixsrc.to/tv/' in item.data:
+        is_tvshow = True
+    elif re.search(r"var\s+imdb\s*=", item.data) and (
+            'se-dle-player' in item.data or 'Stagione' in item.data):
+        is_tvshow = True
+    elif 'vixsrc.to/tv/' in item.data:
+        is_tvshow = True
 
-    for m in re.finditer(r'self\.__next_f\.push\(\[1,"(.*?)"\]\)', data, re.S):
-        raw = m.group(1)
+    if is_tvshow:
+        item.contentType = 'tvshow'
+        logger.info('check: serie TV -> episodios')
+        return episodios(item)
+    item.contentType = 'movie'
+    logger.info('check: film -> findvideos')
+    return findvideos(item)
+
+
+# ------------------------- VIXSRC: oracolo stagioni/episodi -------------------------
+
+VIXSRC_API = 'https://vixsrc.to'
+VIXSRC_UA  = ('Mozilla/5.0 (X11; Linux x86_64; rv:156.0) '
+              'Gecko/20100101 Firefox/156.0')
+API_SLEEP   = 0.8        # [POLITE] pausa tra sonde API
+CACHE_TTL   = 3 * 86400
+_SERIES_CACHE_FILE = os.path.join(tempfile.gettempdir(), 's4me_vixsrc_series.json')
+_SERIES_CACHE = None
+_VIX_SESS = None
+
+
+def _vix_session():
+    global _VIX_SESS
+    if _VIX_SESS is None:
         try:
-            chunk = json.loads('"' + raw + '"')
+            import cloudscraper
+            _VIX_SESS = cloudscraper.create_scraper()
         except Exception:
-            continue
-
-        if token is None:
-            mt = re.search(r'"token":"(\d+)"', chunk)
-            if mt:
-                token = mt.group(1)
-
-        if not seasons:
-            ms = re.search(r'"seasons":(\[.*?\])\s*,\s*"turnstileSiteKey"',
-                           chunk, re.S)
-            if ms:
-                try:
-                    seasons = json.loads(ms.group(1))
-                except Exception:
-                    seasons = []
-
-        if token and seasons:
-            break
-
-    return token, seasons
+            _VIX_SESS = False
+    return _VIX_SESS or None
 
 
-def _next_pairs_and_meta(seasons):
-    pairs = []
-    meta = {}
-    for st in seasons or []:
-        s = st.get('number')
-        if not s:
-            continue
-        for ep in st.get('episodes', []) or []:
-            e = ep.get('number')
-            if not e:
-                continue
-            key = (int(s), int(e))
-            pairs.append(key)
-            meta[key] = {
-                'title': (ep.get('title') or '').strip(),
-                'plot':  (ep.get('plot') or '').strip(),
-                'still': (ep.get('still') or '').strip(),
-            }
-    pairs.sort()
-    return pairs, meta
+def _b64(x):
+    try:
+        x = (x or '').strip()
+        return base64.b64decode(x + '=' * (-len(x) % 4)).decode('utf-8', 'replace')
+    except Exception:
+        return ''
 
 
-@support.scrape
-def episodios(item):
-    cached = EP_CACHE.get(item.url)
-    if cached:
-        token = cached['token']
-        tuples = cached['pairs']
-        TITLES = cached['titles']
-        META = cached.get('meta', {})
+def _api_tv(imdb, se=None):
+    """GET /api/tv/{imdb}[/{s}/{e}] -> (code, src, t, d).
+    code inferito dal body se il framework non espone .code."""
+    if se:
+        url = '%s/api/tv/%s/%d/%d?lang=it' % (VIXSRC_API, imdb, se[0], se[1])
     else:
-        data = support.httptools.downloadpage(item.url, cloudscraper=True).data or ''
-
-        token, seasons = _estrai_next_json(data)
-        pairs, meta = _next_pairs_and_meta(seasons)
-
-        if not (token and pairs):
-            logger.error('episodios: Next.js senza token/seasons su ' + item.url)
-            return []
-
-        logger.info('episodios: NEXT.JS -> token=%s, %d episodi, %d stagioni'
-                    % (token, len(pairs), len({s for s, _ in pairs})))
-
-        tuples = pairs
-        META = meta
-        TITLES = {}
-        for (s, e), m in meta.items():
-            if m.get('title'):
-                TITLES[(s, e)] = m['title']
-
-        EP_CACHE[item.url] = {'token': token, 'pairs': tuples,
-                              'titles': TITLES, 'meta': META}
-
-    data = ''.join('<a href="https://v.vidxgo.co/%s/%d/%d" data-s="%d" data-e="%d"></a>'
-                   % (token, s, e, s, e) for s, e in tuples)
-
-    patron = (r'<a href="(?P<url>https://v\.vidxgo\.co/[^"]+)"'
-              r'[^>]*data-s="(?P<season>\d+)"[^>]*data-e="(?P<episode>\d+)"')
-    action = 'play'
-
-    def itemHook(it):
-        it.is_folder = False
-        it.server = 'vidxgo'
-
-        m = re.search(r'v\.vidxgo\.co/\d+/(\d+)/(\d+)', it.url or '')
-        if m:
-            s, e = int(m.group(1)), int(m.group(2))
+        url = '%s/api/tv/%s?lang=it' % (VIXSRC_API, imdb)
+    code, body = 0, ''
+    sess = _vix_session()
+    try:
+        if sess is not None:
+            r = sess.get(url, headers={'User-Agent': VIXSRC_UA,
+                                       'Accept': 'application/json'}, timeout=12)
+            code, body = r.status_code, r.text or ''
         else:
-            s = int(getattr(it, 'contentSeason', None) or getattr(it, 'season', 0) or 0)
-            e = int(getattr(it, 'contentEpisode', None) or getattr(it, 'episode', 0) or 0)
+            r = httptools.downloadpage(url, cloudscraper=True)
+            code = int(getattr(r, 'code', 0) or 0)
+            body = getattr(r, 'data', '') or ''
+    except Exception:
+        return 0, '', '', ''
+    if code == 0:
+        if '"src"' in body:
+            code = 200
+        elif '"message"' in body or not body.strip():
+            code = 404
+    if code != 200:
+        return code, '', '', ''
+    try:
+        src = json.loads(body).get('src') or ''
+    except Exception:
+        return code, '', '', ''
+    t, d = '', ''
+    try:
+        q = urllib.parse.parse_qs(urllib.parse.urlparse(src).query)
+        t = _b64(q.get('t', [''])[0])
+        d = _b64(q.get('d', [''])[0])
+    except Exception:
+        pass
+    return code, src, t, d
 
-        t = TITLES.get((s, e))
-        if t:
-            it.title = (it.title + ' - ' + t) if it.title else t
 
-        meta = META.get((s, e), {})
-        plot = (meta.get('plot') or '').strip()
-        if plot:
-            it.plot = plot
-            try:
-                info = dict(getattr(it, 'info', {}) or {})
-                info['plot'] = plot
-                it.info = info
-            except Exception:
-                pass
-        still = (meta.get('still') or '').strip()
-        if still:
-            it.thumbnail = still
-
-        return it
-
-    return locals()
-
-
-def findvideos(item):
-    logger.info("=== findvideos: " + item.url)
-
-    m = re.match(r'^https?://[^/]+/(\d+)(?:/(\d+)/(\d+))?/?$', item.url)
-    if m:
-        token = m.group(1)
-        s, e = m.group(2), m.group(3)
-        if s and e:
-            embed_url = 'https://v.vidxgo.co/%s/%s/%s' % (token, s, e)
-        else:
-            embed_url = 'https://v.vidxgo.co/%s' % token
-
-        logger.info("findvideos: URL sintetica libreria rilevata -> %s" % embed_url)
-
-        it = item.clone(action='play', url=embed_url, server='vidxgo')
-        it.title = '[COLOR lime]vidxgo[/COLOR]'
-        it.contentTitle = getattr(item, 'contentTitle', '') or \
-                          getattr(item, 'fulltitle', '') or item.title
-        return support.server(item, itemlist=[it])
-
-    page = ''
-    for attempt in (1, 2, 3):
+def _scache_load():
+    global _SERIES_CACHE
+    if _SERIES_CACHE is None:
         try:
-            page = support.httptools.downloadpage(item.url, cloudscraper=True).data or ''
+            with open(_SERIES_CACHE_FILE) as f:
+                _SERIES_CACHE = json.load(f)
         except Exception:
-            logger.error("findvideos fetch attempt %d failed: %s"
-                         % (attempt, traceback.format_exc()[-300:]))
-            page = ''
-        if page:
+            _SERIES_CACHE = {}
+    return _SERIES_CACHE
+
+
+def _scache_save():
+    try:
+        with open(_SERIES_CACHE_FILE, 'w') as f:
+            json.dump(_SERIES_CACHE or {}, f)
+    except Exception:
+        pass
+
+
+def _scopri_stagioni(imdb):
+    """Probe /api/tv/{imdb}/{s}/1 per s=1..12, stop alla prima 404.
+    Cache 3 giorni. Se la rete fallisce (non 404) NON cachare."""
+    cache = _scache_load()
+    ent = cache.get(imdb) or {}
+    now = time.time()
+    if ent.get('seasons') and (now - ent.get('ts', 0)) < CACHE_TTL:
+        return ent['seasons']
+    seasons, clean = [], True
+    for sn in range(1, MAX_SEASONS + 1):
+        code, src, t, d = _api_tv(imdb, (sn, 1))
+        if code == 200 and '/embed/' in src:
+            seasons.append(sn)
+            logger.info('oracolo %s: S%d OK%s' % (imdb, sn,
+                        (' (%s)' % t) if t else ''))
+        elif code == 404:
             break
-        time.sleep(1)
+        else:
+            clean = False               # rete giu': non cachare
+            break
+        time.sleep(API_SLEEP)
+    if seasons and clean:
+        ent = cache.setdefault(imdb, {})
+        ent['ts'] = now
+        ent['seasons'] = seasons
+        ent.setdefault('eps', {})
+        _scache_save()
+        logger.info('oracolo %s: stagioni %s' % (imdb, seasons))
+    return seasons
 
-    if not page:
-        logger.error("detail page not loaded (3 tentativi)")
+
+def _scopri_episodi(imdb, season):
+    """Probe /api/tv/{imdb}/{s}/{e} per e=1..24, stop alla prima 404.
+    Titolo episodio dal parametro 'd' ("S1:E1 Titolo")."""
+    cache = _scache_load()
+    ent = cache.get(imdb) or {}
+    eps = (ent.get('eps') or {}).get(str(season))
+    now = time.time()
+    if eps and (now - ent.get('ts', 0)) < CACHE_TTL:
+        return eps
+    out, clean = [], True
+    for e in range(1, MAX_EPISODES + 1):
+        code, src, t, d = _api_tv(imdb, (season, e))
+        if code == 200 and '/embed/' in src:
+            title = ''
+            if d:
+                title = re.sub(r'^S\d+\s*:\s*E\d+\s*[:\-]?\s*', '', d).strip()
+            out.append([e, title])
+        elif code == 404:
+            break
+        else:
+            clean = False
+            break
+        time.sleep(API_SLEEP)
+    if out and clean:
+        ent = cache.setdefault(imdb, {})
+        ent['ts'] = now
+        ent.setdefault('eps', {})[str(season)] = out
+        _scache_save()
+        logger.info('oracolo %s S%d: %d episodi' % (imdb, season, len(out)))
+    return out
+
+
+# ---------------------------------- EPISODES (ibrido: oracolo + fallback griglia) ----------------------------------
+def episodios(item):
+    logger.info('episodios: %s' % item.url)
+    data = _get_data(item)
+
+    imdb_id = _estrai_imdb(data)
+    if not imdb_id:
+        logger.error('episodios: IMDb non trovato su ' + item.url)
         return []
+    logger.info('episodios: imdb=%s' % imdb_id)
 
-    embed_url = None
-    fallback_url = None
-    for m in re.finditer(r'<iframe[^>]+src=["\']([^"\']+)["\']', page, re.I):
-        src = html.unescape(m.group(1)).strip()
-        if src.startswith('//'):
-            src = 'https:' + src
-        if 'vidxgo' not in src:
-            continue
-        if 'trailer' in src.lower():
-            if fallback_url is None:
-                fallback_url = src
-            continue
-        embed_url = src
-        break
-    if not embed_url:
-        m = re.search(r'["\'](https?://[^"\']*vidxgo[^"\']+)["\']', page)
-        embed_url = html.unescape(m.group(1)) if m else fallback_url
+    try:
+        season = int(getattr(item, 'contentSeason', 0)
+                     or getattr(item, 'seas', 0) or 0)
+    except Exception:
+        season = 0
 
-    logger.info("embed_url = " + str(embed_url))
-    if not embed_url:
-        logger.error("nessun embed vidxgo su " + item.url)
+    thumb = item.thumbnail or getattr(item, 'contentThumbnail', '')
+
+    # --- livello 1: STAGIONI reali via oracolo ---
+    if not season:
+        seasons = _scopri_stagioni(imdb_id)
+        if seasons:
+            if len(seasons) == 1:
+                return _episodi_stagione(item, imdb_id, seasons[0], thumb)
+            itemlist = []
+            for sn in seasons:
+                it = item.clone(action='episodios', url=item.url)
+                it.contentSeason = sn
+                it.seas = sn
+                it.title = 'Stagione %d' % sn
+                if thumb:
+                    it.thumbnail = thumb
+                itemlist.append(it)
+            return itemlist
+        # oracolo KO (rete): fallback griglia completa
+        logger.error('episodios: oracolo stagioni KO, fallback griglia 12x24')
+        return _griglia_fallback(item, imdb_id, thumb)
+
+    # --- livello 2: EPISODI reali della stagione ---
+    return _episodi_stagione(item, imdb_id, season, thumb)
+
+
+def _episodi_stagione(item, imdb_id, season, thumb):
+    eps = _scopri_episodi(imdb_id, season)
+    if not eps:
+        logger.error('episodios: oracolo episodi S%d KO, fallback griglia'
+                     % season)
+        return _griglia_fallback(item, imdb_id, thumb, solo_stagione=season)
+    itemlist = []
+    for e, title in eps:
+        t = 'Episodio %d%s' % (e, (' - %s' % title) if title else '')
+        it = item.clone(action='findvideos', contentType='episode')
+        it.season = season
+        it.episode = e
+        it.contentSeason = season
+        it.contentEpisodeNumber = e
+        it.contentEpisode = e
+        it.title = t
+        it.contentSerieName = getattr(item, 'fulltitle', '') or item.title
+        if thumb:
+            it.thumbnail = thumb
+            it.contentThumbnail = thumb
+        it.imdb_id = imdb_id
+        it.url = 'https://vixsrc.to/tv/%s/%d/%d?lang=it' % (imdb_id, season, e)
+        itemlist.append(it)
+
+    # TMDB sopra l'oracolo: plot/still reali (titoli gia' garantiti dal 'd')
+    if config.get_setting('episode_info') and not support.stackCheck(['add_tvshow', 'get_newest']):
+        try:
+            support.tmdb.set_infoLabels_itemlist(itemlist, seekTmdb=True)
+        except Exception:
+            logger.error('episodios: TMDB enrichment fallito')
+    try:
+        support.check_trakt(itemlist)
+    except Exception:
+        pass
+    try:
+        support.videolibrary(itemlist, item)
+    except Exception:
+        pass
+    return itemlist
+
+
+def _griglia_fallback(item, imdb_id, thumb, solo_stagione=None):
+    """Rete giu': griglia 12x24 (o della sola stagione) come nel modello 01."""
+    stagioni = [solo_stagione] if solo_stagione else range(1, MAX_SEASONS + 1)
+    itemlist = []
+    for season in stagioni:
+        for episode in range(1, MAX_EPISODES + 1):
+            it = item.clone(action='findvideos', contentType='episode')
+            it.season = season
+            it.episode = episode
+            it.contentSeason = season
+            it.contentEpisodeNumber = episode
+            it.contentEpisode = episode
+            it.title = '%dx%02d' % (season, episode)
+            it.contentSerieName = getattr(item, 'fulltitle', '') or item.title
+            if thumb:
+                it.thumbnail = thumb
+                it.contentThumbnail = thumb
+            it.imdb_id = imdb_id
+            it.url = 'https://vixsrc.to/tv/%s/%d/%d?lang=it' % (imdb_id, season, episode)
+            itemlist.append(it)
+    return itemlist
+
+
+# ---------------------------------- FIND VIDEOS ----------------------------------
+def findvideos(item):
+    logger.info('findvideos: %s' % item.url)
+
+    # --- episodi: URL gia' sintetico vixsrc, dritto al server ---
+    if getattr(item, 'contentType', '') == 'episode' or \
+            'vixsrc.to/tv/' in (item.url or ''):
+        return _offri_server(item, item.url)
+
+    data = _get_data(item)
+
+    imdb_id = _estrai_imdb(data)
+    if not imdb_id:
+        logger.error('findvideos: IMDb non trovato su ' + item.url)
         return []
+    logger.info('findvideos: imdb=%s' % imdb_id)
 
-    it = item.clone(action='play', url=embed_url, server='vidxgo')
-    it.title = '[COLOR lime]vidxgo[/COLOR]'
-    it.contentTitle = getattr(item, 'contentTitle', '') or getattr(item, 'fulltitle', '') or item.title
-    return support.server(item, itemlist=[it])
+    if item.contentType == 'episode' or getattr(item, 'season', 0):
+        season = getattr(item, 'season', 1) or 1
+        episode = getattr(item, 'episode', 1) or 1
+        url = 'https://vixsrc.to/tv/%s/%d/%d?lang=it' % (imdb_id, season, episode)
+    else:
+        url = 'https://vixsrc.to/movie/%s?lang=it' % imdb_id
+
+    return _offri_server(item, url)
+
+
+def _offri_server(item, url):
+    """Popup con entrambi i server (diretto + proxy)."""
+    itemlist = []
+    for label, srv in (('vixsrc', 'vixsrc'), ('vixsrc ALT', 'vixsrc_alt')):
+        it = item.clone(action='play', url=url, server=srv)
+        it.title = '[COLOR lime]%s[/COLOR]' % label
+        it.contentTitle = getattr(item, 'contentTitle', '') \
+            or getattr(item, 'fulltitle', '') or item.title
+        itemlist.append(it)
+    return support.server(item, itemlist=itemlist)
