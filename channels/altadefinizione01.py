@@ -123,19 +123,14 @@ def genres(item):
 
 
 def episodios(item):
-    """
-    Genera la lista episodi 12x24 e replica il comportamento di StreamingCommunity:
-    - contentSeason e contentEpisodeNumber sugli item
-    - arricchimento TMDB
-    - check Trakt
-    - videoteca
-    """
     support.info('episodios', item)
 
-    # Scarica la pagina per ottenere IMDB ID
+    item.duration = ''
+    if hasattr(item, 'infoLabels') and isinstance(item.infoLabels, dict):
+        item.infoLabels.pop('duration', None)
+
     data = item.data if hasattr(item, 'data') and item.data else httptools.downloadpage(item.url).data
 
-    # Estrai IMDB ID
     imdb_id = None
     match = support.match(data, patron=r'<p id="imdb">(tt\d+)</p>').match
     if match:
@@ -151,7 +146,6 @@ def episodios(item):
 
     support.info(f'IMDB ID serie: {imdb_id}')
 
-    # Genera la lista episodi 12x24 (come fa il sito)
     max_seasons = 12
     max_episodes = 24
 
@@ -163,33 +157,27 @@ def episodios(item):
             new_item.contentType = 'episode'
             new_item.season = season
             new_item.episode = episode
-            # Campi che Stream4Me usa per identificare l'episodio
             new_item.contentSeason = season
             new_item.contentEpisodeNumber = episode
-            # Titolo in formato riconosciuto
             new_item.title = f"{season}x{episode:02d}"
-            # Serie di appartenenza
             new_item.contentSerieName = item.fulltitle if item.fulltitle else item.title
-            # Eredita thumbnail e fanart dalla serie
             new_item.thumbnail = item.thumbnail
             new_item.contentThumbnail = item.thumbnail
             new_item.fanart = item.fanart
             new_item.contentFanart = item.fanart
             new_item.imdb_id = imdb_id
             new_item.url = f"https://vixsrc.to/tv/{imdb_id}/{season}/{episode}?lang=it"
+
+            new_item.duration = ''
+            if hasattr(new_item, 'infoLabels') and isinstance(new_item.infoLabels, dict):
+                new_item.infoLabels.pop('duration', None)
+
             itemlist.append(new_item)
 
     support.info(f'Generati {len(itemlist)} episodi (12x24)')
 
-    # Stesso comportamento di StreamingCommunity:
-    # 1) Arricchisci con TMDB (solo se abilitato nelle impostazioni)
-    if config.get_setting('episode_info') and not support.stackCheck(['add_tvshow', 'get_newest']):
-        support.tmdb.set_infoLabels_itemlist(itemlist, seekTmdb=True)
-
-    # 2) Verifica Trakt
     support.check_trakt(itemlist)
 
-    # 3) Abilita "Aggiungi alla videoteca"
     support.videolibrary(itemlist, item)
 
     return itemlist
@@ -238,9 +226,6 @@ def newest(categoria):
 
 
 def findvideos(item):
-    """
-    Server vixsrc.to
-    """
     support.info('findvideos', item)
 
     urls = []
