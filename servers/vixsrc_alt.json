@@ -1,0 +1,30 @@
+{
+  "active": true,
+  "find_videos": {
+    "ignore_urls": [],
+    "patterns": [
+      {
+        "pattern": "https?://(?:[a-z0-9-]+\\.)?vixsrc\\.to/movie/([A-Za-z0-9]+)(?:\\?[^\\s<]*)?(?:[\\s<\"']|$|\\.html)",
+        "url": "https://vixsrc.to/movie/\\1"
+      },
+      {
+        "pattern": "https?://(?:[a-z0-9-]+\\.)?vixsrc\\.to/tv/([A-Za-z0-9]+)/(\\d+)/(\\d+)(?:\\?[^\\s<]*)?(?:[\\s<\"']|$|\\.html)",
+        "url": "https://vixsrc.to/tv/\\1/\\2/\\3"
+      }
+    ]
+  },
+  "free": true,
+  "id": "vixsrc_alt",
+  "name": "VixSrc_alt",
+  "settings": [
+    {
+      "default": false,
+      "enabled": true,
+      "id": "black_list",
+      "label": "$ADDON[plugin.video.s4me 70708]",
+      "type": "bool",
+      "visible": true
+    }
+  ],
+  "cloudflare": true
+}
