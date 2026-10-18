@@ -8,7 +8,7 @@ from core import support, httptools
 from platformcode import logger
 
 host = 'https://video.sky.it'
-api_url = 'https://apid.sky.it/vdp/v1/'
+api_url = 'https://video.sky.it/api/v1'
 
 @support.menu
 def mainlist(item):
