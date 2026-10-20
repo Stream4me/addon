@@ -1,7 +1,7 @@
 {
     "id": "animesaturn",
     "name": "AnimeSaturn",
-    "active": false,
+    "active": true,
     "language": ["ita"],
     "thumbnail": "animesaturn.png",
     "banner": "animesaturn.png",
