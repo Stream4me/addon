@@ -809,6 +809,12 @@ def _get_flaresolverr(reset=False):
     with _flare_lock:
         if reset or _flare_manager is None or _flare_manager_url != url:
             from core.flaresolverr import FlareSolverrManager
+            # Ogni sessione di FlareSolverr e un'istanza di Chromium: si eliminano quelle rimaste
+            # aperte da risoluzioni precedenti (anche di altri processi Kodi) prima di crearne una nuova
+            try:
+                FlareSolverrManager(flaresolverr_url=url, session_id="cleanup").clear_flaresolverr_sessions()
+            except Exception:
+                pass
             manager = FlareSolverrManager(flaresolverr_url=url)
             if not manager.flaresolverr_session:
                 _flare_manager = None
@@ -874,7 +880,27 @@ def _flare_cookies_for(domain):
 FLARE_POLL_WAITS = (1, 1, 1.5, 1.5, 2, 2, 2, 2, 2, 2)
 
 
+def _close_flaresolverr_session():
+    """Chiude la sessione (e quindi Chromium) dopo la risoluzione, per non occupare RAM."""
+    global _flare_manager
+    with _flare_lock:
+        manager = _flare_manager
+        _flare_manager = None
+    if manager is not None:
+        try:
+            manager.clear_flaresolverr_sessions()
+        except Exception:
+            pass
+
+
 def _resolve_with_flaresolverr(domain):
+    try:
+        return _resolve_with_flaresolverr_inner(domain)
+    finally:
+        _close_flaresolverr_session()
+
+
+def _resolve_with_flaresolverr_inner(domain):
     """Chiede a FlareSolverr di superare la challenge e raccoglie cookie e user agent."""
     global _flare_notified
     target = "https://%s" % domain
