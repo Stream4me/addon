@@ -1,0 +1,20 @@
+{
+    "id": "justwatch",
+    "name": "JustWatch TV",
+    "language": ["ita"],
+    "active": true,
+    "thumbnail": "https://avatars.githubusercontent.com/u/10371543?s=280&v=4",
+    "banner": "https://avatars.githubusercontent.com/u/10371543?s=280&v=4",
+    "categories": ["movie"],
+    "not_active": ["include_in_newest"],
+    "settings": [
+        {
+            "id": "include_in_global_search",
+            "type": "bool",
+            "label": "Includi in Ricerca Globale",
+            "default": true,
+            "enabled": true,
+            "visible": true
+        }
+    ]
+}
