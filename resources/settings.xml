@@ -183,8 +183,7 @@
         <setting id="s4me_open_app" type="action" label="Apri S4Me Assistant" action="RunPlugin(plugin://plugin.video.s4me/?eyJhY3Rpb24iOiJzNG1lX29wZW5fYXBwIiwiY2hhbm5lbCI6InNldHRpbmcifQ==)" visible="eq(-4,true)" enable="!eq(-3,1)"/>
         <setting id="s4me_test" type="action" label="Test connessione" action="RunPlugin(plugin://plugin.video.s4me/?eyJhY3Rpb24iOiJzNG1lX3Rlc3QiLCJjaGFubmVsIjoic2V0dGluZyJ9)" visible="eq(-5,true)"/>
         <setting id="s4me_clear_cookies" type="action" label="Elimina cookie S4Me" action="RunPlugin(plugin://plugin.video.s4me/?eyJhY3Rpb24iOiJzNG1lX2NsZWFyX2Nvb2tpZXMiLCJjaGFubmVsIjoic2V0dGluZyJ9)" visible="eq(-6,true)"/>
-        <setting id="s4me_apk_url" type="text" label="Indirizzo del file APK di S4Me Assistant" default="https://github.com/aandroide/Assistant/releases/latest/download/S4MeAssistant.apk" visible="eq(-7,true)" enable="!eq(-6,1)"/>
-        <setting id="s4me_download_apk" type="action" label="Scarica e installa l'APK" action="RunPlugin(plugin://plugin.video.s4me/?eyJhY3Rpb24iOiJzNG1lX2Rvd25sb2FkX2FwayIsImNoYW5uZWwiOiJzZXR0aW5nIn0=)" visible="eq(-8,true)" enable="!eq(-7,1)"/>
-        <setting id="s4me_show_qr" type="action" label="Mostra QR code dell'APK" action="RunPlugin(plugin://plugin.video.s4me/?eyJhY3Rpb24iOiJzNG1lX3Nob3dfcXIiLCJjaGFubmVsIjoic2V0dGluZyJ9)" visible="eq(-9,true)"/>
+        <setting id="s4me_download_apk" type="action" label="Scarica l'APK in Download/kodi_apk" action="RunPlugin(plugin://plugin.video.s4me/?eyJhY3Rpb24iOiJzNG1lX2Rvd25sb2FkX2FwayIsImNoYW5uZWwiOiJzZXR0aW5nIn0=)" visible="eq(-7,true)" enable="!eq(-6,1)"/>
+        <setting id="s4me_show_qr" type="action" label="Mostra QR code dell'APK" action="RunPlugin(plugin://plugin.video.s4me/?eyJhY3Rpb24iOiJzNG1lX3Nob3dfcXIiLCJjaGFubmVsIjoic2V0dGluZyJ9)" visible="eq(-8,true)"/>
     </category>
 </settings>

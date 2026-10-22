@@ -1750,11 +1750,7 @@ def download_apk():
     except ImportError:
         from urllib2 import urlopen, Request
 
-    src = str(config.get_setting("s4me_apk_url", default=DEFAULT_APK_URL) or "").strip()
-    if not src:
-        platformtools.dialog_ok("S4Me Assistant", "Imposta prima l'indirizzo del file APK.")
-        return False
-
+    src = DEFAULT_APK_URL  # indirizzo fisso: un valore salvato in precedenza viene ignorato
     if src.startswith("/"):
         path = src
     else:
@@ -1803,7 +1799,7 @@ def show_apk_qr():
     """Mostra a schermo il QR code con l'indirizzo di download dell'APK."""
     from platformcode import platformtools
     import xbmc
-    src = str(config.get_setting("s4me_apk_url", default=DEFAULT_APK_URL) or "").strip()
+    src = DEFAULT_APK_URL  # indirizzo fisso: un valore salvato in precedenza viene ignorato
     if not src or src.startswith("/"):
         platformtools.dialog_ok("S4Me Assistant", "Imposta prima l'indirizzo web del file APK.")
         return False
@@ -1852,10 +1848,12 @@ def show_apk_qr():
                 y = 110
                 self.addControl(xbmcgui.ControlImage(0, 0, 1280, 720, black))
                 self.addControl(xbmcgui.ControlImage(x, y, size, size, qr_path, aspectRatio=2))
-                self.addControl(xbmcgui.ControlLabel(140, y + size + 20, 1000, 40,
-                                                     "Inquadra il QR code con il telefono per scaricare l'APK",
+                self.addControl(xbmcgui.ControlLabel(40, y + size + 15, 1200, 35,
+                                                     "Scansiona il QR code con il telefono o scarica l'APK manualmente all'indirizzo:",
                                                      alignment=2))
-                self.btn = xbmcgui.ControlButton((1280 - 220) // 2, y + size + 80, 220, 50, "Esci",
+                self.addControl(xbmcgui.ControlLabel(40, y + size + 50, 1200, 35, src,
+                                                     textColor="FF6CB4FF", alignment=2))
+                self.btn = xbmcgui.ControlButton((1280 - 220) // 2, y + size + 110, 220, 50, "Esci",
                                                  focusTexture=blue, noFocusTexture=gray, alignment=2 | 4)
                 self.addControl(self.btn)
                 self.setFocus(self.btn)
