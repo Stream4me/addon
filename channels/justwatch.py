@@ -102,12 +102,20 @@ def gql(query, variables):
 def mainlist(item):
     film = ['',
             ('Popolari', ['', 'peliculas', 'POPULAR', 'movie']),
-            ('Top del momento', ['', 'peliculas', 'TRENDING', 'movie']),
-            ('Ordine alfabetico', ['', 'peliculas', 'ALPHABETICAL', 'movie'])]
+            ('Di tendenza', ['', 'peliculas', 'TRENDING', 'movie']),
+            ('Casuale', ['', 'peliculas', 'RANDOM', 'movie']),
+            ('Ordine alfabetico', ['', 'peliculas', 'ALPHABETICAL', 'movie']),
+            ('Anno di uscita', ['', 'peliculas', 'RELEASE_YEAR', 'movie']),
+            ('Popolarità TMDB', ['', 'peliculas', 'TMDB_POPULARITY', 'movie']),
+            ('Punteggio IMDb', ['', 'peliculas', 'IMDB_SCORE', 'movie'])]
     tvshow = ['',
               ('Popolari', ['', 'peliculas', 'POPULAR', 'tvshow']),
-              ('Top del momento', ['', 'peliculas', 'TRENDING', 'tvshow']),
-              ('Ordine alfabetico', ['', 'peliculas', 'ALPHABETICAL', 'tvshow'])]
+              ('Di tendenza', ['', 'peliculas', 'TRENDING', 'tvshow']),
+              ('Casuale', ['', 'peliculas', 'RANDOM', 'tvshow']),
+              ('Ordine alfabetico', ['', 'peliculas', 'ALPHABETICAL', 'tvshow']),
+              ('Anno di uscita', ['', 'peliculas', 'RELEASE_YEAR', 'tvshow']),
+              ('Popolarità TMDB', ['', 'peliculas', 'TMDB_POPULARITY', 'tvshow']),
+              ('Punteggio IMDb', ['', 'peliculas', 'IMDB_SCORE', 'tvshow'])]
     search = ''
     return locals()
 
@@ -166,7 +174,10 @@ def peliculas(item):
     logger.debug()
     itemlist = []
 
-    sort = item.args if item.args in ('POPULAR', 'TRENDING', 'ALPHABETICAL') else 'POPULAR'
+    valid_sorts = ('POPULAR', 'TRENDING', 'ALPHABETICAL', 'RANDOM',
+                   'RELEASE_YEAR', 'TMDB_POPULARITY', 'IMDB_SCORE')
+    sort = item.args if item.args in valid_sorts else 'POPULAR'
+
     if item.search_text:
         types = '[MOVIE, SHOW]'
     elif item.contentType == 'tvshow':
