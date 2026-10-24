@@ -2,10 +2,10 @@
   "id": "streamingcommunity",
   "name": "StreamingCommunity",
   "active": true,
-  "language": ["ita"],
+  "language": ["ita","sub-ita","eng"],
   "thumbnail": "streamingcommunity.png",
   "banner": "streamingcommunity.png",
-  "categories": ["movie","tvshow"],
+  "categories": ["movie","tvshow","vos"],
   "settings": [],
   "tiny": true
 
