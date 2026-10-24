@@ -1,11 +1,11 @@
 {
     "id": "justwatch",
-    "name": "JustWatch TV",
-    "language": ["ita"],
+    "name": "JustWatch TV [free]",
+    "language": ["ita","sub-ita","eng"],
     "active": true,
     "thumbnail": "https://avatars.githubusercontent.com/u/10371543?s=280&v=4",
     "banner": "https://avatars.githubusercontent.com/u/10371543?s=280&v=4",
-    "categories": ["movie"],
+    "categories": ["movie","tvshow","vos"],
     "not_active": ["include_in_newest"],
     "settings": [
         {
