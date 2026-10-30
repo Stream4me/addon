@@ -1,479 +1,576 @@
 # -*- coding: utf-8 -*-
 # ------------------------------------------------------------
-# Canale per La7
+# Canale per La7 (nuovo sito la7play.it, riscritto da Timmy89 e Androide)
 # ------------------------------------------------------------
 
-import sys
+import base64
+import functools
+import html as _html
+import json
+import re
+from datetime import datetime, timedelta
+
 from core import support, httptools
 from platformcode import logger
-from datetime import datetime, timezone, timedelta
-from urllib.parse import quote_plus
-import html
-import json
-import ssl
-
-if sys.version_info[0] >= 3:
-    from concurrent import futures
-    from urllib.parse import urlencode
-    import urllib.request as urllib_request
-else:
-    from concurrent_py2 import futures
-    from urllib import urlencode
-    import urllib2 as urllib_request  # urllib2 is used in Python 2
 
 DRM = 'com.widevine.alpha'
-key_widevine = "https://la7.prod.conax.cloud/widevine/license"
-host = 'https://www.la7.it'
-headers = {
-    'host_token': 'pat.la7.it',
-    'host_license': 'la7.prod.conax.cloud',
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36',
-    'accept': '*/*',
-    'accept-language': 'en,en-US;q=0.9,it;q=0.8',
-    'dnt': '1',
-    'te': 'trailers',
-    'origin': 'https://www.la7.it',
-    'referer': 'https://www.la7.it/',
-}
+host = 'https://www.la7play.it'
+UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36'
+headers = {'User-Agent': UA, 'Referer': host + '/', 'Origin': host}
+
+
+def _senza_videoteca(f):
+    @functools.wraps(f)
+    def interno(*a, **k):
+        itemlist = f(*a, **k)
+        for it in itemlist or []:
+            it.disable_videolibrary = True
+        return itemlist
+    return interno
+
+
+GQL_PROGRAMMI = ['75b0227f0361abcf', 'f7034d55158fc906']
+GQL_RICERCA = '4da1e384f8a63808'
+GQL_PROGRAMMAZIONE = '69f0b39066b90b25'
+LIVE = [('La7', '/dirette/la7'), ('La7Cinema', '/dirette/la7-cinema')]
+RIVEDI = [('La7', '/guida-tv-rivedi/la7'), ('La7Cinema', '/guida-tv-rivedi/la7-cinema')]
+
 
 @support.menu
 def mainlist(item):
-    top =  [('Dirette {bold}', ['', 'live']),
-            ('Replay {bold}', ['', 'replay_channels'])]
+    top = [('Dirette {bold}', ['', 'live']),
+           ('Replay {bold}', ['', 'replay_channels'])]
 
-    menu = [('Programmi TV {bullet bold}', ['/tutti-i-programmi', 'peliculas', '', 'tvshow']),
-            ('Teche La7 {bullet bold}', ['/la7teche', 'peliculas', '', 'tvshow']),
-            ('Film La7Cinema {bullet bold}', ['/la7-cinema-tutti-i-film/rivedila7', 'episodios', '', 'peliculas'])]
+    menu = [('Programmi TV {bullet bold}', ['/programmi', 'peliculas', '', 'tvshow']),
+            ('Film {bullet bold}', ['/film', 'peliculas', '', 'movie']),
+            ('Documentari {bullet bold}', ['/documentari', 'peliculas', '', 'movie']),
+            ('Tg La7 {bullet bold} {teen}', ['/tgla7/puntate', 'episodios', '', 'tvshow']),
+            ('Coffee Tech {bullet bold} {teen}', ['/coffee-tech', 'episodios', '', 'tvshow'])]
 
     search = ''
     return locals()
 
 
-def live(item):
-    la7live_item = item.clone(title=support.typo('La7', 'bold'), fulltitle='La7', url= host + '/dirette-tv', action='findvideos', forcethumb = True, no_return=True)
-    la7dlive_item = item.clone(title=support.typo('La7Cinema', 'bold'), fulltitle='La7d', url= host + '/live-la7cinema', action='findvideos', forcethumb = True, no_return=True)
-    json_data = json.loads(httptools.downloadpage("https://www.la7.it/sites/default/files/la7_app_home_smarttv.json").data)
-    if "fascia_dirette" in json_data:
-        if 'la7' in json_data["fascia_dirette"]:
-            titolo = json_data["fascia_dirette"]["la7"].get("titolo","")
-            la7live_item.plot = support.typo(titolo, 'bold') + " - " + json_data["fascia_dirette"]["la7"].get("descrizione","")
-            la7live_item.fanart = json_data["fascia_dirette"]["la7"]["url_locandina"]
+def _scarica(url):
+    try:
+        return httptools.downloadpage(url, headers=headers).data or ''
+    except Exception as e:
+        logger.error('la7: download fallito %s %s' % (url, e))
+        return ''
 
-        if 'la7d' in json_data["fascia_dirette"]:
-            titolo = json_data["fascia_dirette"]["la7d"].get("titolo","")
-            la7dlive_item.plot = support.typo(titolo, 'bold') + " - " + json_data["fascia_dirette"]["la7d"].get("descrizione","")
-            la7dlive_item.fanart = json_data["fascia_dirette"]["la7d"]["url_locandina"]
-    itemlist = [la7live_item, la7dlive_item]
-    return support.thumb(itemlist, live=True)
+
+def _pulisci(h):
+    return h.replace('\\"', '"').replace('\\u0026', '&').replace('\\/', '/')
+
+
+def _ld(h):
+    nodi = []
+    for blocco in re.findall(r'<script type="application/ld\+json"[^>]*>(.*?)</script>', h, re.S):
+        try:
+            j = json.loads(blocco)
+        except Exception:
+            continue
+        nodi.extend(j.get('@graph', [j]) if isinstance(j, dict) else j)
+    return nodi
+
+
+def _elementi(h, tipi=None):
+    out = []
+    for nodo in _ld(h):
+        if nodo.get('@type') != 'ItemList':
+            continue
+        for el in nodo.get('itemListElement', []):
+            it = el.get('item', el)
+            if isinstance(it, dict) and (not tipi or it.get('@type') in tipi):
+                out.append(it)
+        if out:
+            break
+    return out
+
+
+def _img(it):
+    i = it.get('image', '')
+    if isinstance(i, dict):
+        i = i.get('url', '')
+    return i or ''
+
+
+def _roma(iso):
+    try:
+        d = datetime.strptime(iso[:19], '%Y-%m-%dT%H:%M:%S')
+    except Exception:
+        return ''
+    def ultima_domenica(anno, mese):
+        g = datetime(anno, mese, 31)
+        return g - timedelta(days=(g.weekday() + 1) % 7)
+    inizio = ultima_domenica(d.year, 3).replace(hour=1)
+    fine = ultima_domenica(d.year, 10).replace(hour=1)
+    d = d + timedelta(hours=2 if inizio <= d < fine else 1)
+    return d.strftime('%H:%M')
+
+
+def _programmi():
+    for ident in GQL_PROGRAMMI:
+        try:
+            j = json.loads(_scarica('%s/api/gql/%s' % (host, ident)))
+            righe = j['data']['graphqlTuttiProgrammi']['results']
+            if righe:
+                return righe
+        except Exception:
+            continue
+    return []
+
+
+def _titolo_visibile(itemlist):
+    for it in itemlist:
+        if it.fulltitle == 'La7d':
+            it.fulltitle = 'La7Cinema'
+    return itemlist
+
+
+def _logo_cinema(h):
+    m = re.search(r'(/_next/static/media/logo-la7-cinema\.[^"\\]+\.png)', h)
+    return host + m.group(1) if m else ''
+
+
+def _logo_cinema_replay():
+    return _logo_cinema(_pulisci(_scarica(host + '/dirette/la7-cinema')))
+
+
+def _prog_api(chiave):
+    try:
+        j = json.loads(_scarica('%s/api/gql/%s/%s' % (host, GQL_PROGRAMMAZIONE, _codifica({'canale': chiave, 'limit': 4}))))
+        elenco = j['data']['guidaTvProgrammazione']['programmi'] or []
+    except Exception as e:
+        logger.error('la7: palinsesto non letto %s' % e)
+        return []
+    prog = []
+    for p in elenco:
+        try:
+            img = p.get('immagineProgramma') or p.get('immagineScena') or ''
+            prog.append((int(p['timestamp']), int(p['durata']), _html.unescape(p['titolo']).strip(), img,
+                         str(p.get('isOnAir')).lower() == 'true', p.get('ora', '')))
+        except Exception:
+            continue
+    return prog
+
+
+def _prog_pagina(h, chiave):
+    prog = []
+    for blocco in h.split('{"ora":"')[1:]:
+        m = re.match(r'(\d{2}:\d{2})","titolo":"([^"]*)","durata":(\d+)', blocco)
+        ts = re.search(r'"timestamp":(\d+)', blocco)
+        if not m or not ts or ('guidatv/%s/' % chiave) not in blocco:
+            continue
+        img = re.search(r'"immagineProgramma":"([^"]+)"', blocco) or re.search(r'"immagineScena":"([^"]+)"', blocco)
+        prog.append((int(ts.group(1)), int(m.group(3)), _html.unescape(m.group(2)).strip(),
+                     img.group(1) if img else '', '"isOnAir":true' in blocco, m.group(1)))
+    return prog
+
+
+def _in_onda(url):
+    from time import time
+    chiave = url.rstrip('/').split('/')[-1].replace('-', '').upper()
+    prog = _prog_api(chiave)
+    h = ''
+    logo = ''
+    if chiave == 'LA7CINEMA' or not prog:
+        h = _pulisci(_scarica(url))
+        logo = _logo_cinema(h)
+    if not prog:
+        prog = _prog_pagina(h, chiave)
+    adesso = time()
+    iniziati = [p for p in prog if p[0] <= adesso < p[0] + p[1] + 3600]
+    scelto = max(iniziati, key=lambda p: p[0]) if iniziati else next((p for p in prog if p[4]), None)
+    if not scelto:
+        return '', '', logo
+    testo = scelto[2]
+    dopo = [p for p in sorted(prog) if p[0] > scelto[0]]
+    if dopo:
+        testo += '\nA seguire: %s %s' % (dopo[0][5], dopo[0][2])
+    return testo, scelto[3], logo
+
+
+def live(item):
+    from concurrent.futures import ThreadPoolExecutor
+    itemlist = []
+    for nome, percorso in LIVE:
+        f_title = 'La7d' if nome == 'La7Cinema' else nome
+        itemlist.append(item.clone(title=support.typo(nome, 'bold'), fulltitle=f_title, url=host + percorso,
+                                   action='findvideos', forcethumb=True, no_return=True))
+    try:
+        with ThreadPoolExecutor(max_workers=2) as ex:
+            onda = list(ex.map(lambda it: _in_onda(it.url), itemlist))
+    except Exception as e:
+        logger.error('la7: palinsesto delle dirette non letto %s' % e)
+        onda = [('', '', '')] * len(itemlist)
+    for it, (t, img, logo) in zip(itemlist, onda):
+        if t:
+            it.plot = t
+            it.infoLabels['plot'] = t
+        if img:
+            it.fanart = img
+    itemlist = _titolo_visibile(support.thumb(itemlist, live=True))
+    for it, (t, img, logo) in zip(itemlist, onda):
+        if it.fulltitle == 'La7Cinema' and logo:
+            it.thumbnail = logo
+    return itemlist
 
 
 def replay_channels(item):
-    itemlist = [item.clone(title=support.typo('La7', 'bold'), fulltitle='La7', url= host + '/rivedila7/0/la7', action='replay_menu', forcethumb = True),
-                item.clone(title=support.typo('La7Cinema', 'bold'), fulltitle='La7d', url= host + '/rivedila7/0/la7cinema', action='replay_menu', forcethumb = True)]
-    itemlist = support.thumb(itemlist, live=True)
-    itemlist.append(item.clone(title=support.typo('TG La7', 'bold'), fulltitle='TG La7',
-                               plot='Informazione a cura della redazione del TG LA7', url= host + '/tgla7', action='episodios',
-                               thumbnail='https://raw.githubusercontent.com/Stream4me/media/refs/heads/master/resources/thumb/tg.png',
-                               fanart='https://raw.githubusercontent.com/Stream4me/media/refs/heads/master/resources/thumb/tg.png'))
-    return itemlist
-
-
-@support.scrape
-def replay_menu(item):
-    action = 'replay'
-    patron = r'href="(?P<url>[^"]+)">\s*<div class="giorno-text">\s*(?P<day>[^<]+)</div>\s*<div class="giorno-numero">\s*(?P<num>[^<]+)</div>\s*<div class="giorno-mese">\s*(?P<month>[^<]+)</div>'
-    def itemHook(item):
-        item.title = support.typo(item.day + ' ' + item.num + ' ' + item.month,'bold')
-        return item
-    return locals()
-
-
-@support.scrape
-def replay(item):
-    action = 'findvideos'
-    patron = r'<div class="orario">(?P<hour>[^<]+)</div>.*?<a href="(?P<url>[^"]+)">.*?data-background-image="(?P<t>[^"]+)".*?<h2>\s*(?P<name>[^<]+)\s*</h2>.*?<div class="occhiello">\s*(?P<plot>[^<]+)\s*</div>'
-    def itemHook(item):
-        item.title = support.typo(item.hour + ' - ' + item.name,'bold')
-        item.contentTitle = item.fulltitle = item.show = item.name
-        item.thumbnail = 'http:' + item.t
-        item.fanart = item.thumbnail
-        item.forcethumb = True
-        return item
-    return locals()
-
-
-def clean_title(t):
-    t = html.unescape(t)
-    t = t.replace("\xa0", " ")
-    t = " ".join(t.split())
-    return t
-
-
-def search(item, text):
-    if hasattr(item, "search") and item.search:
-        text = item.search
-
-    query = str(text).strip()
-    if not query:
-        return []
-
-    raw_page = getattr(item, "page", 0)
-    try:
-        page = int(raw_page)
-    except:
-        page = 0
-
-    encoded = quote_plus(query)
-    url = f"{host}/ricerca?query={encoded}&page={page}"
-    html_data = httptools.downloadpage(url).data
-
-    if '<div class="view-content">' in html_data:
-        html_results = html_data.split('<div class="view-content">')[-1]
-        html_results = html_results.split('<div class="pager pagerBottom"', 1)[0]
-    else:
-        html_results = html_data
-
-    patron = r'<a href="(?P<url>/[^"]+)"[^>]*>\s*<div class="holder-bg">.*?data-background-image="(?P<thumb>[^"]+)".*?<div class="title[^"]*">\s*(?P<title>[^<]+)\s*</div>'
-    match = support.match(html_results, patron=patron)
-    results = match.matches
-
     itemlist = []
-    seen = set()
-
-    for url, thumb, title in results:
-        if url in seen:
-            continue
-        seen.add(url)
-
-        title = clean_title(title)
-        fullurl = host + url
-        if thumb.startswith("//"):
-            thumb = "https:" + thumb
-
-        it = item.clone(
-            title=support.typo(title, 'bold'),
-            fulltitle=title,
-            show=title,
-            url=fullurl,
-            thumbnail=thumb,
-            fanart=thumb,
-            action="findvideos"
-        )
-        itemlist.append(it)
-
-    if f'query={encoded}&amp;page={page+1}' in html_data:
-        next_item = item.clone(
-            search=query,
-            page=page+1,
-            url=host
-        )
-        support.nextPage(itemlist, next_item, function_or_level='search_page')
-
+    for nome, percorso in RIVEDI:
+        f_title = 'La7d' if nome == 'La7Cinema' else nome
+        itemlist.append(item.clone(title=support.typo(nome, 'bold'), fulltitle=f_title, url=host + percorso,
+                                   action='replay_giorni', forcethumb=True))
+    itemlist = _titolo_visibile(support.thumb(itemlist, live=True))
+    logo = _logo_cinema_replay()
+    for it in itemlist:
+        if it.fulltitle == 'La7Cinema' and logo:
+            it.thumbnail = logo
     return itemlist
 
 
+GIORNI = ['lunedi', 'martedi', 'mercoledi', 'giovedi', 'venerdi', 'sabato', 'domenica']
+MESI = ['', 'gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre',
+        'ottobre', 'novembre', 'dicembre']
+
+
+def _guida(h):
+    h = _pulisci(h)
+    marcatori = list(re.finditer(r'"data":"(\d{2}-\d{2}-\d{4})"\},"programma":\[', h))
+    giorni = []
+    for n, m in enumerate(marcatori):
+        fine = marcatori[n + 1].start() if n + 1 < len(marcatori) else len(h)
+        programmi = []
+        for blocco in h[m.end():fine].split('{"ora":"')[1:]:
+            pth = re.search(r'"pathname":"(/[^"]+)"', blocco)
+            if not pth:
+                continue
+            def f(rx):
+                r = re.search(rx, blocco)
+                return r.group(1) if r else ''
+            programmi.append({'ora': blocco[:5], 'titolo': _html.unescape(f(r'"titolo":"([^"]*)"')),
+                              'plot': _html.unescape(f(r'"sinossi":"([^"]*)"')),
+                              'thumb': f(r'"immagine_scena":"([^"]+)"'), 'url': host + pth.group(1)})
+        giorni.append((m.group(1), programmi))
+    return giorni
+
+
+@_senza_videoteca
+def replay_giorni(item):
+    itemlist = []
+    for data, programmi in reversed(_guida(_scarica(item.url))):
+        if not programmi:
+            continue
+        g, me, an = data.split('-')
+        try:
+            nome = GIORNI[datetime(int(an), int(me), int(g)).weekday()].capitalize()
+        except Exception:
+            nome = ''
+        try:
+            if datetime(int(an), int(me), int(g)).date() == datetime.now().date():
+                nome = 'Oggi'
+        except Exception:
+            pass
+        itemlist.append(item.clone(title=support.typo('%s %d %s' % (nome, int(g), MESI[int(me)]), 'bold'),
+                                   day=data, action='replay', thumbnail=support.thumb()))
+    return itemlist
+
+
+@_senza_videoteca
+def replay(item):
+    itemlist = []
+    for data, programmi in _guida(_scarica(item.url)):
+        if data != item.day:
+            continue
+        for pr in programmi:
+            itemlist.append(item.clone(title=support.typo('%s - %s' % (pr['ora'], pr['titolo']), 'bold'),
+                                       contentTitle=pr['titolo'], fulltitle=pr['titolo'], show=pr['titolo'],
+                                       url=pr['url'], plot=pr['plot'], thumbnail=pr['thumb'], fanart=pr['thumb'],
+                                       action='findvideos', forcethumb=True))
+    return itemlist
+
+
+@_senza_videoteca
+def peliculas(item):
+    if item.url.rstrip('/').endswith('/film'):
+        return film(item)
+    if item.url.rstrip('/').endswith('/documentari'):
+        return documentari(item)
+    itemlist = []
+    for r in _programmi():
+        titolo = _html.unescape(r.get('titolo', '')).strip()
+        percorso = r.get('pathname', '')
+        if not titolo or not percorso:
+            continue
+        plot = _html.unescape(re.sub(r'<[^>]+>', '', r.get('occhiello', '') or '')).replace('\xa0', ' ').strip()
+        thumb = r.get('img', '') or ''
+        if thumb.startswith('/'):
+            thumb = host + thumb
+        itemlist.append(item.clone(title=support.typo(titolo, 'bold'), fulltitle=titolo, show=titolo, contentSerieName=titolo,
+                                   plot=plot, thumbnail=thumb, fanart=thumb, url=host + percorso, action='episodios'))
+    _immagini_mancanti(itemlist)
+    itemlist.sort(key=lambda i: i.fulltitle.lower())
+    return itemlist
+
+
+def _dati_programma(it):
+    h = _pulisci(_scarica(it.url))
+    descr = ''
+    m = re.search(r'<meta name="description" content="([^"]*)"', h)
+    if m:
+        descr = _html.unescape(m.group(1)).strip()
+    if not descr:
+        m = re.search(r'(Prossimamente su [A-Za-z0-9]+)', re.sub(r'<[^>]+>', ' ', h))
+        descr = m.group(1) if m else ''
+    img = ''
+    m = re.search(r'<meta property="og:image" content="([^"]+)"', h)
+    if m and 'la7-logo-og' not in m.group(1):
+        img = m.group(1)
+    else:
+        m = re.search(r'(https://images\.la7play\.it/video/[^"\s\\]+/scena-\d+x\d+\.webp)', h)
+        img = m.group(1) if m else ''
+    testata = ''
+    slug = it.url.rstrip('/').rsplit('/', 1)[-1]
+    m = re.search(r'(https://images\.la7play\.it/media/c/t\d+/%s[^/"\s\\]*\.\w+/img/1280x720\.webp)' % re.escape(slug), h)
+    testata = m.group(1) if m else ''
+    return descr, img, testata, not it.plot
+
+
+def _immagini_mancanti(itemlist):
+    from concurrent.futures import ThreadPoolExecutor
+    vuoti = [it for it in itemlist if not it.thumbnail or not it.plot]
+    if not vuoti:
+        return
+    try:
+        with ThreadPoolExecutor(max_workers=8) as ex:
+            dati = list(ex.map(_dati_programma, vuoti))
+    except Exception as e:
+        logger.error('la7: dati dei programmi non letti %s' % e)
+        return
+    for it, (descr, img, testata, senza_descr) in zip(vuoti, dati):
+        if descr and not it.plot:
+            it.plot = descr
+            it.infoLabels['plot'] = descr
+        if not it.thumbnail and img:
+            it.thumbnail = img
+            it.fanart = img
+        if senza_descr and testata:
+            it.thumbnail = testata
+            it.fanart = testata
+
+
+@_senza_videoteca
+def episodios(item):
+    url = item.url
+    pagina = int(item.page or 1) if hasattr(item, 'page') and item.page else 1
+    if '/puntate' not in url:
+        url = url.rstrip('/') + '/puntate'
+    base = url.split('?')[0]
+    h = _scarica(base + ('?page=%d' % pagina if pagina > 1 else ''))
+    elementi = _elementi(h, ('TVEpisode',))
+    if not elementi and pagina == 1:
+        elementi = _elementi(_scarica(base.replace('/puntate', '')), ('TVEpisode', 'TVClip'))
+    itemlist = []
+    for ep in elementi:
+        titolo = _html.unescape(ep.get('name', '')).strip()
+        if not ep.get('url'):
+            continue
+        data = ep.get('datePublished', '')[:10]
+        itemlist.append(item.clone(title=support.typo(titolo, 'bold'), fulltitle=titolo, show=item.fulltitle or titolo,
+                                   contentTitle=titolo, url=ep['url'], thumbnail=_img(ep), fanart=_img(ep),
+                                   plot=data, action='findvideos', forcethumb=True))
+    _dettagli(itemlist)
+    if len(elementi) >= 20:
+        itemlist.append(item.clone(title=support.typo(support.config.get_localized_string(30992), 'color std bold'),
+                                   url=base, page=pagina + 1, action='episodios', nextPage=True, thumbnail=support.thumb()))
+    return itemlist
+
+
+def _dettagli(itemlist):
+    from concurrent.futures import ThreadPoolExecutor
+
+    def leggi(it):
+        if it.action != 'findvideos':
+            return {}
+        h = _scarica(it.url)
+        unito = {}
+        for nodo in _ld(h):
+            if nodo.get('@type') in ('Movie', 'TVEpisode', 'VideoObject'):
+                for k, v in nodo.items():
+                    if v and k not in unito:
+                        unito[k] = v
+        return unito
+
+    try:
+        with ThreadPoolExecutor(max_workers=8) as ex:
+            nodi = list(ex.map(leggi, itemlist))
+    except Exception as e:
+        logger.error('la7: dettagli non letti %s' % e)
+        return itemlist
+    for it, n in zip(itemlist, nodi):
+        trama = _html.unescape(re.sub(r'<[^>]+>', ' ', n.get('description', ''))).replace('\xa0', ' ').strip()
+        if trama:
+            m = re.match(r'(\d{4})-(\d{2})-(\d{2})$', it.plot or '')
+            if m:
+                trama = '%s/%s/%s\n\n%s' % (m.group(3), m.group(2), m.group(1), trama)
+            it.plot = trama
+            it.infoLabels['plot'] = trama
+        if re.match(r'\d{4}$', str(n.get('dateCreated', ''))):
+            it.infoLabels['year'] = int(n['dateCreated'])
+        it.infoLabels.pop('duration', None)
+        gen = n.get('genre', '')
+        gen = [g for g in (gen if isinstance(gen, list) else [gen]) if g and g != 'Film']
+        if gen:
+            it.infoLabels['genre'] = ', '.join(gen)
+        reg = n.get('director')
+        reg = reg.get('name', '') if isinstance(reg, dict) else ''
+        if reg:
+            it.infoLabels['director'] = reg
+    return itemlist
+
+
+@_senza_videoteca
+def film(item):
+    itemlist = []
+    for f in _elementi(_scarica(host + '/film'), ('Movie',)):
+        titolo = _html.unescape(f.get('name', '')).strip()
+        if not f.get('url'):
+            continue
+        itemlist.append(item.clone(title=support.typo(titolo, 'bold'), fulltitle=titolo, contentTitle=titolo,
+                                   url=f['url'], thumbnail=_img(f), fanart=_img(f), contentType='movie',
+                                   action='findvideos', forcethumb=True))
+    return _dettagli(itemlist)
+
+
+@_senza_videoteca
+def documentari(item):
+    itemlist = []
+    for d in _elementi(_scarica(host + '/documentari'), ('Movie', 'TVEpisode')):
+        titolo = _html.unescape(d.get('name', '')).strip()
+        if not d.get('url'):
+            continue
+        itemlist.append(item.clone(title=support.typo(titolo, 'bold'), fulltitle=titolo, contentTitle=titolo,
+                                   url=d['url'], thumbnail=_img(d), fanart=_img(d), contentType='movie',
+                                   action='findvideos', forcethumb=True))
+    return _dettagli(itemlist)
+
+
+def _codifica(variabili):
+    t = json.dumps(variabili, separators=(',', ':'), sort_keys=True, ensure_ascii=False)
+    return base64.urlsafe_b64encode(t.encode('utf-8')).decode('ascii').rstrip('=')
+
+
+@_senza_videoteca
+def search(item, text):
+    q = str(getattr(item, 'search', '') or text).strip()
+    if not q:
+        return []
+    pagina = int(getattr(item, 'page', 0) or 1)
+    var = {'q': q}
+    if pagina > 1:
+        var['page'] = pagina
+    try:
+        j = json.loads(_scarica('%s/api/gql/%s/%s' % (host, GQL_RICERCA, _codifica(var))))
+        dati = j['data']['siteSearch']
+    except Exception as e:
+        logger.error('la7: ricerca fallita %s' % e)
+        return []
+    itemlist = []
+    for gruppo in dati.get('groups', []):
+        if gruppo.get('contentType') == 'article':
+            continue
+        for h in gruppo.get('hits', []):
+            url = h.get('url')
+            if not url:
+                continue
+            titolo = _html.unescape(h.get('title', '')).strip()
+            programma = h.get('propertyName') or ''
+            thumb = h.get('imageUrl') or ''
+            video = bool(re.search(r'-\d{5,}$', url))
+            plot = _html.unescape(h.get('excerpt') or '')
+            itemlist.append(item.clone(
+                title=support.typo(titolo + (' (%s)' % programma if programma and video else ''), 'bold'),
+                fulltitle=titolo, contentTitle=titolo, show=programma or titolo, url=host + url,
+                thumbnail=thumb, fanart=thumb, plot=plot, forcethumb=True,
+                action='findvideos' if video else 'episodios'))
+    if pagina < int(dati.get('totalPages') or 1):
+        itemlist.append(item.clone(title=support.typo(support.config.get_localized_string(30992), 'color std bold'),
+                                   search=q, page=pagina + 1, action='search_page', nextPage=True,
+                                   thumbnail=support.thumb()))
+    return itemlist
+
+
+@_senza_videoteca
 def search_page(item):
     return search(item, item.search)
 
 
-def peliculas(item):
-    html_content = httptools.downloadpage(item.url).data
-
-    if 'la7teche' in item.url:
-        patron = r'<a href="(?P<url>[^"]+)" title="(?P<title>[^"]+)" class="teche-i-img".*?url\(\'(?P<thumb>[^\']+)'
-    else:
-        tids = {'/fa-che-io-sia-lultima': '115013', '/100minuti': '115737', '/atelechiavi': '84090', '/ai-il-futuro': '114921', '/amarsi-un-po': '115239', '/amgstories': '112885',
-             '/amoristonati': '79999', '/artbox': '104964', '/atlantide': '27381', '/atlantidefiles': '87126', '/barbero-risponde': '118666', '/bellitalia-in-viaggio': '102099',
-             '/bellidentrobellifuori': '82353', '/bersaglio-mobile': '45819', '/bull': '115680', '/buongiornomondo': '119675', '/c-era-una-volta': '111648', '/cera-una-volta-il-novecento': '111932',
-             '/cambio-cuoco': '75628', '/camera-con-vista': '81722', '/cercasiautodisperatamente': '82794', '/coffee-break': '27592', '/cristina-parodi-live': '27533',
-             '/crozza': '25457', '/cuochi-e-fiamme': '33163', '/defining-class-since-1886': '114836', '/diciannovequaranta': '59402', '/dimartedi': '59403', '/dizionario-del-tempo-presente': '101035',
-             '/donne-vittime-e-carnefici': '33198', '/donne-storie-che-ispirano': '96013', '/downton-abbey': '106972', '/drink-me-out': '86027', '/eccezionale-veramente': '69716',
-             '/eccezionale-veramente-2017': '74976', '/eccezionale-veramente-ma-veramente': '72974', '/omnibus-edicola': '114491', '/effetti-personali': '33311', '/quirinale': '106765',
-             '/elezioni': '32577', '/elezioni-amministrative-2021': '104639', '/elezioni-europee-2024': '117571', '/elezioni-politiche-2022': '109941', '/regionali2015': '65426',
-             '/elezioni-regionali-2020': '94442', '/elezioni-usa': '95091', '/eqelements': '114288', '/euro-dieci': '117427', '/europost': '119993', '/eventi-live': '116094',
-             '/speciali-ezio-mauro': '119401', '/facciaafaccia': '73973', '/famiglie-ditalia': '118714', '/film-e-fiction': '53050', '/food-maniac': '34470', '/webserie': '58781',
-             '/fuori-di-gusto': '34408', '/fuorionda': '69092', '/futbol': '72814', '/gazzetta-sports-awards': '74693', '/gigawatt': '118659', '/guerrieri': '52614', '/gustibus': '64469',
-             '/hawthorne': '85101', '/honestlygood': '82312', '/i-men%C3%B9-di-benedetta': '36443', '/i-responsabili': '109082', '/il-bello-delle-curve': '76901', '/il-boss-dei-comici': '67694',
-             '/il-commissario-cordier': '53311', '/il-gusto-di-sapere': '91393', '/il-mondo-che-verr%C3%A0': '37129', '/il-palio-di-siena': '109478', '/ilpolliceverdesonoio': '68548',
-              '/il-processo-di-biscardi': '112450', '/in-altre-parole': '114460', '/ricette-di-cucina': '58727', '/la-cucina-di-sonia': '97070', '/in-cucina-con-vissani': '42222', '/in-onda': '58737',
-             '/in-treatment': '57985', '/in-tv': '42300', '/in-viaggio-con-barbero': '114442', '/inarrestabili': '58625', '/inchieste-da-fermo': '113584', '/indovina-cosa-sceglie-la-sposa': '75632',
-             '/innovation': '36568', '/inseparabili': '101261', '/intanto': '101263', '/italia-fashion-show': '55904', '/josephineangegardien': '77994', '/kataklo': '90255', '/laria-che-tira': '38052',
-             '/lariadestate': '66668', '/lerba-del-vicino': '56552', '/lingrediente-perfetto': '86510', '/lofficina-delle-erbe': '74825', '/lora-della-salute': '75316','/lunionefalaforza': '86454',
-             '/la-caduta': '115146', '/le-copertine-di-crozza': '66697', '/la-corsa-al-voto': '109702', '/lafelicitanoneunatruffa': '82920', '/la-gabbia': '52618', '/la-gaia-scienza': '38026',
-             '/la-mala-educaxxxion': '56214', '/la-mala-educaxxxion-la7d': '38317', '/la-torre-di-babele': '114981', '/la-torre-di-babele-doc': '118783', '/la7cult': '111885', '/la7-cult': '26075',
-             '/la7magazine': '63005', '/la7ricorda': '83508', '/la7racconta': '72941', '/la7speciali': '102882', '/la7venti': '103095', '/le-invasioni-barbariche': '38071',
-             '/le-parole-della-salute': '91908', '/libri-in-onda': '111130', '/like': '84156', '/linea-gialla': '38501', '/lingo': '109910', '/little-murders': '81521', '/magazine7': '64468',
-             '/mamma-mia-che-settimana': '43996', '/marxisti-tendenza-groucho': '48797', '/meravigliosamente': '78387', '/meteo-della-sera': '93826', '/meteola7': '60540',
-             '/mica-pizza-e-fichi': '86104', '/miss-italia': '52620', '/miss-marple': '109479', '/missione-natura': '42849', '/mode-e-modi': '58403', '/mondo-senza-fine': '54093',
-             '/motorstorie': '111088', '/nene-e-margherita': '49131', '/niente-ferma-le-donne': '75540', '/non-ditelo-alla-sposa': '54990', '/nonelarena': '78932',
-             '/oliver-stone-nuclear-now': '115049', '/omnibus': '43855', '/oroscopo': '53863', '/otto-e-mezzo': '45098', '/our-godfather': '85928', '/padre-brown': '109373', '/piazzapulita': '42851',
-             '/pinkisgood': '78693', '/trash-it': '76993', '/propagandalive': '78368', '/quattrodonneeunfunerale': '54398', '/raffaella-carra': '103352', '/recital-di-corrado-guzzanti': '53862',
-             '/rigenerazione': '115362', '/figworldcup': '84181', '/roshn-saudi-league': '114296', '/royal-wedding': '81166', '/sconosciuti': '116192', '/se-stasera-sono-qui': '45749',
-             '/selfiefood': '79476', '/sempre-meglio-che-restare-a-casa': '112451', '/senti-chi-mangia': '92485', '/sfera': '71860', '/si-parla-di': '83927', '/skroll': '78278',
-             '/specialguest': '66670', '/speciali': '55153', '/speciali-mentana': '45796', '/startupeconomy': '91462', '/storie-dellaltro-social': '112291', '/storie-di-grandi-chef': '42921',
-             '/storie-di-palazzi': '110336', '/syusy-e-patrizio-news': '118758', '/tacco12enonsolo': '72605', '/taga-doc': '87967', '/tagada': '67838', '/taste-il-gusto-delleccellenza': '116662',
-             '/tgla7': '52619', '/the-dr-oz-show': '87313', '/the-show-must-go-off': '42865', '/ti-ci-porto-io': '46132', '/trumpstory': '119618', '/un-dolce-da-maestro': '84410',
-             '/una-giornata-particolare': '109868', '/uno-maggio-taranto-liberi-e-pensanti': '91830', '/uozzap': '81522', '/urban-scouters': '109003', '/vado-a-vivere-in-montagna': '85810',
-             '/varcondicio': '79932', '/victor-victoria': '42868', '/voicetown': '100017', '/voto-piu-voto-meno': '119921', '/welovecinema': '60262', '/zeta': '46396'}
-        program_details = {}
-        def fetch_program_data(path, tid):
-            url = f"https://www.la7.it/appla7/service_propertysmarttv?s=hbbtv&field_property_tid={tid}"
-            try:
-                data = json.loads(httptools.downloadpage(url).data)
-                if data and isinstance(data, list):  # Ensure data is a non-empty list
-                    item = data[0]
-                    return path, {
-                        "titolo": html.unescape(item.get("titolo", "")),
-                        "testo": html.unescape(item.get("testo", "")),
-                        "img": item.get("img", "").split('src="')[1].split('"')[0] if 'src="' in item.get("img", "") else "",
-                        "img_verticale": item.get("img_verticale", "").split('src="')[1].split('"')[0] if 'src="' in item.get("img_verticale", "") else "",
-                    }
-                else:
-                    return path, None
-            except Exception as e:
-                return path, None  # Return None if request or parsing fails
-
-        # Use ThreadPoolExecutor for parallel requests
-        with futures.ThreadPoolExecutor() as executor:
-            future_to_path = {executor.submit(fetch_program_data, path, tid): path for path, tid in tids.items()}
-            
-            for future in futures.as_completed(future_to_path):
-                path, data = future.result()
-                if data:
-                    program_details[path] = data
-        patron = r'<a href="(?P<url>[^"]+)"[^>]*>\s*<div class="[^"]+" data-background-image="(?P<thumb>[^"]+)"'
-
-    match = support.match(html_content, patron=patron)
-    matches = match.matches
-    # url_splits = item.url.split('?')
-
-    itemlist = []
-    for n, key in enumerate(matches):
-        if 'la7teche' in item.url:
-            programma_url, titolo, thumb = key
-            plot = ""
-            fanart = ""
-        else:
-            programma_url, thumb = key
-            if programma_url in program_details:
-                pinfo = program_details[programma_url]
-                titolo = pinfo['titolo'] if pinfo['titolo'] else " ".join(programma_url.replace("/", "").split('-')).title()
-                plot = pinfo['testo']
-                thumb = pinfo['img'] if pinfo['img'] else thumb
-                fanart = pinfo['img_verticale']
-            else:
-                titolo = " ".join(programma_url.replace("/", "").split('-')).title()
-                plot = ""
-                fanart = ""
-
-        if not thumb.startswith("https://"):
-            thumb = f'{host}/{thumb}'
-        programma_url = f'{host}{programma_url}'
-        titolo = html.unescape(titolo)
-
-        it = item.clone(title=support.typo(titolo, 'bold'),
-                        data='',
-                        fulltitle=titolo,
-                        show=titolo,
-                        plot = plot,
-                        thumbnail=thumb,
-                        fanart = fanart,
-                        url=programma_url,
-                        video_url=programma_url,
-                        order=n)
-        it.action = 'episodios'
-        it.contentSerieName = it.fulltitle
-
-        itemlist.append(it)
-
-    return itemlist
+def _token(endpoint, ident, tipo):
+    try:
+        data = httptools.downloadpage('%s?id=%s&contentType=%s' % (endpoint, ident, tipo), headers=headers).data
+        j = json.loads(data)
+        return j.get('preAuthToken') or j.get('token') or j.get('auth') or ''
+    except Exception as e:
+        logger.error('la7: token non ottenuto %s' % e)
+        return ''
 
 
-def episodios(item):
-    if item.url.endswith('/tgla7'):
-        html_content = httptools.downloadpage('https://tg.la7.it/ultime-edizioni-del-tgla7').data
-    else:
-        html_content = httptools.downloadpage(item.url).data
-
-    if '/la7-cinema-tutti-i-film/rivedila7/' in item.url:
-        return [ item.clone(action='findvideos', url=item.url, video_url=item.url) ]
-
-    itemlist = []
-    matches = []
-
-    if 'la7teche' in item.url:
-        patron = r'[^>]+>\s*<a href="(?P<url>[^"]+)">.*?image="(?P<thumb>[^"]+)(?:[^>]+>){4,5}\s*(?P<title>[\d\w][^<]+)(?:(?:[^>]+>){7}\s*(?P<title2>[\d\w][^<]+))?'
-        html_content = html_content.split('id="block-system-main"')[1]
-        match = support.match(html_content, patron=patron)
-        matches.extend(match.matches)
-
-    elif 'tgla7' in item.url:
-        patron = r'<a href="(?P<url>[^"]+)"[^>]+data-bg="(?P<thumb>[^"]+)".*?</a>.*?<h4 class="news-title">\s*<a [^>]*>(?P<title>[^<]+)</a>.*?<div class="news-descrizione">\s*(?P<plot>[^<]+)\s*<'
-        match = support.match(html_content, patron=patron)
-        matches.extend(match.matches)
-
-    else:
-        if len(item.url.split('www.la7.it')[-1].strip('/').split("/")) == 1:
-            match = support.match(html_content, patron=r'page-taxonomy-term-(\d+)')
-            tid = match.matches[0] if match.matches else ""
-            if tid:
-                data = json.loads(httptools.downloadpage(
-                    f"https://www.la7.it/appla7/service_propertysmarttv?s=hbbtv&field_property_tid={tid}"
-                ).data)
-                plot = html.unescape(data[0].get("testo", "")) if data else ""
-            else:
-                plot = ""
-
-            match = support.match(html_content, patron=r'background-image:url\((\'|")([^\'"]+)(\'|")\);')
-            fanart = match.matches[0][1] if match.matches else ""
-
-            match = support.match(html_content,
-                                  patron=r'<li class="voce_menu">\s*<a href="([^"]+)"[^>]*>\s*([^<]+)\s*</a>\s*</li>')
-            result_dict = {text: href for href, text in match.matches}
-
-            for k, v in result_dict.items():
-                if len(v.strip('/').split("/")) > 1:
-                    if not v.startswith('/') and not v.startswith('https://www.la7.it'):
-                        continue
-                    v = f'{host}{v}'
-                    new_item = item.clone(
-                        title=support.typo(k, 'bold'),
-                        data='',
-                        fulltitle=k,
-                        show=k,
-                        url=v,
-                        plot=plot,
-                        fanart=fanart
-                    )
-                    itemlist.append(new_item)
-
-            patron = r'<div class="item.*?"> <a href="(?P<url>[^"]+)"><div class="holder-bg">.*?data-background-image="(?P<image>(?:https?:)?//[^"]+)".*?<div class="(?:title|occhiello)[^"]*">\s*(?P<title>[^<]+)\s*</div>'
-            match = support.match(html_content.split('<div class="subcontent">')[-1], patron=patron)
-            matches.extend(match.matches)
-
-        else:
-            html_content = html_content.split('<div class="main-content-node">')[-1].split('<div class="right">')[0]
-            html_content = html_content.split('<div class="view-content clearfix">')
-            patron = r'<div class="[^"]*"[^>]*>.*?<a href="(?P<url>[^"]+)">.*?data-background-image="(?P<image>(?:https?:)?//[^"]+)"[^>]*>.*?<div class="title[^"]*">\s*(?P<title>[^<]+)\s*</div>'
-
-            if '<li class="pager-previous">' not in html_content[0]:
-                if len(html_content) > 1:
-                    match = support.match(html_content[0], patron=patron)
-                    matches.extend(match.matches)
-
-            html_content = html_content[-1]
-            match = support.match(html_content, patron=patron)
-            matches.extend(match.matches)
-
-    visited = set()
-
-    def itInfo(n, key, item):
-        if 'la7teche' in item.url:
-            programma_url, thumb, titolo, plot = key
-        elif 'tgla7' in item.url:
-            programma_url, thumb, titolo, plot = key
-        else:
-            programma_url, thumb, titolo = key
-            plot = ""
-
-        if programma_url in visited:
-            return None
-
-        visited.add(programma_url)
-        programma_url = f'{"https://tg.la7.it" if "tgla7" in item.url else host}{programma_url}'
-        thumb = 'https://' + thumb[2:] if thumb.startswith("//") else thumb
-        titolo = html.unescape(titolo)
-
-        it = item.clone(
-            title=support.typo(titolo, 'bold'),
-            data='',
-            fulltitle=titolo,
-            show=titolo,
-            thumbnail=thumb,
-            url=programma_url,
-            video_url=programma_url,
-            plot=plot if plot else item.plot,
-            order=n
-        )
-        it.action = 'findvideos'
-        return it
-
-    original_length = len(itemlist)
-
-    with futures.ThreadPoolExecutor() as executor:
-        itlist = [executor.submit(itInfo, n, it, item) for n, it in enumerate(matches)]
-        for res in futures.as_completed(itlist):
-            if res.result():
-                itemlist.append(res.result())
-
-    itemlist[original_length:] = sorted(itemlist[original_length:], key=lambda it: it.order)
-
-    match = support.match(html_content, patron=r'<li class="pager-next"><a href="(.*?)">›</a></li>')
-    if match.matches:
-        next_page_link = match.matches[0]
-        itemlist.append(
-            item.clone(
-                title=support.typo(support.config.get_localized_string(30992), 'color std bold'),
-                url=f'{host}{next_page_link}',
-                order=len(itemlist),
-                video_url='',
-                thumbnail=''
-            )
-        )
-
-    return itemlist
+def _licenza(server, token):
+    for parte in server.split(';'):
+        if parte.lower().startswith(DRM):
+            url = parte.split('|', 1)[1]
+            return '%s|preAuthorization=%s&Origin=%s&Referer=%s/|R{SSM}|' % (url, token, host, host + '/')
+    return ''
 
 
 def findvideos(item):
-    support.info()
-    if item.livefilter:
-        for it in live(item):
-            if it.fulltitle == item.livefilter:
-                item = it
-                break
-    data = support.match(item).data
+    h = _pulisci(_scarica(item.url))
 
-    url = support.match(data, patron=r'''["]?dash["]?\s*:\s*["']([^"']+)["']''').match
+    def g(rx):
+        m = re.search(rx, h)
+        return m.group(1) if m else ''
 
-    if url:
-        preurl = support.match(data, patron=r'preTokenUrl = "(.+?)"').match
-        tokenHeader = {
-            'host': headers['host_token'],
-            'user-agent': headers['user-agent'],
-            'accept': headers['accept'],
-            'accept-language': headers['accept-language'],
-            'dnt': headers['dnt'],
-            'te': headers['te'],
-            'origin': headers['origin'],
-            'referer': headers['referer'],
-        }
-        req = urllib_request.Request(preurl, headers=tokenHeader)
-        with urllib_request.urlopen(req, context=ssl._create_unverified_context()) as response:
-            data = json.load(response)  # Parse JSON response
-        preAuthToken = data['preAuthToken']
+    endpoint = g(r'"drmTokenEndpoint":"([^"]+)"')
+    ident = g(r'"drmContentId":"([^"]+)"')
+    server = g(r'"drmLicenseServer":"([^"]+)"')
+    url = ''
+    drm = False
+    tipo = 'VOD'
 
-        licenseHeader = {
-            'host': headers['host_license'],
-            'user-agent': headers['user-agent'],
-            'accept': headers['accept'],
-            'accept-language': headers['accept-language'],
-            'preAuthorization': preAuthToken,
-            'origin': headers['origin'],
-            'referer': headers['referer'],
-        }
-        preLic= '&'.join(['%s=%s' % (name, value) for (name, value) in licenseHeader.items()])
-        tsatmp=str(int(support.time()))
-        license_url= key_widevine + '?d=%s'%tsatmp
-        lic_url='%s|%s|R{SSM}|'%(license_url, preLic)
-        item.drm = DRM
-        item.license = lic_url
+    if '/dirette/' in item.url:
+        principale = g(r'"mainLiveUrl":"([^"]+)"').split('|')[0]
+        url = principale
+        drm = True
+        tipo = 'LIVE'
     else:
-        match = support.match(data, patron=r'''["]?m3u8["]?\s*:\s*["']([^"']+)["']''').match
-        if match:
-            url = match.replace("http://la7-vh.akamaihd.net/i/", "https://awsvodpkg.iltrovatore.it/local/hls/").replace("csmil/master.m3u8", "urlset/master.m3u8");
-    
-    if url=="":
-        url = support.match(data, patron=r'''["]?mp4["]?\s*:\s*["']([^"']+)["']''').match
+        remoto = g(r'"cf_remote_url":"([^"]+)"')
+        if not remoto:
+            logger.error('la7: video non trovato in %s' % item.url)
+            return []
+        vecchio = g(r'"cf_old_entry_id":"([^"]+)"')
+        drm = g(r'"drm":(true|false)') == 'true'
+        if drm:
+            base = g(r'"hostnameCdnDrm":"([^"]+)"').rstrip('/')
+            nome = remoto.lstrip('/').split('/')[-1]
+            url = '%s/%s/DASH/%s.mpd' % (base, nome, nome)
+        else:
+            base = g(r'"hostnameCdn":"([^"]+)"').rstrip('/')
+            percorso = (remoto if remoto.startswith('/') else '/' + remoto).replace('.mp4', '')
+            if not vecchio:
+                parti = []
+                for p in percorso.split(','):
+                    p = p.strip()
+                    parti.append(p if not p or p.startswith('/nk/') else ('/nk' + p if p.startswith('/') else '/nk/' + p))
+                percorso = ','.join(parti)
+            url = '%s/local/hls/,%s,.mp4.urlset/master.m3u8' % (base, percorso)
 
-    item = item.clone(title='Direct', server='directo', url=url, action='play')
-    return support.server(item, itemlist=[item], Download=False, Videolibrary=False)
+    if not url:
+        return []
+    it = item.clone(title='Direct', server='directo', url=url, action='play')
+    if drm:
+        token = _token(endpoint, ident, tipo)
+        it.drm = DRM
+        it.license = _licenza(server, token)
+    return support.server(it, itemlist=[it], Download=False, Videolibrary=False)
