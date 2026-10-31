@@ -1,0 +1,20 @@
+{
+    "id": "vixsrc",
+    "name": "VixSrc",
+    "language": ["ita"],
+    "active": true,
+    "thumbnail": "vixsrc.png",
+    "banner": "vixsrc.png",
+    "categories": ["movie", "tvshow"],
+    "not_active": ["include_in_newest"],
+    "settings": [
+        {
+            "id": "include_in_global_search",
+            "type": "bool",
+            "label": "Includi in Ricerca Globale",
+            "default": true,
+            "enabled": true,
+            "visible": true
+        }
+    ]
+}
