@@ -224,4 +224,12 @@ def findvideos(item):
 
     itemlist = [item.clone(title=channeltools.get_channel_parameters(item.channel)['title'],
                            url=item.url.replace('/watch/', '/iframe/'), server='streamingcommunityws')]
-    return support.server(item, itemlist=itemlist, referer=False)
+    # Vixsrc come server: l'indirizzo con l'ID TMDb passa dal riconoscimento dei server (servers/vixsrc.json)
+    tmdb_id = item.infoLabels.get('tmdb_id') or item.infoLabels.get('tmdb_id_show')
+    data = ''
+    if tmdb_id:
+        if item.contentType == 'movie':
+            data = 'https://vixsrc.to/movie/%s' % tmdb_id
+        elif item.season and item.episode:
+            data = 'https://vixsrc.to/tv/%s/%s/%s' % (tmdb_id, item.season, item.episode)
+    return support.server(item, data=data, itemlist=itemlist, referer=False)
