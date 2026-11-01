@@ -3,8 +3,8 @@
     "name": "VixSrc",
     "language": ["ita"],
     "active": true,
-    "thumbnail": "vixsrc.png",
-    "banner": "vixsrc.png",
+    "thumbnail": "https://streamunity.app/images/og-default.png",
+    "banner": "https://streamunity.app/images/og-default.png",
     "categories": ["movie", "tvshow"],
     "not_active": ["include_in_newest"],
     "settings": [
