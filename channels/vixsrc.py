@@ -18,8 +18,26 @@ DURATA_CACHE = 12 * 3600
 
 @support.menu
 def mainlist(item):
-    film = ['']
-    tvshow = ['']
+    film = ['',
+            ('Di tendenza oggi', ['', 'peliculas', 'trending/movie/day', 'movie']),
+            ('Di tendenza questa settimana', ['', 'peliculas', 'trending/movie/week', 'movie']),
+            ('Popolari', ['', 'peliculas', 'movie/popular', 'movie']),
+            ('Più votati', ['', 'peliculas', 'movie/top_rated', 'movie']),
+            ('Ultime uscite', ['', 'peliculas', 'discover/movie?sort_by=primary_release_date.desc&primary_release_date.lte={oggi}&vote_count.gte=5', 'movie']),
+            ('Per piattaforma', ['', 'piattaforme', 'movie', 'movie']),
+            ('Generi', ['', 'generi', 'movie', 'movie']),
+            ('Per anno', ['', 'anni', 'movie', 'movie']),
+            ('Per lingua', ['', 'lingue', 'movie', 'movie'])]
+    tvshow = ['',
+              ('Di tendenza oggi', ['', 'peliculas', 'trending/tv/day', 'tvshow']),
+              ('Di tendenza questa settimana', ['', 'peliculas', 'trending/tv/week', 'tvshow']),
+              ('Popolari', ['', 'peliculas', 'tv/popular', 'tvshow']),
+              ('Più votate', ['', 'peliculas', 'tv/top_rated', 'tvshow']),
+              ('Ultime uscite', ['', 'peliculas', 'discover/tv?sort_by=first_air_date.desc&first_air_date.lte={oggi}&vote_count.gte=5', 'tvshow']),
+              ('Per piattaforma', ['', 'piattaforme', 'tv', 'tvshow']),
+              ('Generi', ['', 'generi', 'tv', 'tvshow']),
+              ('Per anno', ['', 'anni', 'tv', 'tvshow']),
+              ('Per lingua', ['', 'lingue', 'tv', 'tvshow'])]
     search = ''
     return locals()
 
@@ -80,6 +98,9 @@ def _titoli(ids, tipo, item):
 
 def peliculas(item):
     logger.debug()
+    if item.args and not item.ids:
+        # sezioni TMDB (tendenze, piattaforme, generi): la lista resta di tipo film o serie TV per la vista di Kodi
+        return sezione(item)
     tipo = 'movie' if item.contentType == 'movie' else 'tv'
     pagina = int(item.page or 0)
     if item.ids:
@@ -91,6 +112,96 @@ def peliculas(item):
     if len(ids) > (pagina + 1) * PAGE:
         itemlist.append(item.clone(title=support.typo(config.get_localized_string(30992), 'color kod bold'),
                                    action='peliculas', page=pagina + 1, thumbnail=support.thumb()))
+    return itemlist
+
+
+PIATTAFORME = [('Amazon Prime Video', 119), ('Apple TV', 2), ('Apple TV+', 350), ('Chili', 40), ('Discovery+', 524),
+               ('Disney+', 337), ('Google Play Film', 3), ('Mediaset Infinity', 359), ('MUBI', 11), ('Netflix', 8),
+               ('NOW', 39), ('Paramount+', 531), ('Plex', 538), ('Pluto TV', 300), ('RaiPlay', 222),
+               ('Rakuten TV', 35), ('Sky Go', 29), ('TIMVISION', 109)]
+
+
+def _tmdb(percorso):
+    sep = '&' if '?' in percorso else '?'
+    return '%s/%s%sapi_key=%s&language=%s' % (tmdb.host, percorso, sep, tmdb.api, tmdb.def_lang)
+
+
+def sezione(item):
+    # elenco TMDB (tendenze, popolari, piattaforme, generi) tenuto solo per i titoli presenti su VixSrc, nell'ordine di TMDB
+    logger.debug()
+    percorso = (item.args or 'trending/movie/day').replace('{oggi}', time.strftime('%Y-%m-%d'))
+    tipo = 'movie' if 'movie' in percorso.split('?')[0] else 'tv'
+    validi = set(_id_validi(tipo))
+    ids = []
+    for pagina in range(1, 9):
+        try:
+            dati = tmdb.Tmdb.get_json('%s&page=%d' % (_tmdb(percorso), pagina))
+        except Exception:
+            logger.error('vixsrc: elenco TMDB non disponibile')
+            break
+        risultati = (dati or {}).get('results', [])
+        for r in risultati:
+            if r.get('id') in validi and r['id'] not in ids:
+                ids.append(r['id'])
+        if not risultati or len(ids) >= 60:
+            break
+    if not ids:
+        return []
+    return peliculas(item.clone(ids=ids, page=0, contentType='movie' if tipo == 'movie' else 'tvshow'))
+
+
+def piattaforme(item):
+    logger.debug()
+    tipo = item.args or 'movie'
+    itemlist = []
+    for nome, codice in PIATTAFORME:
+        percorso = 'discover/%s?watch_region=IT&with_watch_providers=%d&sort_by=popularity.desc' % (tipo, codice)
+        itemlist.append(item.clone(title=support.typo(nome, 'bold'), action='peliculas', args=percorso,
+                                   thumbnail=support.thumb(), folder=True))
+    return itemlist
+
+
+def generi(item):
+    logger.debug()
+    tipo = item.args or 'movie'
+    itemlist = []
+    try:
+        dati = tmdb.Tmdb.get_json(_tmdb('genre/%s/list' % tipo))
+    except Exception:
+        logger.error('vixsrc: generi TMDB non disponibili')
+        return itemlist
+    for g in sorted((dati or {}).get('genres', []), key=lambda x: x.get('name', '')):
+        percorso = 'discover/%s?with_genres=%s&sort_by=popularity.desc' % (tipo, g['id'])
+        itemlist.append(item.clone(title=support.typo(g['name'], 'bold'), action='peliculas', args=percorso,
+                                   thumbnail=support.thumb(), folder=True))
+    return itemlist
+
+
+LINGUE = [('Italiano', 'it'), ('Inglese', 'en'), ('Giapponese', 'ja'), ('Coreano', 'ko'), ('Francese', 'fr'),
+          ('Spagnolo', 'es'), ('Tedesco', 'de'), ('Cinese', 'zh'), ('Hindi', 'hi'), ('Turco', 'tr'),
+          ('Portoghese', 'pt'), ('Russo', 'ru'), ('Svedese', 'sv'), ('Danese', 'da'), ('Polacco', 'pl')]
+
+
+def anni(item):
+    logger.debug()
+    tipo = item.args or 'movie'
+    campo = 'primary_release_year' if tipo == 'movie' else 'first_air_date_year'
+    itemlist = []
+    for anno in range(int(time.strftime('%Y')), 2005, -1):
+        percorso = 'discover/%s?%s=%d&sort_by=popularity.desc' % (tipo, campo, anno)
+        itemlist.append(item.clone(title=support.typo(str(anno), 'bold'), action='peliculas', args=percorso,
+                                   thumbnail=support.thumb(), folder=True))
+    return itemlist
+
+
+def lingue(item):
+    logger.debug()
+    tipo = item.args or 'movie'
+    itemlist = []
+    for nome, codice in LINGUE:
+        percorso = 'discover/%s?with_original_language=%s&sort_by=popularity.desc' % (tipo, codice)
+        itemlist.append(item.clone(title=support.typo(nome, 'bold'), action='peliculas', args=percorso,
+                                   thumbnail=support.thumb(), folder=True))
     return itemlist
 
 
