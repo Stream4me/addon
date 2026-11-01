@@ -58,10 +58,28 @@ def _clean(t):
 
 def _pure_title(full_title):
     full_title = _clean(full_title)
-    m = re.match(r'^(.+?)\s*\((\d{4})\)', full_title)
+    m = re.match(r'^(.+?)\s*\((\d{4})(?:\s*[-–]\s*\d{4})?\)', full_title)
     if m:
         return m.group(1).strip(), m.group(2)
     return full_title, ''
+
+
+def _int_or_empty(value):
+    if value in (None, '', 0):
+        return ''
+    s = str(value).strip()
+    if s.isdigit():
+        return int(s)
+    m = re.match(r'(\d{4})', s)
+    return int(m.group(1)) if m else ''
+
+
+def _strip_duration(items):
+    for it in items:
+        try:
+            it.infoLabels.pop('duration', None)
+        except Exception:
+            pass
 
 
 def _posts_to_itemlist(item, posts):
@@ -79,7 +97,6 @@ def _posts_to_itemlist(item, posts):
         tmdb_id = int(tmdb_raw) if tmdb_raw and str(tmdb_raw).isdigit() else ''
         imdb_id = ('tt' + imdb_raw) if imdb_raw and not str(imdb_raw).startswith('tt') else imdb_raw
         poster = movie.get('poster', '')
-        duration = movie.get('duration', '')
         genres = ', '.join(g.get('name', '') for g in movie.get('genres', []))
         new_item = item.clone(
             action='findvideos',
@@ -90,11 +107,10 @@ def _posts_to_itemlist(item, posts):
             thumbnail=poster,
             contentType='movie',
             infoLabels={
-                'year': int(year) if year else '',
+                'year': _int_or_empty(year),
                 'genre': genres,
                 'imdb_id': imdb_id,
                 'tmdb_id': str(tmdb_id) if tmdb_id else '',
-                'duration': int(duration) if duration else '',
             }
         )
         itemlist.append(new_item)
@@ -198,6 +214,8 @@ def peliculas(item):
     except Exception:
         pass
 
+    _strip_duration(_built)
+
     if page < total_pages:
         _built.append(item.clone(
             title=support.typo(support.config.get_localized_string(30992), 'color std bold'),
@@ -252,7 +270,7 @@ def search(item, text):
                     thumbnail=poster,
                     contentType='movie',
                     infoLabels={
-                        'year': int(year) if year else '',
+                        'year': _int_or_empty(year),
                         'imdb_id': ('tt' + imdb) if imdb else '',
                         'tmdb_id': tmdb,
                     }
@@ -262,6 +280,9 @@ def search(item, text):
             tmdb.set_infoLabels_itemlist(itemlist, seekTmdb=True)
         except Exception:
             pass
+
+        _strip_duration(itemlist)
+
         return itemlist
     except Exception:
         import sys
