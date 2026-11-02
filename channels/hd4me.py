@@ -82,9 +82,38 @@ def _strip_duration(items):
             pass
 
 
+def _is_tv(info):
+    """True se il post sembra una serie TV (da scartare)."""
+    movie = info.get('movie', {}) or {}
+
+    ct = (movie.get('contentType') or info.get('contentType') or '').lower()
+    if ct in ('tv', 'tvshow', 'serie', 'series', 'tvseries'):
+        return True
+
+    if movie.get('seasons') or info.get('seasons') or movie.get('episodes'):
+        return True
+
+    years = movie.get('years') or []
+    if years and isinstance(years[0], dict):
+        y = (years[0].get('name') or '').strip()
+        if re.match(r'^\d{4}\s*[-–]\s*\d{4}$', y):
+            return True
+
+    title = _clean(info.get('title') or '')
+    slug = info.get('slug') or ''
+    if re.search(r'(?i)\bS\d{1,2}\b', title):
+        return True
+    if re.search(r'(?i)-s\d{1,2}(-|$)', slug):
+        return True
+
+    return False
+
+
 def _posts_to_itemlist(item, posts):
     itemlist = []
     for info in posts:
+        if _is_tv(info):          # <-- scarta le serie TV
+            continue
         post_id = info.get('id', '')
         full_title = _clean(info.get('title', ''))
         movie = info.get('movie', {})
@@ -254,6 +283,8 @@ def search(item, text):
             twy = _clean(entry.get('twy', ''))
             to = _clean(entry.get('to', ''))
             if text_norm in _normalize(twy) or text_norm in _normalize(to):
+                if _is_tv(entry):          # <-- scarta le serie TV
+                    continue
                 pid = entry.get('pid', '')
                 year = entry.get('y', '')
                 imdb = entry.get('iid', '')
