@@ -3,7 +3,7 @@
 # Canale per StreamingCommunity
 # ------------------------------------------------------------
 
-import json, re, sys
+import json, re, sys, unicodedata 
 PY3 = False
 if sys.version_info[0] >= 3: PY3 = True
 
@@ -152,21 +152,56 @@ def peliculas(item):
     return itemlist
 
 
+def _norm(s):
+    s = unicodedata.normalize('NFKD', s or u'')
+    s = s.encode('ascii', 'ignore').decode('ascii').lower()
+    return re.sub(r'[^a-z0-9]+', ' ', s).strip()
+
+
+def _pick_tmdb_tv(title, site_year):
+    try:
+        from lib.fuzzy_match import algorithims
+        results = support.tmdb.Tmdb(searched_text=title, search_type='tv').results
+    except Exception:
+        return None
+    if not results:
+        return None
+
+    text = title.lower()
+    best, best_score = None, 0
+    for r in results:
+        names = [n for n in (r.get('name'), r.get('original_name')) if n]
+        score = max([algorithims.trigram(text, n) for n in names] or [0])
+        if any(_norm(n) == _norm(title) for n in names):
+            score += 1.0                                  
+        fa = (r.get('first_air_date') or '')[:4]
+        if site_year and fa.isdigit():
+            diff = site_year - int(fa)                    
+            score += (0.3 - 0.05 * diff) if 0 <= diff <= 6 else -0.3
+        score += min((r.get('popularity') or 0) / 500.0, 0.2)
+        if score > best_score:
+            best, best_score = r, score
+
+    return best.get('id') if best is not None and best_score >= 0.6 else None
+
+
 def makeItem(n, it, item):
     logger.debug(it)
     title = it['name']
     lang = 'Sub-ITA' if it.get('sub_ita', 0) == 1 else 'ITA'
-    itm = item.clone(title=support.typo(title,'bold') + support.typo(lang,'_ [] color std bold'))
+
+    itm = item.clone(title=support.typo(title, 'bold') + support.typo(lang, '_ [] color std bold'))
     itm.contentType = it['type'].replace('tv', 'tvshow')
     itm.language = lang
 
     year_str = (it.get('release_date') or
                 next((tr['value'] for tr in it.get('translations', [])
                       if tr.get('key') == 'release_date' and tr.get('value')), None))
-
+    site_year = None
     if year_str:
         try:
-            itm.year = int(str(year_str)[:4])
+            site_year = int(str(year_str)[:4])
+            itm.year = site_year
         except:
             pass
 
@@ -180,6 +215,12 @@ def makeItem(n, it, item):
         itm.action = 'episodios'
         itm.season_count = it['seasons_count']
         itm.url = host + '/it/titles/%s-%s' % (it['id'], it['slug'])
+
+        if config.get_setting('tmdb_active'):
+            tmdb_id = _pick_tmdb_tv(title, site_year)
+            if tmdb_id:
+                itm.infoLabels['tmdb_id'] = str(tmdb_id)
+
     itm.n = n
     return itm
 
@@ -224,12 +265,4 @@ def findvideos(item):
 
     itemlist = [item.clone(title=channeltools.get_channel_parameters(item.channel)['title'],
                            url=item.url.replace('/watch/', '/iframe/'), server='streamingcommunityws')]
-    # Vixsrc come server: l'indirizzo con l'ID TMDb passa dal riconoscimento dei server (servers/vixsrc.json)
-    tmdb_id = item.infoLabels.get('tmdb_id') or item.infoLabels.get('tmdb_id_show')
-    data = ''
-    if tmdb_id:
-        if item.contentType == 'movie':
-            data = 'https://vixsrc.to/movie/%s' % tmdb_id
-        elif item.season and item.episode:
-            data = 'https://vixsrc.to/tv/%s/%s/%s' % (tmdb_id, item.season, item.episode)
-    return support.server(item, data=data, itemlist=itemlist, referer=False)
+    return support.server(item, itemlist=itemlist, referer=False)

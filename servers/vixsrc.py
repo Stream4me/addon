@@ -94,6 +94,28 @@ def test_video_exists(page_url):
     logger.info("vixsrc test_video_exists: %s" % page_url)
     if not page_url or 'vixsrc.to' not in page_url:
         return False, "URL non valido"
+    # Controllo reale: se la risorsa non esiste S4Me passa al server successivo
+    # invece di avviare il player con un errore.
+    try:
+        api_url = page_url.replace('/tv/', '/api/tv/').replace('/movie/', '/api/movie/')
+        headers = _get_headers()
+        if api_url != page_url:
+            codice, dati = _download(api_url, headers)
+            if codice in (404, 410):
+                return False, "Contenuto non disponibile su VixSrc"
+            if codice == 200 and dati:
+                try:
+                    if 'src' in json.loads(dati):
+                        return True, ""
+                except Exception:
+                    pass
+        codice, pagina = _download(page_url, headers)
+        if codice in (404, 410):
+            return False, "Contenuto non disponibile su VixSrc"
+        if codice == 200 and not _TOKEN_RE.search(pagina) and not _IFRAME_RE.search(pagina):
+            return False, "Contenuto non disponibile su VixSrc"
+    except Exception as e:
+        logger.debug("vixsrc test_video_exists: %s" % e)
     return True, ""
 
 

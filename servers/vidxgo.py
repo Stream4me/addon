@@ -7,6 +7,57 @@ import cloudscraper
 
 from platformcode import logger
 
+
+# DNS cifrato (DoH) come StreamFlix: si usa la funzione che l'addon ha gia'
+# (core/resolverdns.py). Il suo override agisce su ogni connessione urllib3 del
+# processo, quindi anche cloudscraper, le richieste del proxy e il CDN.
+_DOH_MODULES = ('urllib3.util.connection',
+                'requests.packages.urllib3.util.connection',
+                'lib.urllib3.util.connection',
+                'lib.requests.packages.urllib3.util.connection',
+                'lib.cloudscraper.requests.packages.urllib3.util.connection')
+_DOH = {'done': False}
+
+
+def _install_doh():
+    if _DOH['done']:
+        return
+    try:
+        import importlib
+        from core import resolverdns
+        resolverdns.install_dns_override()   # rispetta l'impostazione resolver_dns
+        if not getattr(resolverdns, '_patched_conn_modules', None):
+            # impostazione spenta: per vidxgo il DoH si attiva comunque
+            for modname in _DOH_MODULES:
+                try:
+                    resolverdns._patch_connection_module(importlib.import_module(modname))
+                except Exception:
+                    continue
+        _DOH['done'] = True
+        logger.info('vidxgo: DNS DoH attivo (%d moduli)'
+                    % len(getattr(resolverdns, '_patched_conn_modules', [])))
+    except Exception:
+        logger.error('vidxgo: DoH non attivato: ' + traceback.format_exc()[-300:])
+
+
+_install_doh()
+
+# False = niente proxy locale (solo prova: il CDN rifiuta Kodi senza proxy).
+USA_PROXY = True
+
+# Come StreamFlix: il proxy non fa passare i video. Rielabora solo le playlist
+# (.m3u8) e a ogni altra richiesta (segmenti, chiavi) risponde con un redirect
+# 302 al CDN con il token piu' recente, come l'intercettore di StreamFlix che
+# aggiorna la query di ogni richiesta. I thread di streaming spariscono.
+# Provato: Kodi non riesce a raggiungere il CDN da solo (30 secondi di attesa e
+# poi errore del demuxer), quindi deve restare False: il proxy trasporta i segmenti.
+REDIRECT_SEGMENTS = False
+
+# Provato e non funziona: inputstream.adaptive riceve 403 dal CDN (che rifiuta il
+# curl di Kodi) e il token scade dopo 3 minuti. Deve restare False: serve il proxy.
+MODO_ISA = False
+_ISA = {'props': {}}
+
 HOST = 'https://v.vidxgo.co'
 REF_SITE = 'https://altadefinizionex.live'
 
@@ -23,11 +74,15 @@ PLAY_HEADERS = {
     'Sec-Fetch-Site':  'cross-site',
 }
 
-WD_POLL = 3
+WD_POLL = 2
 WD_IDLE_PLAYED = 10
 WD_IDLE_NEVER = 30
 
 REFRESH_GRACE = 60
+
+# tempo massimo e timeout ammessi per risolvere una pagina (evita attese lunghe sui 404)
+RESOLVE_BUDGET = 20
+RESOLVE_MAX_TIMEOUTS = 2
 
 CDN_MIN_INTERVAL = 1.0
 
@@ -45,6 +100,50 @@ _HB = {'sid': ''}
 SEGMENTS_DIRECT = False
 
 _RELAY_SESSIONS = {}
+
+# risposte upstream in corso: allo stop vanno chiuse, altrimenti i thread del
+# proxy restano appesi nella lettura e Kodi aspetta che finiscano
+_ACTIVE = set()
+_ACTIVE_LOCK = threading.Lock()
+
+
+# connessioni dei client (Kodi) verso il proxy: le connessioni rimaste aperte
+# tengono vivi i thread del proxy fino a 20 secondi, e Kodi aspetta che finiscano
+# prima di lasciar cliccare di nuovo nel menu. Allo stop si chiudono subito.
+_CLIENTS = set()
+
+
+def _kill_clients():
+    with _ACTIVE_LOCK:
+        lst = list(_CLIENTS)
+        _CLIENTS.clear()
+    for c in lst:
+        try:
+            import socket
+            c.shutdown(socket.SHUT_RDWR)
+        except Exception:
+            pass
+        try:
+            c.close()
+        except Exception:
+            pass
+
+
+def _kill_active():
+    _kill_clients()
+    with _ACTIVE_LOCK:
+        lst = list(_ACTIVE)
+        _ACTIVE.clear()
+    for r in lst:
+        try:
+            import socket
+            r.raw._fp.fp.raw._sock.shutdown(socket.SHUT_RDWR)
+        except Exception:
+            pass
+        try:
+            r.close()
+        except Exception:
+            pass
 _RELAY_CAND = {}
 _RELAY_DIRECT = set()
 _LAST_REFRESH = [0.0]
@@ -56,6 +155,11 @@ _NET_FAIL = [0.0, 0]
 _REFRESH_LOCK = threading.Lock()
 
 _HEAL = {'t': 0.0, 'busy': False}
+
+# una sola risoluzione alla volta: se parte un altro contenuto prima che la
+# precedente finisca, quella vecchia viene annullata (non tocca piu' il proxy)
+_GEN = [0]
+_PLAY_LOCK = threading.Lock()
 _PATH_MAP = ['', '']
 
 
@@ -209,6 +313,8 @@ def _vidxgo_session():
 def _vidxgo_resolve(url_candidates, headers):
     saved = _tls_cache_load()
     tried_full = False
+    deadline = time.time() + RESOLVE_BUDGET
+    timeouts = 0
     while True:
         if saved:
             order = [saved]
@@ -223,6 +329,9 @@ def _vidxgo_resolve(url_candidates, headers):
         for cand in order:
             s = _build_vidxgo_session(cand)
             for u in url_candidates:
+                if time.time() > deadline:
+                    logger.error('vidxgo resolve: tempo massimo superato (%ds)' % RESOLVE_BUDGET)
+                    return None, None, None
                 try:
                     r = s.get(u, headers=headers, timeout=10)
                     if r.status_code == 200:
@@ -236,8 +345,17 @@ def _vidxgo_resolve(url_candidates, headers):
                         break
                     if r.status_code in (404, 410):
                         return None, None, None
+                    if r.status_code < 500 and r.status_code not in (403, 429):
+                        # risposta definitiva del sito (es. 400, 401, 451): cambiare fingerprint non serve
+                        logger.info('vidxgo resolve: HTTP %s, contenuto non disponibile' % r.status_code)
+                        return None, None, None
                 except Exception as e:
                     logger.error('vidxgo resolve cand=%s: %s' % (cand[0], str(e)[:150]))
+                    if 'Timeout' in type(e).__name__ or 'timed out' in str(e).lower():
+                        timeouts += 1
+                        if timeouts >= RESOLVE_MAX_TIMEOUTS:
+                            logger.error('vidxgo resolve: server lento, rinuncio dopo %d timeout' % timeouts)
+                            return None, None, None
 
 
 def _relay_cand_for(host):
@@ -438,6 +556,8 @@ def _maintenance_due():
 
 
 def _maintenance_do(pos, need_hb):
+    if _PROXY.get('server') is None:
+        return
     try:
         if need_hb:
             _send_heartbeat(pos)
@@ -474,12 +594,23 @@ def _send_heartbeat(pos):
 def _proxy_watchdog(srv):
     player = None
     monitor = None
+    in_riproduzione = None
     try:
         import xbmc
         player = xbmc.Player()
         monitor = xbmc.Monitor()
     except Exception:
         pass
+    # Si usa lo stesso controllo del player di S4Me (platformtools.is_playing):
+    # nella diagnostica il suo thread vedeva lo stop, il nostro Player no.
+    try:
+        from platformcode import platformtools
+        in_riproduzione = platformtools.is_playing
+    except Exception:
+        if player is not None:
+            in_riproduzione = player.isPlaying
+    fermo = 0
+    giri = 0
     while True:
         if monitor is not None:
             if monitor.waitForAbort(WD_POLL):
@@ -488,16 +619,35 @@ def _proxy_watchdog(srv):
             time.sleep(WD_POLL)
         if _PROXY['server'] is not srv:
             return
-        if player is not None and player.isPlaying():
+        giri += 1
+        attivo = bool(in_riproduzione()) if in_riproduzione is not None else False
+        if giri % 5 == 0:
+            logger.info('vidxgo watchdog: in riproduzione=%s, played=%s, fermo=%d'
+                        % (attivo, _PROXY.get('played'), fermo))
+        if in_riproduzione is not None and attivo:
             _PROXY['played'] = True
             _PROXY['last_req'] = time.time()
+            fermo = 0
+            continue
+        # dopo la riproduzione, due controlli di seguito senza player attivo
+        # (stop o fine film): il proxy si chiude subito, cosi' lo script del
+        # player non resta in attesa dei thread del proxy
+        if in_riproduzione is not None and _PROXY.get('played'):
+            fermo += 1
+            if fermo >= 2:
+                logger.info('vidxgo watchdog: player fermo, chiudo il proxy')
+                break
             continue
         idle = time.time() - _PROXY.get('last_req', 0.0)
         if idle < (WD_IDLE_PLAYED if _PROXY.get('played') else WD_IDLE_NEVER):
             continue
-        if player is not None and player.isPlaying():
+        if in_riproduzione is not None and in_riproduzione():
             continue
+        logger.info('vidxgo watchdog: riproduzione finita (inattivo %.0fs, played=%s)'
+                    % (idle, _PROXY.get('played')))
         break
+    srv._stopping = True
+    _kill_active()
     try:
         srv.shutdown()
         srv.server_close()
@@ -507,12 +657,150 @@ def _proxy_watchdog(srv):
         _PROXY['server'] = None
         _PROXY['port'] = 0
     _PLCACHE.clear()
-    logger.info('vidxgo proxy stopped (idle watchdog)')
+    _fh_stop()
+    logger.info('vidxgo proxy stopped (watchdog), thread rimasti: %s'
+                % [t.name for t in threading.enumerate()])
+
+
+_FH = {'file': None}
+_FH_PERIODO = 15
+
+
+def _fh_start():
+    """Diagnostica: finche' il proxy e' acceso, ogni 15 secondi scrive in
+    Download/vidxgo_stack.txt lo stato di tutti i thread Python.
+    faulthandler usa un thread proprio, quindi scrive anche se Python e'
+    bloccato: mostra dove si ferma lo script allo stop."""
+    try:
+        import faulthandler
+        import xbmcvfs
+        _fh_stop()
+        # cartella Download del telefono (raggiungibile dall'utente), altrimenti temp di Kodi
+        _FH['file'] = None
+        path = ''
+        for base in ('/storage/emulated/0/Download', '/sdcard/Download',
+                     xbmcvfs.translatePath('special://temp')):
+            try:
+                path = os.path.join(base, 'vidxgo_stack.txt')
+                _FH['file'] = open(path, 'w')
+                break
+            except Exception:
+                _FH['file'] = None
+        if _FH['file'] is None:
+            return
+        faulthandler.dump_traceback_later(_FH_PERIODO, repeat=True, file=_FH['file'])
+        logger.info('vidxgo: diagnostica thread attiva (%s)' % path)
+    except Exception:
+        logger.error('vidxgo: diagnostica thread non attivata: ' + traceback.format_exc()[-200:])
+
+
+def _fh_stop():
+    try:
+        import faulthandler
+        faulthandler.cancel_dump_traceback_later()
+    except Exception:
+        pass
+    f = _FH.get('file')
+    if f:
+        nome = getattr(f, 'name', None)
+        try:
+            f.close()
+        except Exception:
+            pass
+        _FH['file'] = None
+        # se non e' stato scritto nulla (proxy chiuso prima dei 15 secondi) il file vuoto si toglie
+        try:
+            if nome and os.path.getsize(nome) == 0:
+                os.remove(nome)
+        except Exception:
+            pass
+
+
+def isa_properties():
+    """Impostazioni di inputstream.adaptive che platformtools applica al ListItem."""
+    return dict(_ISA.get('props') or {})
+
+
+def _dns_diagnostica(host):
+    """Scrive nel log cosa risolve il DNS di sistema (quello di Kodi) e cosa il DoH."""
+    def lavoro():
+        t0 = time.time()
+        try:
+            import socket
+            ip_sys = socket.gethostbyname(host)
+        except Exception as e:
+            ip_sys = 'errore %s' % str(e)[:60]
+        dt = time.time() - t0
+        try:
+            from core import resolverdns
+            ip_doh = resolverdns.resolve(host)
+        except Exception:
+            ip_doh = '?'
+        logger.info('vidxgo DNS CDN %s: sistema=%s (%.1fs), DoH=%s' % (host, ip_sys, dt, ip_doh))
+    t = threading.Thread(target=lavoro, daemon=True)
+    t.start()
+    t.join(4)
+
+
+def _risultato_isa(stream_url):
+    q = urllib.parse.urlparse(stream_url).query
+    hdr = urllib.parse.urlencode({'User-Agent': UA_CHROME,
+                                  'Referer': HOST + '/',
+                                  'Origin': HOST})
+    _ISA['props'] = {
+        'inputstream.adaptive.manifest_params': q,
+        'inputstream.adaptive.stream_params': q,
+        'inputstream.adaptive.common_headers': hdr,
+        'inputstream.adaptive.stream_headers': hdr,
+        'inputstream.adaptive.manifest_headers': hdr,
+    }
+    _dns_diagnostica(urllib.parse.urlparse(stream_url).netloc)
+    logger.info('vidxgo: modalita inputstream.adaptive (senza proxy), query token %d caratteri' % len(q))
+    return [['hls [vidxgo]', stream_url]]
+
+
+_HOOK = {'fatto': False}
+
+
+def _installa_aggancio():
+    """Senza modificare i file di S4Me (videoteca, platformtools): dopo lo stop,
+    con vidxgo, la finestra dei server non si apre e il ciclo del 'segna come
+    visto' (xbmc_videolibrary) non chiama Kodi migliaia di volte al secondo.
+    Con il proxy locale acceso quei due comportamenti bloccavano Kodi per 2 minuti."""
+    if _HOOK['fatto']:
+        return
+    try:
+        from platformcode import platformtools
+        originale_finestra = platformtools.serverWindow
+        originale_in_riproduzione = platformtools.is_playing
+
+        def serverWindow(item, *a, **k):
+            if getattr(item, 'server', '') == 'vidxgo':
+                logger.info('vidxgo: finestra dei server dopo lo stop non aperta')
+                return None
+            return originale_finestra(item, *a, **k)
+
+        def is_playing():
+            # solo il thread che segna come visto gira senza pause: lo si rallenta
+            if 'mark_as_watched' in threading.current_thread().name:
+                time.sleep(0.5)
+            return originale_in_riproduzione()
+
+        platformtools.serverWindow = serverWindow
+        platformtools.is_playing = is_playing
+        _HOOK['fatto'] = True
+        logger.info('vidxgo: aggancio a platformtools attivo')
+    except Exception:
+        logger.error('vidxgo: aggancio a platformtools non attivato: ' + traceback.format_exc()[-200:])
 
 
 def _stop_proxy():
     old = _PROXY['server']
     if old is not None:
+        logger.info('vidxgo proxy: arresto richiesto (porta %s), thread: %s'
+                    % (_PROXY.get('port'), [t.name for t in threading.enumerate()]))
+        old._stopping = True
+        _kill_active()
         try:
             old.shutdown()
             old.server_close()
@@ -521,6 +809,7 @@ def _stop_proxy():
         _PROXY['server'] = None
         _PROXY['port'] = 0
         _PLCACHE.clear()
+        _fh_stop()
         time.sleep(0.05)
 
 
@@ -545,6 +834,40 @@ def _start_proxy():
         class _Handler(http.server.BaseHTTPRequestHandler):
             protocol_version = 'HTTP/1.1'
             timeout = 20
+
+            def handle(self):
+                # Attesa della richiesta successiva a piccoli passi: su Windows
+                # shutdown() non sveglia una recv bloccata, e Kodi aspetta che
+                # tutti i thread finiscano prima di far cliccare il menu.
+                import select
+                self.close_connection = True
+                self.handle_one_request()
+                while not self.close_connection:
+                    t0 = time.time()
+                    pronto = False
+                    while time.time() - t0 < 8:
+                        if getattr(self.server, '_stopping', False):
+                            return
+                        try:
+                            r, _, _ = select.select([self.connection], [], [], 0.3)
+                        except Exception:
+                            return
+                        if r:
+                            pronto = True
+                            break
+                    if not pronto:
+                        return
+                    self.handle_one_request()
+
+            def setup(self):
+                super().setup()
+                with _ACTIVE_LOCK:
+                    _CLIENTS.add(self.connection)
+
+            def finish(self):
+                with _ACTIVE_LOCK:
+                    _CLIENTS.discard(self.connection)
+                super().finish()
 
             def _to_proxy(self, u, base_dir, inherit_q):
                 if u.startswith('//'):
@@ -619,7 +942,8 @@ def _start_proxy():
                 if _PATH_MAP[0] and req_path.startswith(_PATH_MAP[0]):
                     req_up = _PATH_MAP[1] + req_path[len(_PATH_MAP[0]):]
 
-                if host_up in _RELAY_DIRECT:
+                if host_up in _RELAY_DIRECT or \
+                        (REDIRECT_SEGMENTS and not req_path.lower().endswith('.m3u8')):
                     durl = _PROXY['base'] + req_up
                     if _PROXY.get('fresh_query'):
                         durl += '?' + _PROXY['fresh_query']
@@ -637,6 +961,9 @@ def _start_proxy():
                         self.send_response(200)
                         self.send_header('Content-Type', 'application/vnd.apple.mpegurl')
                         self.send_header('Content-Length', str(len(payload)))
+                        if not with_body:
+                            self.send_header('Connection', 'close')
+                            self.close_connection = True
                         self.end_headers()
                         if with_body:
                             self.wfile.write(payload)
@@ -741,6 +1068,8 @@ def _start_proxy():
                         pass
                     return
 
+                with _ACTIVE_LOCK:
+                    _ACTIVE.add(r)
                 ct = r.headers.get('Content-Type') or ''
                 is_pl = ('mpegurl' in ct.lower()) or req_path.lower().endswith('.m3u8')
                 try:
@@ -768,6 +1097,11 @@ def _start_proxy():
                         if 'Content-Range' in r.headers:
                             self.send_header('Content-Range', r.headers['Content-Range'])
                         self.send_header('Accept-Ranges', 'bytes')
+                        if not with_body:
+                            # HEAD (anche quella di Kodi dopo lo stop): connessione chiusa
+                            # subito, cosi' il thread termina senza aspettare il watchdog.
+                            self.send_header('Connection', 'close')
+                            self.close_connection = True
                         self.end_headers()
                         if with_body:
                             for chunk in r.iter_content(chunk_size=256 * 1024):
@@ -776,16 +1110,30 @@ def _start_proxy():
                 except (ConnectionResetError, BrokenPipeError, ConnectionAbortedError):
                     pass
                 finally:
+                    with _ACTIVE_LOCK:
+                        _ACTIVE.discard(r)
                     try:
                         r.close()
                     except Exception:
                         pass
 
+            def _timed(self, with_body):
+                # diagnostica: playlist e richieste lente (> 3 secondi) nel log
+                t0 = time.time()
+                try:
+                    self._relay(with_body)
+                finally:
+                    dt = time.time() - t0
+                    pth = self.path.split('?')[0]
+                    if dt > 3 or pth.lower().endswith('.m3u8'):
+                        logger.info('vidxgo relay %s ...%s in %.1fs'
+                                    % ('GET' if with_body else 'HEAD', pth[-50:], dt))
+
             def do_GET(self):
-                self._relay(True)
+                self._timed(True)
 
             def do_HEAD(self):
-                self._relay(False)
+                self._timed(False)
 
             def log_message(self, *a):
                 pass
@@ -804,29 +1152,56 @@ def _start_proxy():
         threading.Thread(target=srv.serve_forever, daemon=True).start()
         threading.Thread(target=_proxy_watchdog, args=(srv,), daemon=True).start()
         logger.info('vidxgo proxy started on 127.0.0.1:%d' % _PROXY['port'])
+        _fh_start()
     return _PROXY['port']
 
 
 _XOR_BLOCK_RE = re.compile(r"var\s+\w+\s*=\s*'([^']*)'\s*,\s*d\s*=\s*atob\(\s*'([^']*)'", re.S)
+_SCRIPT_RE = re.compile(r'<script[^>]*>(.*?)</script>', re.S | re.I)
+_K_RE = re.compile(r"var\s+k\s*=\s*['\"]([^'\"]+)['\"]")
+_ATOB_RE = re.compile(r"atob\(\s*['\"]([^'\"]+)['\"]\s*\)")
+
+
+def _xor_decode(key, b64):
+    try:
+        decoded = base64.b64decode(b64)
+    except Exception:
+        return None
+    kb = key.encode('utf-8')
+    if not kb:
+        return None
+    return bytes(b ^ kb[i % len(kb)] for i, b in enumerate(decoded)).decode('utf-8', 'ignore')
 
 
 def _decode_xor_blocks(page):
+    """Decifra i blocchi dello script dell'embed. Come in StreamFlix: in ogni
+    <script> con una funzione auto eseguita si cerca "var k = '...'" e
+    "atob('...')" separatamente, quindi non conta l'ordine ne' il nome delle
+    altre variabili. Il vecchio schema resta come seconda possibilita'."""
     out = []
+    seen = set()
+
+    def add(text):
+        if text is not None and text not in seen:
+            seen.add(text)
+            out.append(text)
+
+    for sm in _SCRIPT_RE.finditer(page):
+        body = sm.group(1)
+        if '(function' not in body:
+            continue
+        mk = _K_RE.search(body)
+        md = _ATOB_RE.search(body)
+        if mk and md:
+            add(_xor_decode(mk.group(1), md.group(1)))
     for m in _XOR_BLOCK_RE.finditer(page):
-        key, b64 = m.group(1), m.group(2)
-        try:
-            decoded = base64.b64decode(b64)
-        except Exception:
-            continue
-        kb = key.encode('utf-8')
-        if not kb:
-            continue
-        out.append(bytes(b ^ kb[i % len(kb)]
-                         for i, b in enumerate(decoded)).decode('utf-8', 'ignore'))
+        add(_xor_decode(m.group(1), m.group(2)))
     return out
 
 
-def extract_m3u8_from_embed(session, embed_url, referer=None):
+def extract_embed(session, embed_url, referer=None):
+    """Ritorna (url m3u8, scadenza in ms o 0) letti dall'embed (currentSrc e
+    currentExpire nei blocchi decifrati)."""
     headers = {
         'User-Agent': UA_FF,
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -845,8 +1220,13 @@ def extract_m3u8_from_embed(session, embed_url, referer=None):
         if not sm:
             sm = re.search(r'(https?://[^\s"\'<>]+?\.m3u8[^\s"\'<>]*)', blob)
         if sm:
-            return sm.group(1).replace('\\', '')
+            me = re.search(r'let\s+currentExpire\s*=\s*(\d+)', blob)
+            return sm.group(1).replace('\\', ''), (int(me.group(1)) if me else 0)
     raise Exception('m3u8 non trovato in %d blocchi XOR' % len(blobs))
+
+
+def extract_m3u8_from_embed(session, embed_url, referer=None):
+    return extract_embed(session, embed_url, referer)[0]
 
 
 def get_embed_page(page_url, referer=None):
@@ -897,6 +1277,7 @@ _SEASONS_ARR_RE = re.compile(r'seasons\s*:\s*(\[\s*\{[^\]]*\}\s*\])')
 
 def probe(token):
     info = {'mode': '', 'episodes': []}
+    _install_doh()
     try:
         embed = get_embed_page(HOST + '/' + str(token))
         if not embed:
@@ -941,6 +1322,52 @@ def probe(token):
         return info
 
 
+SEASONS_MAX = 20
+
+
+def episodes_api(token):
+    """Episodi dall'API del sito (seasons.php?imdb=<id>&season=<n>): numero,
+    nome, descrizione e immagine di ogni episodio. Si ferma alla prima
+    stagione che non risponde. Ritorna None se la stagione 1 non risponde."""
+    _install_doh()
+    info = {'mode': 'tv', 'episodes': [], 'details': []}
+    try:
+        hdrs = {'User-Agent': UA_FF, 'Referer': REF_SITE + '/',
+                'Accept': 'application/json, text/plain, */*'}
+        for sn in range(1, SEASONS_MAX + 1):
+            url = '%s/seasons.php?imdb=%s&season=%d' % (HOST, token, sn)
+            r, _u, _s = _vidxgo_resolve([url], hdrs)
+            if r is None:
+                break
+            try:
+                data = r.json()
+            except Exception:
+                break
+            if data.get('ok') != 1:
+                break
+            got = 0
+            for ep in data.get('episodes') or []:
+                try:
+                    en = int(ep.get('number'))
+                except Exception:
+                    continue
+                info['episodes'].append((sn, en))
+                info['details'].append({'s': sn, 'e': en,
+                                        'name': ep.get('name') or '',
+                                        'overview': ep.get('overview') or '',
+                                        'still': ep.get('still') or ''})
+                got += 1
+            if not got:
+                break
+        if not info['episodes']:
+            return None
+        info['episodes'] = sorted(set(info['episodes']))
+        return info
+    except Exception:
+        logger.error('vidxgo episodes_api: ' + traceback.format_exc())
+        return None
+
+
 def _tv_default_episode(token):
     try:
         embed = get_embed_page(HOST + '/' + str(token))
@@ -965,11 +1392,52 @@ def _tv_default_episode(token):
 
 
 def test_video_exists(page_url):
+    """Controlla in fretta se vidxgo ha il contenuto, per film ed episodi: un 404
+    vuol dire che non c'e', e S4Me (anche con l'autoplay) passa subito al server
+    successivo, per esempio vixsrc, senza aspettare i tentativi lunghi.
+    Film: se /t/<token> da 404 si guarda anche la pagina del player (un token
+    nudo puo' essere una serie, che si apre lo stesso).
+    In ogni dubbio (rete lenta, blocchi, errori) risponde che il video esiste."""
+    try:
+        parti = urllib.parse.urlparse(page_url).path.strip('/').split('/')
+        if not parti or not parti[0]:
+            return True, ''
+        episodio = len(parti) >= 3 and parti[1].isdigit() and parti[2].isdigit()
+        _install_doh()
+        sessione = _vidxgo_session()
+        hdrs = {'User-Agent': UA_FF, 'Referer': HOST + '/',
+                'Accept': 'application/json, text/plain, */*'}
+        url = HOST + '/t/' + '/'.join(parti[:3] if episodio else parti[:1])
+        r = sessione.get(url, headers=hdrs, timeout=4)
+        if r.status_code in (404, 410):
+            if not episodio:
+                r2 = sessione.get(HOST + '/' + parti[0],
+                                  headers=dict(hdrs, Accept='text/html,*/*;q=0.8'), timeout=4)
+                if r2.status_code not in (404, 410):
+                    return True, ''
+            logger.info('vidxgo: contenuto non presente (%s), passo al server successivo' % url)
+            return False, 'Contenuto non disponibile su vidxgo'
+    except Exception:
+        logger.error('vidxgo test_video_exists: ' + traceback.format_exc()[-150:])
     return True, ''
 
 
 def get_video_url(page_url, premium=False, user='', password='', video_password=''):
     logger.info('vidxgo.get_video_url: %s' % page_url)
+    _install_doh()
+    _installa_aggancio()
+    _GEN[0] += 1
+    gen = _GEN[0]
+    # nuovo contenuto richiesto: ferma subito il proxy del precedente
+    _stop_proxy()
+    with _PLAY_LOCK:
+        if gen != _GEN[0]:
+            logger.info('vidxgo: richiesta superata da una piu recente, annullo')
+            return []
+        return _get_video_url_impl(page_url, gen)
+
+
+def _get_video_url_impl(page_url, gen):
     try:
         path_parts = urllib.parse.urlparse(page_url).path.strip('/').split('/')
         token = path_parts[0] if path_parts and path_parts[0] else ''
@@ -1054,15 +1522,33 @@ def get_video_url(page_url, premium=False, user='', password='', video_password=
 
         if not stream_url:
             try:
-                stream_url = extract_m3u8_from_embed(_vidxgo_session(), page_url,
-                                                     referer=REF_SITE + '/')
-                _PROXY['t_url'] = ''
+                stream_url, exp_embed = extract_embed(_vidxgo_session(), page_url,
+                                                      referer=REF_SITE + '/')
+                # come StreamFlix: dal token dell'embed si ricava l'URL /t/ per rinnovarlo
+                n_seg = 3 if is_episode else 1
+                _PROXY['t_url'] = HOST + '/t/' + '/'.join(path_parts[:n_seg])
+                _PROXY['fresh_query'] = urllib.parse.urlparse(stream_url).query
+                if exp_embed:
+                    _PROXY['expire_ms'] = exp_embed
             except Exception as e:
                 logger.error('vidxgo embed extraction failed: %s' % e)
 
         if not stream_url:
             logger.error('vidxgo: nessun URL trovato')
             return []
+
+        if gen != _GEN[0]:
+            logger.info('vidxgo: avvio annullato, e stato richiesto un altro contenuto')
+            return []
+
+        if MODO_ISA:
+            return _risultato_isa(stream_url)
+
+        if not USA_PROXY:
+            hdr = '&'.join('%s=%s' % (k, urllib.parse.quote(v, safe=''))
+                           for k, v in PLAY_HEADERS.items())
+            logger.info('vidxgo: modalita diretta, senza proxy')
+            return [['vidxgo', stream_url + '|' + hdr]]
 
         _reset_relay_sessions()
 
@@ -1078,6 +1564,11 @@ def get_video_url(page_url, premium=False, user='', password='', video_password=
             return []
 
         proxy_url = 'http://127.0.0.1:%d%s' % (port, u.path)
+        if REDIRECT_SEGMENTS:
+            # i segmenti li scarica Kodi dal CDN: servono le intestazioni
+            proxy_url += '|' + '&'.join(
+                '%s=%s' % (k, urllib.parse.quote(PLAY_HEADERS[k], safe=''))
+                for k in ('User-Agent', 'Referer', 'Origin'))
 
         import threading as _th
         _th.Thread(target=_prefetch_playlists, daemon=True).start()

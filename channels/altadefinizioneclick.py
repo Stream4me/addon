@@ -277,11 +277,14 @@ def episodios(item):
 
     patron = (r'<a href="(?P<url>https://v\.vidxgo\.co/[^"]+)"'
               r'[^>]*data-s="(?P<season>\d+)"[^>]*data-e="(?P<episode>\d+)"')
-    action = 'play'
+    # Gli episodi aprono findvideos, come negli altri canali: i link li crea la
+    # funzione findvideos (anche per l'URL sintetico v.vidxgo.co/<token>/<s>/<e>).
+    # Gli item degli episodi non devono avere 'server': la ricerca globale lo
+    # prende per un elenco di link e mette in riproduzione il primo episodio.
+    action = 'findvideos'
 
     def itemHook(it):
         it.is_folder = False
-        it.server = 'vidxgo'
 
         m = re.search(r'v\.vidxgo\.co/\d+/(\d+)/(\d+)', it.url or '')
         if m:
