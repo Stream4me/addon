@@ -82,6 +82,8 @@ def mark_auto_as_watched(item):
                 nextdialog.close()
                 break
 
+            xbmc.sleep(1000)
+
 
         # Silent sync with Trakt
         if sync and config.get_setting("trakt_sync"): sync_trakt_kodi()
