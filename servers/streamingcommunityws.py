@@ -4,7 +4,7 @@ PY3 = False
 if sys.version_info[0] >= 3: PY3 = True
 
 from six.moves import urllib
-    
+
 import ast
 import xbmc
 
@@ -13,11 +13,15 @@ from platformcode import logger, config
 
 vttsupport = False if int(xbmc.getInfoLabel('System.BuildVersion').split('.')[0]) < 20 else True
 
+
 def test_video_exists(page_url):
     global iframeParams
     global urlParams
     server_url = support.scrapertools.decodeHtmlentities(support.match(page_url, patron=['<iframe [^>]+src="([^"]+)', 'embed_url="([^"]+)']).match)
-    iframeParams = support.match(server_url, patron=r'''window\.masterPlaylist\s+=\s+{[^{]+({[^}]+}),\s+url:\s+'([^']+).*?canPlayFHD\s=\s(true|false)''', debug=False).match
+
+    embed_headers = {'Referer': page_url}
+
+    iframeParams = support.match(server_url, headers=embed_headers, patron=r'''window\.masterPlaylist\s+=\s+{[^{]+({[^}]+}),\s+url:\s+'([^']+).*?canPlayFHD\s=\s(true|false)''', debug=False).match
 
     if not iframeParams or len(iframeParams) < 2:
         return 'StreamingCommunity', 'Prossimamente'
@@ -38,7 +42,7 @@ def get_video_url(page_url, premium=False, user="", password="", video_password=
         masterPlaylistParams['h'] = 1
     if 'b' in urlParams:
         masterPlaylistParams['b'] = 1
-    
+
     masterPlaylistParams.update(url_params)
     url =  '{}://{}{}?{}'.format(split_url.scheme,split_url.netloc,split_url.path,urllib.parse.urlencode(masterPlaylistParams))
 
