@@ -253,17 +253,33 @@ def peliculas(item):
 
     return itemlist
 
+
 def episodios(item):
     support.info()
     itemlist = []
     title = 'Parte' if item.type.lower() == 'movie' else 'Episodio'
     start = 1
     limit = 120
+
+    if not getattr(item, 'api_ep_url', None):
+        m = re.search(r'/anime/(\d+)', item.url or '')
+        if not m:
+            logger.info('AnimeUnity: impossibile ricavare api_ep_url da url={}'.format(item.url))
+            return []
+        item.api_ep_url = '{}/info_api/{}/'.format(host, m.group(1))
+        logger.info('AnimeUnity: api_ep_url ricostruito -> {}'.format(item.api_ep_url))
  
     while True:
-        full = json.loads(httptools.downloadpage('{}1?start_range={}&end_range={}'.format(item.api_ep_url, start, start + (limit - 1)), headers=headers).data)
-        count = full['episodes_count']
-        episodes = full['episodes']
+        url_api = '{}1?start_range={}&end_range={}'.format(item.api_ep_url, start, start + (limit - 1))
+        data = httptools.downloadpage(url_api, headers=headers).data
+
+        try:
+            full = json.loads(data)
+        except (ValueError, TypeError):
+            logger.info('AnimeUnity: risposta non valida da {} (len={})'.format(url_api, len(data or '')))
+            break
+        count = full.get('episodes_count', 0)
+        episodes = full.get('episodes', [])
         
         for it in episodes:
             file_name = it.get('file_name', '')
