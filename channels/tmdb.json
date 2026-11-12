@@ -1,0 +1,40 @@
+{
+    "id": "tmdb",
+    "name": "TMDb",
+    "language": [
+        "ita"
+    ],
+    "active": true,
+    "thumbnail": "https://i.imgur.com/Q4G2eNP.png",
+    "banner": "tmdb.png",
+    "categories": [
+        "movie",
+        "tvshow"
+    ],
+    "not_active": [
+        "include_in_newest"
+    ],
+    "settings": [
+        {
+            "id": "al_click",
+            "type": "list",
+            "label": "Al click sul contenuto",
+            "default": 0,
+            "enabled": true,
+            "visible": true,
+            "lvalues": [
+                "Riproduci subito",
+                "Scelta utente",
+                "Ricerca globale"
+            ]
+        },
+        {
+            "id": "include_in_global_search",
+            "type": "bool",
+            "label": "Includi in Ricerca Globale",
+            "default": false,
+            "enabled": true,
+            "visible": true
+        }
+    ]
+}
