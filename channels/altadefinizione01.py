@@ -46,13 +46,13 @@ _RE_TMDB = re.compile(r'themoviedb\.org/(?:movie|tv)/(\d+)', re.I)
 @support.menu
 def mainlist(item):
     menu = [
-        ('Tutti', ['/lastnews/', 'peliculas', '', 'undefined']),
-        ('Al Cinema {submenu}', ['/cinema/', 'peliculas', '', 'undefined']),
+        ('Tutti', ['/lastnews/', 'peliculas', '', 'movie']),
+        ('Al Cinema {submenu}', ['/cinema/', 'peliculas', '', 'movie']),
         ('Ultimi Aggiornati-Aggiunti {submenu}', ['', 'peliculas', 'update']),
-        ('Generi {submenu}', ['', 'genres', 'genres', 'undefined']),
-        ('Lettera {submenu}', ['/catalog/a', 'genres', 'orderalf', 'undefined']),
-        ('Anni {submenu}', ['', 'genres', 'years', 'undefined']),
-        ('Sub-ITA {submenu}', ['/sub-ita/', 'peliculas', '', 'undefined']),
+        ('Generi {submenu}', ['', 'genres', 'genres', 'movie']),
+        ('Lettera {submenu}', ['/catalog/a', 'genres', 'orderalf', 'movie']),
+        ('Anni {submenu}', ['', 'genres', 'years', 'movie']),
+        ('Sub-ITA {submenu}', ['/sub-ita/', 'peliculas', '', 'movie']),
         ('Serie TV', ['/serie-tv/', 'peliculas', '', 'tvshow']),
     ]
     search = ''
@@ -108,16 +108,18 @@ def peliculas(item):
         patronNext = r'<div[^>]*class="[^"]*page[^"]*"[^>]*>.*?<a href="([^"]+)"[^>]*>(?:Next|Avanti|\d+|>)</a>'
 
     else:
+        # film o serie lo dice l'etichetta della locandina: trdublaj (qualita') o se_num (stagione ed episodio)
+        typeContentDict = {'movie': ['trdublaj'], 'tvshow': ['se_num']}
         patronBlock = r'<div class="cover_kapsul ml-mask">(?P<block>.*)<div class="page_nav">'
         patron = (
             r'<div class="cover boxcaption"> +<h2>\s*<a href="(?P<url>[^"]+)">(?P<title>[^<]+).*?'
             r'src="(?P<thumb>[^"]+).*?'
-            r'(?:<div class="trdublaj">|<span class="se_num">)(?P<quality>[^<]+).*?'
+            r'<(?:div|span) class="(?P<type>trdublaj|se_num)">(?P<quality>[^<]+).*?'
             r'<span class="ml-label">(?P<year>[0-9]+).*?'
             r'<span class="ml-label">(?P<duration>[^<]+).*?'
             r'<p>(?P<plot>[^<]+)'
         )
-        patronNext = r'<span>\d</span> <a href="([^"]+)">'
+        patronNext = r'<span>\d+</span>\s*<a href="([^"]+)">'
 
     return locals()
 
