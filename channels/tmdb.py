@@ -318,6 +318,17 @@ def _durate(risultati, tipo):
     if elenco:
         with futures.ThreadPoolExecutor(max_workers=10) as executor:
             list(executor.map(una, elenco))
+    _senza_durata_a_destra()
+
+
+def _senza_durata_a_destra():
+    # senza un metodo di ordinamento Kodi mostra la durata a destra di ogni riga (maschera %D). La skin la mostra gia
+    # in basso accanto alla data, quindi si indica un ordinamento 'non ordinato' con la seconda etichetta vuota
+    try:
+        import xbmcplugin
+        xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_UNSORTED, '%L', ' ')
+    except Exception:
+        logger.error('tmdb: metodo di ordinamento non impostato')
 
 
 def _elemento(r, tipo, base, latini=None):
