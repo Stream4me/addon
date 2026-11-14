@@ -627,6 +627,36 @@ def set_infolabels(listitem, item, player=False):
     except:
         listitem.setInfo("video", item.infoLabels)
 
+    if player:
+        set_uniqueids(listitem, item)
+
+
+def set_uniqueids(listitem, item):
+    """
+    Passa al player gli id TMDb, IMDb e TVDB come uniqueid, cosi gli addon di servizio che li leggono dal
+    player (per esempio TheIntroDB, plugin.video.tidb) li trovano. Per gli episodi l'id TMDb e quello della
+    serie, quindi va in 'tmdbshow'. Serve Kodi 19 o superiore, sulle versioni vecchie non fa nulla.
+    """
+    try:
+        info = item.infoLabels
+        ids = {}
+        episodio = item.contentType == 'episode' or info.get('mediatype') == 'episode' \
+                   or (info.get('season') and info.get('episode'))
+        tmdb_id = str(info.get('tmdb_id') or '').strip()
+        if tmdb_id.isdigit() and int(tmdb_id) > 0:
+            ids['tmdbshow' if episodio else 'tmdb'] = tmdb_id
+        imdb_id = str(info.get('imdb_id') or info.get('imdbnumber') or '').strip()
+        if imdb_id.startswith('tt'):
+            ids['imdb'] = imdb_id
+        tvdb_id = str(info.get('tvdb_id') or '').strip()
+        if tvdb_id.isdigit() and int(tvdb_id) > 0:
+            ids['tvdbshow' if episodio else 'tvdb'] = tvdb_id
+        if ids:
+            default = 'tmdbshow' if 'tmdbshow' in ids else 'tmdb' if 'tmdb' in ids else list(ids)[0]
+            listitem.getVideoInfoTag().setUniqueIDs(ids, default)
+    except Exception:
+        logger.debug('uniqueid non impostati')
+
 
 def set_context_commands(item, item_url, parent_item, **kwargs):
     """
