@@ -889,6 +889,7 @@ def seasons(item):
                                    plot=s.get('overview') or trama, fulltitle=nome, show=nome, folder=True))
     # come gli altri canali: voce "Aggiungi alla videoteca" in fondo, salva tutte le stagioni tramite episodios
     support.videolibrary(itemlist, item.clone(action='episodios', season=''), function='episodios')
+    _senza_durata_a_destra()
     return itemlist
 
 
@@ -937,6 +938,8 @@ def episodios(item):
                                        contentEpisodeNumber=num, season=n, episode=num, thumbnail=img,
                                        tmdb=str(id_serie), fulltitle=nome, show=nome, contentSerieName=nome, context=[],
                                        plot=e.get('overview') or item.plot or ''))
+    if not libreria:
+        _senza_durata_a_destra()  # il tmdb di S4Me aggiunge la durata agli episodi: a destra non deve comparire
     return itemlist
 
 
@@ -1010,23 +1013,60 @@ def _dai_canali(item, controlla=True):
     return None
 
 
-_IMDB = {}
+_ESTERNI = {}
 
 
-def _id_imdb(tmdb_id, tipo):
-    # id IMDb (solo le cifre, senza "tt") dall'id TMDB: una richiesta, tenuta in cache da core/tmdb
+def _id_esterni(tmdb_id, tipo):
+    # id IMDb ("tt...") e TVDB dall'id TMDB: una richiesta (external_ids), tenuta in cache
     chiave = (tipo, str(tmdb_id))
-    if chiave not in _IMDB:
-        trovato = ''
+    if chiave not in _ESTERNI:
+        trovato = {'imdb': '', 'tvdb': ''}
         try:
             dati = tmdb.Tmdb.get_json('%s/%s/%s/external_ids?api_key=%s' % (tmdb.host, tipo, tmdb_id, tmdb.api)) or {}
             valore = dati.get('imdb_id') or ''
             if valore.startswith('tt') and valore[2:].isdigit():
-                trovato = valore[2:]
+                trovato['imdb'] = valore
+            if str(dati.get('tvdb_id') or '').isdigit():
+                trovato['tvdb'] = str(dati['tvdb_id'])
         except Exception:
-            logger.error('tmdb: id IMDb non letto per %s' % tmdb_id)
-        _IMDB[chiave] = trovato
-    return _IMDB[chiave]
+            logger.error('tmdb: id esterni non letti per %s' % tmdb_id)
+        _ESTERNI[chiave] = trovato
+    return _ESTERNI[chiave]
+
+
+def _id_imdb(tmdb_id, tipo):
+    # id IMDb (solo le cifre, senza "tt") per i link vidxgo
+    return _id_esterni(tmdb_id, tipo)['imdb'][2:]
+
+
+def _id_per_trakt(item, voci):
+    # I server arrivano da canali diversi e con le infoLabels minime (solo l'id TMDB). Chi legge gli id dal player,
+    # come script.trakt, identifica le serie con TVDB o IMDb e i film con TMDB o IMDb: senza, lo scrobble non parte.
+    # Come gli altri canali (che hanno le infoLabels complete dal core) si completano qui, una richiesta in cache.
+    try:
+        tmdb_id = item.tmdb or item.infoLabels.get('tmdb_id') or item.infoLabels.get('tmdb_id_show')
+        if not tmdb_id:
+            return
+        serie = bool(item.season and item.episode)
+        esterni = _id_esterni(tmdb_id, 'tv' if serie else 'movie')
+        nome = item.contentSerieName or item.fulltitle or item.contentTitle
+        for voce in voci:
+            info = voce.infoLabels
+            info['tmdb_id'] = info.get('tmdb_id') or str(tmdb_id)
+            if esterni['imdb']:
+                info['imdb_id'] = info.get('imdb_id') or esterni['imdb']
+            if serie:
+                if esterni['tvdb']:
+                    info['tvdb_id'] = info.get('tvdb_id') or esterni['tvdb']
+                info['mediatype'] = 'episode'
+                info['season'] = info.get('season') or int(item.season)
+                info['episode'] = info.get('episode') or int(item.episode)
+                if nome:
+                    info['tvshowtitle'] = info.get('tvshowtitle') or nome
+            else:
+                info['mediatype'] = info.get('mediatype') or 'movie'
+    except Exception:
+        logger.error('tmdb: id per trakt non impostati')
 
 
 def _da_vidxgo(item, tmdb_id, serie):
@@ -1376,6 +1416,7 @@ def findvideos(item):
         # anime che i player diretti non hanno: scheda trovata per id (modulo tmdb_anime), poi stesso controllo dei server.
         # Prima la versione doppiata in italiano; la sottotitolata solo se quella manca o il suo server non e valido
         server = _server_validi(_da_anime(item, 'ITA')) or _server_validi(_da_anime(item, 'Sub-ITA'))
+    _id_per_trakt(item, server)
     for voce in server:
         # nella finestra dei server S4Me mostra serverName e ch_name
         voce.serverName = voce.serverName or (voce.server or '').capitalize()
