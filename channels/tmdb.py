@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 # Canale TMDb per S4Me.
+# Crediti: la struttura del menu (sezioni, sottosezioni, piattaforme, collezioni) e' ripresa da TMDb Helper di
+# jurialmunkey: https://github.com/jurialmunkey/plugin.video.themoviedb.helper
 # Mostra le categorie di TMDB (film e serie) e al click riproduce subito: il video si chiede direttamente ai player
 # raggiungibili da un id (VixSrc con l'id TMDB, vidxgo con l'id IMDb), senza cercare il titolo nei siti.
 # I riferimenti sono solo id, quindi il canale non dipende dai domini dei siti e i widget non si rompono.
