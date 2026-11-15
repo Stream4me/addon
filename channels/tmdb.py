@@ -1423,6 +1423,10 @@ def findvideos(item):
         # nella finestra dei server S4Me mostra serverName e ch_name
         voce.serverName = voce.serverName or (voce.server or '').capitalize()
         voce.ch_name = voce.ch_name or 'TMDb'
+        # la finestra dei server di S4Me sostituisce thumbnail con il logo del server; il lettore usa contentThumbnail
+        # se c'e, quindi si conserva qui la copertina del titolo (altrimenti in "Informazioni" compare il logo)
+        voce.contentThumbnail = voce.contentThumbnail or item.contentThumbnail or item.thumbnail
+        voce.contentFanart = voce.contentFanart or item.fanart
     logger.info('tmdb: findvideos terminato in %.1f secondi, %d server' % (time.time() - inizio, len(server)))
     if not server:
         platformtools.dialog_notification('TMDb', 'Non disponibile: prova "Cerca negli altri canali" dal menu contestuale')
