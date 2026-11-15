@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 # Canale TMDb per S4Me.
+# Crediti: la struttura del menu (sezioni, sottosezioni, piattaforme, collezioni) e' ripresa da TMDb Helper di
+# jurialmunkey: https://github.com/jurialmunkey/plugin.video.themoviedb.helper
 # Mostra le categorie di TMDB (film e serie) e al click riproduce subito: il video si chiede direttamente ai player
 # raggiungibili da un id (VixSrc con l'id TMDB, vidxgo con l'id IMDb), senza cercare il titolo nei siti.
 # I riferimenti sono solo id, quindi il canale non dipende dai domini dei siti e i widget non si rompono.
@@ -1421,6 +1423,10 @@ def findvideos(item):
         # nella finestra dei server S4Me mostra serverName e ch_name
         voce.serverName = voce.serverName or (voce.server or '').capitalize()
         voce.ch_name = voce.ch_name or 'TMDb'
+        # la finestra dei server di S4Me sostituisce thumbnail con il logo del server; il lettore usa contentThumbnail
+        # se c'e, quindi si conserva qui la copertina del titolo (altrimenti in "Informazioni" compare il logo)
+        voce.contentThumbnail = voce.contentThumbnail or item.contentThumbnail or item.thumbnail
+        voce.contentFanart = voce.contentFanart or item.fanart
     logger.info('tmdb: findvideos terminato in %.1f secondi, %d server' % (time.time() - inizio, len(server)))
     if not server:
         platformtools.dialog_notification('TMDb', 'Non disponibile: prova "Cerca negli altri canali" dal menu contestuale')
