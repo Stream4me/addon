@@ -8,7 +8,7 @@ import cloudscraper
 from platformcode import logger
 
 
-# DNS cifrato (DoH) come StreamFlix: si usa la funzione che l'addon ha gia'
+# DNS cifrato (DoH): si usa la funzione che l'addon ha gia'
 # (core/resolverdns.py). Il suo override agisce su ogni connessione urllib3 del
 # processo, quindi anche cloudscraper, le richieste del proxy e il CDN.
 _DOH_MODULES = ('urllib3.util.connection',
@@ -45,10 +45,10 @@ _install_doh()
 # False = niente proxy locale (solo prova: il CDN rifiuta Kodi senza proxy).
 USA_PROXY = True
 
-# Come StreamFlix: il proxy non fa passare i video. Rielabora solo le playlist
+# Modalita con redirect: il proxy non fa passare i video. Rielabora solo le playlist
 # (.m3u8) e a ogni altra richiesta (segmenti, chiavi) risponde con un redirect
-# 302 al CDN con il token piu' recente, come l'intercettore di StreamFlix che
-# aggiorna la query di ogni richiesta. I thread di streaming spariscono.
+# 302 al CDN con il token piu' recente, aggiornando la query di ogni richiesta.
+# I thread di streaming spariscono.
 # Provato: Kodi non riesce a raggiungere il CDN da solo (30 secondi di attesa e
 # poi errore del demuxer), quindi deve restare False: il proxy trasporta i segmenti.
 REDIRECT_SEGMENTS = False
@@ -1174,7 +1174,7 @@ def _xor_decode(key, b64):
 
 
 def _decode_xor_blocks(page):
-    """Decifra i blocchi dello script dell'embed. Come in StreamFlix: in ogni
+    """Decifra i blocchi dello script dell'embed. In ogni
     <script> con una funzione auto eseguita si cerca "var k = '...'" e
     "atob('...')" separatamente, quindi non conta l'ordine ne' il nome delle
     altre variabili. Il vecchio schema resta come seconda possibilita'."""
@@ -1409,6 +1409,15 @@ def test_video_exists(page_url):
                 'Accept': 'application/json, text/plain, */*'}
         url = HOST + '/t/' + '/'.join(parti[:3] if episodio else parti[:1])
         r = sessione.get(url, headers=hdrs, timeout=4)
+        if r.status_code == 200:
+            # il titolo c'e: si controlla anche che il CDN apra la connessione, e se non risponde lo si dice
+            # chiaramente (il messaggio generico di S4Me fa pensare a un errore dell'addon)
+            try:
+                flusso = (r.json() or {}).get('url') or ''
+            except ValueError:
+                flusso = ''
+            if flusso.startswith('http') and not _cdn_raggiungibile(flusso):
+                return False, MSG_CDN
         if r.status_code in (404, 410):
             if not episodio:
                 r2 = sessione.get(HOST + '/' + parti[0],
@@ -1420,6 +1429,33 @@ def test_video_exists(page_url):
     except Exception:
         logger.error('vidxgo test_video_exists: ' + traceback.format_exc()[-150:])
     return True, ''
+
+
+MSG_CDN = 'Attualmente non disponibile su Vidxgo.'
+
+
+def _cdn_raggiungibile(stream_url):
+    """Prima di avviare il proxy si controlla che il CDN apra la connessione. Se non si apre
+    (host che non risponde, bloccato dalla rete) il proxy aspetterebbe 30 secondi per ogni
+    richiesta di Kodi, che riprova per minuti restando fermo. Con poca pazienza (3 secondi
+    di connessione) si rinuncia subito e S4Me mostra che il video non e disponibile.
+    Risponde True a qualunque risposta HTTP (anche 403) e a un timeout di lettura: vuol
+    dire che il server c'e. Solo gli errori di connessione danno False."""
+    try:
+        r = _vidxgo_session().get(stream_url, headers=PLAY_HEADERS, timeout=(3, 3), stream=True)
+        try:
+            r.close()
+        except Exception:
+            pass
+        return True
+    except Exception as e:
+        nome = type(e).__name__
+        if 'ReadTimeout' not in nome and ('Timeout' in nome or 'ConnectionError' in nome):
+            logger.error('vidxgo: il CDN %s non risponde (%s), video non disponibile'
+                         % (urllib.parse.urlparse(stream_url).netloc, nome))
+            return False
+        logger.error('vidxgo: controllo del CDN non riuscito (%s), si prosegue' % nome)
+        return True
 
 
 def get_video_url(page_url, premium=False, user='', password='', video_password=''):
@@ -1524,7 +1560,7 @@ def _get_video_url_impl(page_url, gen):
             try:
                 stream_url, exp_embed = extract_embed(_vidxgo_session(), page_url,
                                                       referer=REF_SITE + '/')
-                # come StreamFlix: dal token dell'embed si ricava l'URL /t/ per rinnovarlo
+                # dal token dell'embed si ricava l'URL /t/ per rinnovarlo
                 n_seg = 3 if is_episode else 1
                 _PROXY['t_url'] = HOST + '/t/' + '/'.join(path_parts[:n_seg])
                 _PROXY['fresh_query'] = urllib.parse.urlparse(stream_url).query
@@ -1539,6 +1575,9 @@ def _get_video_url_impl(page_url, gen):
 
         if gen != _GEN[0]:
             logger.info('vidxgo: avvio annullato, e stato richiesto un altro contenuto')
+            return []
+
+        if not _cdn_raggiungibile(stream_url):
             return []
 
         if MODO_ISA:
