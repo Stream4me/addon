@@ -37,6 +37,128 @@ xbmc_player = xbmc.Player()
 
 play_canceled = False
 
+# --- [2.1] InfoTagVideo (Kodi 19+): evita warning deprecazione setInfo/setCast/ResumeTime ---
+try:
+    _KODI_NUM_VERSION = float(config.get_platform(True).get('num_version', 0) or 0)
+except Exception:
+    _KODI_NUM_VERSION = 0
+_USE_INFOTAG = _KODI_NUM_VERSION >= 19
+
+
+def _to_int(v):
+    try:
+        return int(float(v))
+    except Exception:
+        return 0
+
+
+def _to_float(v):
+    try:
+        return float(v)
+    except Exception:
+        return 0.0
+
+
+def _to_list(v):
+    if isinstance(v, (list, tuple)):
+        return [str(x).strip() for x in v if str(x).strip()]
+    return [x.strip() for x in str(v).split(',') if x.strip()]
+
+
+def _set_votes(tag, v):
+    try:
+        tag.setVotes(_to_int(v))
+    except Exception:
+        pass
+
+
+_INFO_LABEL_SETTERS = {
+    'title': lambda t, v: t.setTitle(str(v)),
+    'originaltitle': lambda t, v: t.setOriginalTitle(str(v)),
+    'tvshowtitle': lambda t, v: t.setTvShowTitle(str(v)),
+    'sorttitle': lambda t, v: t.setSortTitle(str(v)),
+    'plot': lambda t, v: t.setPlot(str(v)),
+    'plotoutline': lambda t, v: t.setPlotOutline(str(v)),
+    'tagline': lambda t, v: t.setTagLine(str(v)),
+    'duration': lambda t, v: t.setDuration(_to_int(v)),
+    'season': lambda t, v: t.setSeason(_to_int(v)),
+    'episode': lambda t, v: t.setEpisode(_to_int(v)),
+    'sortseason': lambda t, v: t.setSortSeason(_to_int(v)),
+    'sortepisode': lambda t, v: t.setSortEpisode(_to_int(v)),
+    'mediatype': lambda t, v: t.setMediaType(str(v)),
+    'mpaa': lambda t, v: t.setMpaa(str(v)),
+    'status': lambda t, v: t.setStatus(str(v)),
+    'aired': lambda t, v: t.setAired(str(v)),
+    'premiered': lambda t, v: t.setPremiered(str(v)),
+    'lastplayed': lambda t, v: t.setLastPlayed(str(v)),
+    'dateadded': lambda t, v: t.setDateAdded(str(v)),
+    'rating': lambda t, v: t.setRating(_to_float(v)),
+    'votes': _set_votes,
+    'genre': lambda t, v: t.setGenres(_to_list(v)),
+    'country': lambda t, v: t.setCountries(_to_list(v)),
+    'studio': lambda t, v: t.setStudios(_to_list(v)),
+    'director': lambda t, v: t.setDirector(_to_list(v)),
+    'writer': lambda t, v: t.setWritingCredits(str(v)),
+    'credits': lambda t, v: t.setWritingCredits(str(v)),
+    'artist': lambda t, v: t.setArtist(_to_list(v)),
+    'album': lambda t, v: t.setAlbum(str(v)),
+    'imdbnumber': lambda t, v: t.setIMDBNumber(str(v)),
+    'trailer': lambda t, v: t.setTrailer(str(v)),
+    'episodeguide': lambda t, v: t.setEpisodeGuide(str(v)),
+    'playcount': lambda t, v: t.setPlayCount(_to_int(v)),
+    'top250': lambda t, v: t.setTop250(_to_int(v)),
+    'tracknumber': lambda t, v: t.setTrackNumber(_to_int(v)),
+    'userrating': lambda t, v: t.setUserRating(_to_int(v)),
+    'set': lambda t, v: t.setSet(str(v)),
+    'setid': lambda t, v: t.setSetId(_to_int(v)),
+    'setoverview': lambda t, v: t.setSetOverview(str(v)),
+    'showlink': lambda t, v: t.setShowLinks(_to_list(v)),
+    'tag': lambda t, v: t.setTags(_to_list(v)),
+    'year': lambda t, v: t.setYear(_to_int(v)),
+}
+
+
+def set_cast(listitem, cast):
+    """Kodi 20+: InfoTagVideo.setCast vuole oggetti xbmc.Actor. Kodi 19: dict. Kodi <19: legacy."""
+    if _USE_INFOTAG:
+        try:
+            if hasattr(xbmc, 'Actor'):
+                actors = []
+                for c in cast:
+                    if not (isinstance(c, dict) and c.get('name')):
+                        continue
+                    try:
+                        actors.append(xbmc.Actor(c.get('name', ''), c.get('role', '') or '',
+                                                 _to_int(c.get('order', 0)),
+                                                 c.get('thumbnail', '') or ''))
+                    except Exception:
+                        continue
+                if actors:
+                    listitem.getVideoInfoTag().setCast(actors)
+                    return
+            else:
+                listitem.getVideoInfoTag().setCast(cast)
+                return
+        except Exception:
+            pass
+        return  # se l'API moderna fallisce, saltiamo: niente fallback deprecated
+    listitem.setCast(cast)   # legacy < Kodi 19
+
+
+def set_resume_time(listitem, seconds):
+    if _USE_INFOTAG:
+        tag = listitem.getVideoInfoTag()
+        for args in ((_to_int(seconds), 0, ''), (_to_int(seconds), 0)):
+            try:
+                tag.setResumePoint(*args)
+                return
+            except Exception:
+                continue
+        return  # se l'API moderna fallisce, saltiamo: niente fallback deprecated
+    listitem.setProperty('ResumeTime', str(seconds))   # legacy < Kodi 19
+# --- fine [2.1] ---
+
+
 
 def dialog_ok(heading, message):
     dialog = xbmcgui.Dialog()
@@ -365,7 +487,7 @@ def render_items(itemlist, parent_item):
         if item.infoLabels.get('clearart'): art['clearart'] = item.infoLabels['clearart']
         if item.infoLabels.get('banner'): art['banner'] = item.infoLabels['banner']
         if item.infoLabels.get('disc'): art['disc'] = item.infoLabels['disc']
-        listitem.setProperty('ResumeTime', str(get_played_time(item)))
+        set_resume_time(listitem, get_played_time(item))
 
         listitem.setArt(art)
 
@@ -376,7 +498,7 @@ def render_items(itemlist, parent_item):
             try:
                 cast = [{'name':c[0], 'role':c[1], 'thumbnail':c[2], 'order':c[3]} for c in item.infoLabels.get("castandrole", [])]
                 cast.sort(key=lambda c: c['order'])
-                listitem.setCast(cast)
+                set_cast(listitem, cast)
                 del item.infoLabels['castandrole']
             except:
                 pass
@@ -623,8 +745,26 @@ def set_infolabels(listitem, item, player=False):
     # if item.infoLabels:
     try:
         infoLabels_kodi = {infoLabels_dict[label_tag]: label_value for label_tag, label_value in list(item.infoLabels.items()) if label_tag in infoLabels_dict}
+    except Exception:
+        infoLabels_kodi = dict(item.infoLabels)
+
+    if _USE_INFOTAG:
+        try:
+            tag = listitem.getVideoInfoTag()
+            for label, value in infoLabels_kodi.items():
+                setter = _INFO_LABEL_SETTERS.get(label)
+                if setter:
+                    try:
+                        setter(tag, value)
+                    except Exception:
+                        continue
+            return
+        except Exception:
+            pass
+
+    try:
         listitem.setInfo("video", infoLabels_kodi)
-    except:
+    except Exception:
         listitem.setInfo("video", item.infoLabels)
 
 
