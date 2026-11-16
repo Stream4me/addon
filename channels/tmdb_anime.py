@@ -14,6 +14,7 @@
 import json
 import re
 import time
+from urllib.parse import urlencode
 
 from core import filetools, httptools, tmdb
 from platformcode import config, logger, platformtools
@@ -137,10 +138,21 @@ def _titoli(item, tipo, tmdb_id):
     return puliti[:RICERCHE_MAX]
 
 
+def _versioni(record):
+    # AnimeUnity (sito nuovo): una scheda sola con le lingue disponibili in 'variants'
+    codici = [v.get('language') for v in record.get('variants') or [] if v.get('language')]
+    versioni = []
+    if 'ita' in codici:
+        versioni.append('ITA')
+    if any(c != 'ita' for c in codici) or not codici:
+        versioni.append('Sub-ITA')
+    return versioni
+
+
 def _cerca(canale, testo):
-    risposta = httptools.downloadpage(canale.host + '/archivio/get-animes', headers=canale.headers,
-                                      post=json.dumps({'title': testo, 'offset': 0}))
-    return (risposta.json or {}).get('records') or []
+    url = '%s/api/archive?%s' % (canale.host, urlencode([('query', testo)]))
+    risposta = httptools.downloadpage(url, headers=canale.headers)
+    return json.loads(risposta.data).get('data') or []
 
 
 def _schede_sito(canale, titoli, anilist, mal):
@@ -158,21 +170,61 @@ def _schede_sito(canale, titoli, anilist, mal):
     return []
 
 
+def _api(canale, percorso, parametri=None):
+    url = canale.host + percorso + (('?' + urlencode(parametri)) if parametri else '')
+    try:
+        return json.loads(httptools.downloadpage(url, headers=canale.headers).data) or {}
+    except Exception:
+        logger.error('tmdb anime: richiesta %s non riuscita' % url)
+        return {}
+
+
+def _tutti_episodi(canale, anime_id):
+    # l'API da 120 puntate per volta; il nome del parametro di partenza si riconosce da solo
+    percorso = '/api/anime/%s/episodes' % anime_id
+    prima = _api(canale, percorso)
+    episodi = list(prima.get('episodes') or [])
+    totale = prima.get('total') or len(episodi)
+    if totale <= len(episodi) or not episodi:
+        return episodi
+    primo_id = episodi[0].get('id')
+    nome_ok = None
+    while len(episodi) < totale:
+        altri = []
+        for nome in ([nome_ok] if nome_ok else ['start', 'start_range', 'offset', 'from']):
+            altri = _api(canale, percorso, [(nome, len(episodi) + 1)]).get('episodes') or []
+            if altri and altri[0].get('id') != primo_id:
+                nome_ok = nome
+                break
+            altri = []
+        if not altri:
+            break
+        episodi += altri
+    return episodi
+
+
+def _video(episodio, versione):
+    # il video della puntata nella versione voluta: 'ITA' oppure 'Sub-ITA' (qualsiasi lingua diversa da ita)
+    for v in episodio.get('videos') or []:
+        if v.get('scws_id') and not v.get('is_hidden') and (v.get('language') == 'ita') == (versione == 'ITA'):
+            return v
+    return None
+
+
 def _id_episodio(canale, record, numero):
-    # episodio del sito (id, numero, nome del file): si chiede solo la finestra attorno al numero voluto
-    # (prima stretta, poi larga: nelle serie lunghe gli speciali spostano la posizione di qualche decina).
-    # Nel log restano numero e nome del file dell'episodio scelto e dei vicini, per controllare l'abbinamento.
-    for prima, dopo in ((3, 3), (60, 20)):
-        url = '%s/info_api/%s/1?start_range=%d&end_range=%d' % (canale.host, record['id'], max(1, numero - prima), numero + dopo)
-        dati = json.loads(httptools.downloadpage(url, headers=canale.headers).data)
-        elenco = dati.get('episodes') or []
-        for e in elenco:
-            if str(e.get('number')) == str(numero):
-                vicini = ', '.join('%s=%s' % (x.get('number'), x.get('file_name')) for x in elenco
-                                   if abs((int(x['number']) if str(x.get('number')).isdigit() else -999) - numero) <= 1)
-                logger.info('tmdb anime: animeunity scheda %s, episodio %s id %s file "%s" (vicini: %s)' % (
-                    record.get('slug'), e.get('number'), e.get('id'), e.get('file_name'), vicini))
-                return e
+    # episodio del sito (con i video ita/jpn): l'API da 120 puntate per volta, quindi per i numeri bassi
+    # basta la prima richiesta, per gli altri si scaricano tutte.
+    # Nel log restano numero e video dell'episodio scelto, per controllare l'abbinamento.
+    if numero <= 120:
+        elenco = _api(canale, '/api/anime/%s/episodes' % record['id']).get('episodes') or []
+    else:
+        elenco = _tutti_episodi(canale, record['id'])
+    for e in elenco:
+        if str(e.get('number')) == str(numero):
+            logger.info('tmdb anime: animeunity scheda %s, episodio %s id %s video %s' % (
+                record.get('slug'), e.get('number'), e.get('id'),
+                ', '.join('%s=%s' % (v.get('language'), v.get('id')) for v in e.get('videos') or [])))
+            return e
     return None
 
 
@@ -201,7 +253,7 @@ def _marca(elenco, lingua, nome):
 
 
 def _da_animeunity(item, anilist, mal, numero, titoli, serie, lingua=None):
-    # lingua: 'ITA' solo la scheda doppiata, 'Sub-ITA' solo quella sottotitolata, None tutte e due
+    # lingua: 'ITA' solo la versione doppiata, 'Sub-ITA' solo quella sottotitolata, None tutte e due
     canale = _canale('animeunity')
     if not canale:
         return []
@@ -210,20 +262,27 @@ def _da_animeunity(item, anilist, mal, numero, titoli, serie, lingua=None):
         _MEMORIA[chiave] = _schede_sito(canale, titoli, anilist, mal)
     risultato = []
     for record in _MEMORIA[chiave]:
-        if lingua and ('ITA' if record.get('dub') == 1 else 'Sub-ITA') != lingua:
-            continue
         try:
-            url = '%s/anime/%s-%s' % (canale.host, record.get('id'), record.get('slug'))
-            if serie:
-                episodio_sito = _id_episodio(canale, record, numero)
-                if not episodio_sito:
-                    logger.info('tmdb anime: animeunity, la scheda %s non ha l\'episodio %d' % (record.get('slug'), numero))
+            base = '%s/anime/%s-%s' % (canale.host, record.get('id'), record.get('slug'))
+            episodio_sito = _id_episodio(canale, record, numero) if serie else None
+            if serie and not episodio_sito:
+                logger.info('tmdb anime: animeunity, la scheda %s non ha l\'episodio %d' % (record.get('slug'), numero))
+                continue
+            for versione in _versioni(record):
+                if lingua and versione != lingua:
                     continue
-                url += '/%s' % episodio_sito.get('id')
-            versione = 'ITA' if record.get('dub') == 1 else 'Sub-ITA'
-            voce = item.clone(channel='animeunity', action='findvideos', url=url, global_search=True, contentLanguage=versione)
-            nome_sito = 'AnimeUnity' + (' ep. %s' % episodio_sito.get('number') if serie else '')
-            risultato += _marca(canale.findvideos(voce), versione, nome_sito)
+                # la puntata (o la prima, per i film) nella versione voluta
+                scelto = episodio_sito or (_tutti_episodi(canale, record['id']) or [{}])[0]
+                video = _video(scelto, versione)
+                if not video:
+                    logger.info('tmdb anime: animeunity, %s senza la versione %s' % (
+                        ('episodio %d' % numero) if serie else 'film', versione))
+                    continue
+                url = '%s/%s' % (base, video.get('id'))
+                voce = item.clone(channel='animeunity', action='findvideos', url=url, global_search=True,
+                                  contentLanguage=versione, scws_id=video.get('scws_id'))
+                nome_sito = 'AnimeUnity' + (' ep. %s' % episodio_sito.get('number') if serie else '')
+                risultato += _marca(canale.findvideos(voce), versione, nome_sito)
         except Exception:
             import traceback
             logger.error('tmdb anime: animeunity, scheda %s non letta\n%s' % (record.get('slug'), traceback.format_exc()))
