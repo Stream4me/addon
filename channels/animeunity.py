@@ -13,8 +13,6 @@ host = support.config.get_channel_url()
 headers = {'Accept': 'application/json',
            'X-Requested-With': 'XMLHttpRequest'}
 
-FETCH_NEWS_PLOT = False
-
 _genres_cache = []
 _years_cache = []
 
@@ -273,6 +271,30 @@ def newest(categoria):
     return itemlist
 
 
+_plot_cache = {}
+
+
+def _plot_di(anime_data):
+    aid = anime_data.get('id')
+    if aid in _plot_cache:
+        return _plot_cache[aid]
+    plot = ''
+    try:
+        titolo = anime_data.get('title') or anime_data.get('title_eng')
+        r = api_json('{}/api/archive?query={}'.format(host, quote_plus(titolo)))
+        records = (r or {}).get('data', [])
+        if isinstance(records, dict):
+            records = records.get('data', [])
+        for rec in records or []:
+            if rec.get('id') == aid:
+                plot = clean_html_entities(rec.get('plot') or '')
+                break
+    except Exception:
+        plot = ''
+    _plot_cache[aid] = plot
+    return plot
+
+
 def news(item):
     support.info()
     item.contentType = 'episode'
@@ -290,7 +312,6 @@ def news(item):
         return itemlist
 
     js = fullJs.get('data') or []
-    plot_cache = {}
 
     for it in js:
         if it.get('is_hidden'):
@@ -327,13 +348,8 @@ def news(item):
 
             url_anime = anime_url(anime_data)
             clean_plot = clean_html_entities(anime_data.get('plot') or '')
-            if not clean_plot and FETCH_NEWS_PLOT:
-                aid = anime_data.get('id')
-                if aid not in plot_cache:
-                    ap = get_data_page(url_anime)
-                    plot_cache[aid] = clean_html_entities(
-                        (((ap or {}).get('props') or {}).get('anime') or {}).get('plot') or '')
-                clean_plot = plot_cache[aid]
+            if not clean_plot:
+                clean_plot = _plot_di(anime_data)
 
             itemlist.append(
                 item.clone(title = final_title + full_episode,
@@ -404,7 +420,7 @@ def peliculas(item):
     if args.get('season'):
         params.append('season={}'.format(args['season']))
     if args.get('studio'):
-        params.append('studio={}'.format(args['studio']))
+        params.append('studio[]={}'.format(args['studio']))
     if args.get('language'):
         params.append('language={}'.format(args['language']))
     params.append('page={}'.format(page + 1))
