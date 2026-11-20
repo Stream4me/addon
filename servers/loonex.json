@@ -1,0 +1,15 @@
+{
+  "active": true,
+  "find_videos": {
+    "ignore_urls": [],
+    "patterns": [
+    ]
+  },
+  "free": true,
+  "id": "loonex",
+  "name": "Loonex",
+  "premium": [
+  ],
+  "settings": [
+  ]
+}

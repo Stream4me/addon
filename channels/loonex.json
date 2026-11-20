@@ -1,0 +1,10 @@
+{
+    "id": "loonex",
+    "name": "Loonex",
+    "language": ["ita", "sub-ita"],
+    "active": true,
+    "thumbnail": "loonex.png",
+    "banner": "loonex.png",
+    "categories": ["movie", "tvshow", "anime"],
+    "settings": []
+}
