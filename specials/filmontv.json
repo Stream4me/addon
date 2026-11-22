@@ -8,9 +8,22 @@
     "categories": [],
     "settings": [
         {
+            "id": "al_click",
+            "type": "list",
+            "label": "Al click sul contenuto",
+            "default": 0,
+            "enabled": true,
+            "visible": true,
+            "lvalues": [
+                "Riproduci subito",
+                "Scelta utente",
+                "Ricerca globale"
+            ]
+        },
+        {
             "id": "film1",
             "type": "text",
-            "label": "Inserisci nome Film #1",
+            "label": "Nome Film #1",
             "default": "[Oggi in TV] Film #1",
             "enabled": true,
             "visible": true
@@ -18,7 +31,7 @@
         {
             "id": "film2",
             "type": "text",
-            "label": "Inserisci nome Film #2",
+            "label": "Nome Film #2",
             "default": "[Oggi in TV] Film #2",
             "enabled": true,
             "visible": true
@@ -26,7 +39,7 @@
         {
             "id": "film3",
             "type": "text",
-            "label": "Inserisci nome Film #3",
+            "label": "Nome Film #3",
             "default": "[Oggi in TV] Film #3",
             "enabled": true,
             "visible": true
@@ -34,7 +47,7 @@
         {
             "id": "film4",
             "type": "text",
-            "label": "Inserisci nome Film #4",
+            "label": "Nome Film #4",
             "default": "[Oggi in TV] Film #4",
             "enabled": true,
             "visible": true
@@ -42,7 +55,7 @@
         {
             "id": "film5",
             "type": "text",
-            "label": "Inserisci nome Film #5",
+            "label": "Nome Film #5",
             "default": "[Oggi in TV] Film #5",
             "enabled": true,
             "visible": true
@@ -50,7 +63,7 @@
         {
             "id": "film6",
             "type": "text",
-            "label": "Inserisci nome Film #6",
+            "label": "Nome Film #6",
             "default": "[Oggi in TV] Film #6",
             "enabled": true,
             "visible": true
@@ -58,7 +71,7 @@
         {
             "id": "film7",
             "type": "text",
-            "label": "Inserisci nome Film #7",
+            "label": "Nome Film #7",
             "default": "[Oggi in TV] Film #7",
             "enabled": true,
             "visible": true
@@ -66,7 +79,7 @@
         {
             "id": "now1",
             "type": "text",
-            "label": "Inserisci nome adesso in onda #1",
+            "label": "Nome adesso in onda #1",
             "default": "[Adesso in onda] Tutte le trasmissioni #1",
             "enabled": true,
             "visible": true
@@ -74,7 +87,7 @@
         {
             "id": "now2",
             "type": "text",
-            "label": "Inserisci nome adesso in onda #2",
+            "label": "Nome adesso in onda #2",
             "default": "[Adesso in onda] Tutte le trasmissioni #2",
             "enabled": true,
             "visible": true
@@ -82,7 +95,7 @@
         {
             "id": "now3",
             "type": "text",
-            "label": "Inserisci nome adesso in onda #3",
+            "label": "Nome adesso in onda #3",
             "default": "[Adesso in onda] Tutte le trasmissioni #3",
             "enabled": true,
             "visible": true
@@ -90,7 +103,7 @@
         {
             "id": "now4",
             "type": "text",
-            "label": "Inserisci nome adesso in onda #4",
+            "label": "Nome adesso in onda #4",
             "default": "[Adesso in onda] Tutte le trasmissioni #4",
             "enabled": true,
             "visible": true
@@ -98,7 +111,7 @@
         {
             "id": "now5",
             "type": "text",
-            "label": "Inserisci nome adesso in onda #5",
+            "label": "Nome adesso in onda #5",
             "default": "[Adesso in onda] Tutte le trasmissioni #5",
             "enabled": true,
             "visible": true
@@ -106,7 +119,7 @@
         {
             "id": "now6",
             "type": "text",
-            "label": "Inserisci nome adesso in onda #6",
+            "label": "Nome adesso in onda #6",
             "default": "[Adesso in onda] Tutte le trasmissioni #6",
             "enabled": true,
             "visible": true
@@ -114,7 +127,7 @@
         {
             "id": "now7",
             "type": "text",
-            "label": "Inserisci nome adesso in onda #7",
+            "label": "Nome adesso in onda #7",
             "default": "[Adesso in onda] Tutte le trasmissioni #7",
             "enabled": true,
             "visible": true

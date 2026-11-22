@@ -3,8 +3,10 @@
 # Canale film in tv
 # ------------------------------------------------------------
 import re
+import sys
 import time
 import hashlib
+import difflib
 import datetime
 import threading
 
@@ -182,15 +184,12 @@ def get_year_from_detail_page(detail_url):
         return ""
 
 
-def create_search_item(title, search_text, content_type, thumbnail="", year="", genre="", plot="", event_type=""):
+def _search_item(title, clean_text, content_type, thumbnail="", year="", genre="", plot="", event_type="", infoLabels=None):
+    # item di ricerca come prima del click configurabile: ricerca globale nuova oppure vecchia
     use_new_search = config.get_setting('new_search')
-    clean_text     = normalize_title_for_tmdb(search_text).replace("+", " ").strip()
     is_movie       = content_type == 'movie'
     mode           = 'movie' if is_movie else 'tvshow'
-
-    infoLabels = {'year': year, 'genre': genre, 'title': clean_text, 'plot': plot}
-    if not is_movie:
-        infoLabels['tvshowtitle'] = clean_text
+    infoLabels     = infoLabels or {'year': year, 'genre': genre, 'title': clean_text, 'plot': plot}
 
     if use_new_search:
         new_item = Item(channel='globalsearch', action='Search', text=clean_text, title=title,
@@ -206,9 +205,85 @@ def create_search_item(title, search_text, content_type, thumbnail="", year="", 
                         title=title, fulltitle=clean_text, mode='all', search_text=clean_text,
                         url="", thumbnail=thumbnail, contentTitle=clean_text, contentYear=year,
                         contentType=content_type, infoLabels=infoLabels, folder=True)
+    return new_item
 
+
+def create_search_item(title, search_text, content_type, thumbnail="", year="", genre="", plot="", event_type=""):
+    # al click si passa da 'click', che in base all'impostazione "Al click sul contenuto" riproduce, chiede o cerca
+    clean_text = normalize_title_for_tmdb(search_text).replace("+", " ").strip()
+    is_movie   = content_type == 'movie'
+
+    infoLabels = {'year': year, 'genre': genre, 'title': clean_text, 'plot': plot}
+    if not is_movie:
+        infoLabels['tvshowtitle'] = clean_text
+
+    new_item = Item(channel='filmontv', action='click', title=title, fulltitle=clean_text,
+                    thumbnail=thumbnail, fanart=thumbnail, contentType=content_type,
+                    infoLabels=infoLabels, search_text=clean_text, folder=False)
+    if is_movie:
+        new_item.contentTitle = clean_text
+    else:
+        new_item.contentSerieName = clean_text
     new_item.event_type = event_type
     return new_item
+
+
+def _titolo_simile(item):
+    # TMDB, se non trova il titolo, ripiega sul risultato piu simile anche se sbagliato: prima di riprodurre per id
+    # si controlla che il titolo trovato somigli a quello della guida tv
+    cercato = (item.search_text or '').lower().strip()
+    if not cercato:
+        return False
+    for chiave in ('title', 'originaltitle'):
+        trovato = (item.infoLabels.get(chiave) or '').lower().strip()
+        if trovato and (cercato in trovato or trovato in cercato or
+                        difflib.SequenceMatcher(None, cercato, trovato).ratio() >= 0.9):
+            return True
+    return False
+
+
+def _cerca(item):
+    # stessa ricerca che partiva prima al click
+    import xbmc
+    ricerca = _search_item(item.title, item.search_text, item.contentType, thumbnail=item.thumbnail,
+                           infoLabels=item.infoLabels)
+    comando = 'RunPlugin' if config.get_setting('new_search') else 'Container.Update'
+    xbmc.executebuiltin('%s(%s?%s)' % (comando, sys.argv[0], ricerca.tourl()))
+
+
+def _riproduci(item):
+    # play diretto per id tramite il canale TMDb. Solo per i film con un titolo TMDB affidabile: di una serie in onda
+    # non si sa quale episodio sia. Restituisce False se non si puo, e allora si cerca negli altri canali
+    if item.contentType != 'movie' or not item.infoLabels.get('tmdb_id') or not _titolo_simile(item):
+        return False
+    if not filetools.exists(filetools.join(config.get_runtime_path(), 'channels', 'tmdb.py')):
+        return False
+    import xbmc
+    play = Item(channel='tmdb', action='findvideos', contentType='movie', title=item.fulltitle,
+                fulltitle=item.fulltitle, contentTitle=item.contentTitle, infoLabels=item.infoLabels,
+                thumbnail=item.thumbnail, fanart=item.fanart,
+                salta_scelta=True, cerca_se_vuoto=True,
+                disableAutoplay=item.disableAutoplay)  # dal menu contestuale "Seleziona il server" l'elenco va mostrato
+    xbmc.executebuiltin('RunPlugin(%s?%s)' % (sys.argv[0], play.tourl()))
+    return True
+
+
+def click(item):
+    # impostazione "Al click sul contenuto": 0 riproduci subito, 1 scelta utente, 2 ricerca globale.
+    # Restituisce None (non una lista) per non far comparire la notifica "Nessun elemento da visualizzare"
+    try:
+        scelta = int(config.get_setting('al_click', channel='filmontv') or 0)
+    except (TypeError, ValueError):
+        scelta = 0
+    if scelta == 1:
+        voce = platformtools.dialog_select('Cosa vuoi fare?', ['Riproduci subito', 'Cerca negli altri canali'])
+        if voce < 0:
+            return None
+        scelta = 2 if voce == 1 else 0
+    if scelta == 0 and _riproduci(item):
+        return None
+    _cerca(item)
+    return None
 
 
 def _split_cards(data):

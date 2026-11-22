@@ -1103,11 +1103,12 @@ def _da_vidxgo(item, tmdb_id, serie):
 
 def _diretti(item):
     # i player raggiungibili da un id: prima i canali di CANALI (VixSrc, id TMDB), poi vidxgo (id IMDb).
-    # Controllati insieme: appena uno e valido, all'altro restano ATTESA_SERVER_ALTRI secondi.
+    # Come fa StreamFlix, vidxgo si mostra sempre, senza controllo prima dell'elenco: costruito dall'id non ha una pagina
+    # che dica se il titolo c'e, e un controllo lento o fallito lo faceva sparire a caso. Se poi non parte, S4Me passa
+    # al server successivo (autoplay) o si sceglie un altro dalla finestra.
     tmdb_id = item.tmdb or item.infoLabels.get('tmdb_id') or item.infoLabels.get('tmdb_id_show')
     serie = bool(item.season and item.episode)
-    candidati = list(_dai_canali(item, controlla=False) or [])[:1] + _da_vidxgo(item, tmdb_id, serie)
-    validi = _server_validi(candidati)
+    validi = _server_validi(list(_dai_canali(item, controlla=False) or [])[:1]) + _da_vidxgo(item, tmdb_id, serie)
     logger.info('tmdb: player diretti per id: %s' % (', '.join(v.server or '?' for v in validi) or 'nessuno'))
     return validi
 
@@ -1363,6 +1364,12 @@ def _al_click(item):
         scelta = 2 if voce == 1 else 0
     if scelta != 2:
         return False
+    _cerca_altrove(item)
+    return True
+
+
+def _cerca_altrove(item):
+    # apre la ricerca negli altri canali per il titolo dell'item
     import xbmc
     nome = item.contentSerieName or item.contentTitle or item.fulltitle
     tipo = 'movie' if item.contentType == 'movie' else 'tvshow'
@@ -1378,7 +1385,6 @@ def _al_click(item):
                        contentType=tipo, release_date=anno)
         comando = 'Container.Update'
     xbmc.executebuiltin('%s(%s?%s)' % (comando, sys.argv[0], ricerca.tourl()))
-    return True
 
 
 def _ricorda_server(elenco):
@@ -1429,7 +1435,11 @@ def findvideos(item):
         voce.contentFanart = voce.contentFanart or item.fanart
     logger.info('tmdb: findvideos terminato in %.1f secondi, %d server' % (time.time() - inizio, len(server)))
     if not server:
-        platformtools.dialog_notification('TMDb', 'Non disponibile: prova "Cerca negli altri canali" dal menu contestuale')
+        if item.cerca_se_vuoto:
+            # richiesta da un altro canale (es. Film in TV): se i player diretti non hanno il titolo si passa alla ricerca
+            _cerca_altrove(item)
+        else:
+            platformtools.dialog_notification('TMDb', 'Non disponibile: prova "Cerca negli altri canali" dal menu contestuale')
     elif len(server) == 1 and not config.get_setting('autoplay') and not item.da_upnext:
         # autoplay spento e un solo server: S4Me lo avvia senza mostrare la finestra, quindi si dice da dove parte
         voce = server[0]

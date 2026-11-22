@@ -348,7 +348,7 @@ def _decode_xor_blocks(page):
     return out
 
 
-def _leggi_pagina(url, referer, timeout=10):
+def _leggi_pagina(url, referer, timeout=10, senza_cf=False):
     headers = {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'it-IT,it;q=0.9,en;q=0.8',
@@ -358,16 +358,19 @@ def _leggi_pagina(url, referer, timeout=10):
     }
     if urllib.parse.urlparse(referer).netloc != urllib.parse.urlparse(url).netloc:
         headers['Sec-Fetch-Site'] = 'cross-site'
-    return httptools.downloadpage(url, headers=headers, timeout=timeout, alfa_s=True)
+    extra = {'_s4me_retry': True} if senza_cf else {}  # nel controllo niente risoluzione CF: risposta rapida
+    return httptools.downloadpage(url, headers=headers, timeout=timeout, alfa_s=True, **extra)
 
 
-def extract_embed(embed_url, referer=None, timeout=10):
+def extract_embed(embed_url, referer=None, timeout=10, senza_cf=False):
     """Legge la pagina del player. Restituisce (url m3u8, scadenza, codice http)."""
-    resp = _leggi_pagina(embed_url, referer or HOST + '/', timeout)
+    resp = _leggi_pagina(embed_url, referer or HOST + '/', timeout, senza_cf)
     codice = resp.code
     if codice != 200:
+        # con un errore di connessione la risposta non ha gli header: non deve dare un secondo errore
+        intestazioni = getattr(resp, 'headers', None) or {}
         logger.error('vidxgo: pagina del player %s (cf-mitigated=%s)'
-                     % (str(codice)[:60], (resp.headers or {}).get('cf-mitigated')))
+                     % (str(codice)[:60], intestazioni.get('cf-mitigated')))
         return None, 0, codice
     for blob in _decode_xor_blocks(resp.data or ''):
         sm = re.search(r'currentSrc\s*=\s*["\'](https?:[^"\']+?\.m3u8[^"\']*)["\']',
@@ -437,24 +440,27 @@ MSG_CDN = 'Attualmente non disponibile su Vidxgo.'
 _EMBED_CACHE = {}
 
 
-def _leggi_embed(page_url):
-    """Una sola lettura della pagina per test_video_exists e get_video_url."""
+def _leggi_embed(page_url, controllo=False):
+    """Una sola lettura della pagina per test_video_exists e get_video_url.
+    Con controllo=True (test_video_exists) niente risoluzione CF: se il sito non risponde si sa subito.
+    In cache solo l'esito sicuro (trovato, oppure 404 e 410): un errore di connessione non resta nascosto."""
     c = _EMBED_CACHE.get(page_url)
     if c and time.time() - c[0] < 60:
         return c[1]
     try:
-        esito = extract_embed(page_url, timeout=6)
+        esito = extract_embed(page_url, timeout=6, senza_cf=controllo)
     except Exception:
         logger.error('vidxgo: lettura del player: ' + traceback.format_exc()[-200:])
-        esito = (None, 0, None)
-    _EMBED_CACHE[page_url] = (time.time(), esito)
+        return (None, 0, None)
+    if esito[0] or esito[2] in (404, 410):
+        _EMBED_CACHE[page_url] = (time.time(), esito)
     return esito
 
 
 def test_video_exists(page_url):
     try:
         if urllib.parse.urlparse(page_url).path.strip('/'):
-            url, _, codice = _leggi_embed(page_url)
+            url, _, codice = _leggi_embed(page_url, controllo=True)
             if not url:
                 if codice in (404, 410):
                     return False, 'Contenuto non disponibile su vidxgo'

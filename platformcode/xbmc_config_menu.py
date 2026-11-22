@@ -371,7 +371,7 @@ class SettingsWindow(xbmcgui.WindowXMLDialog):
 
     def add_control_text(self, c):
         control = xbmcgui.ControlEdit(0, -100, self.controls_width, self.height_control,
-                                    c["label"], self.font, c["color"], '', 1 | 4,
+                                    c["label"], self.font, c["color"], '', 4,
                                     focusTexture='',
                                     noFocusTexture='')
 
@@ -674,7 +674,7 @@ class SettingsWindow(xbmcgui.WindowXMLDialog):
                 select = platformtools.dialog_select(config.get_localized_string(30041), cont["lvalues"], self.values[cont["id"]])
                 if select >= 0:
                     cont["label"].setLabel(cont["lvalues"][select])
-                    self.values[cont["id"]] = cont["lvalues"].index(cont["label"].getLabel())
+                    self.values[cont["id"]] = select
 
             # If the control is a "bool", we save the new value True / False
             if cont["type"] == "bool" and cont["control"].getId() == id: self.values[cont["id"]] = bool(cont["control"].isSelected())
