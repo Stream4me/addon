@@ -30,7 +30,7 @@ host = "https://www.superguidatv.it"
 
 RE_CARD_SPLIT   = re.compile(r'(?=<div class="sgtv-group sgtv-flex sgtv-flex-col sgtv-rounded-md sgtv-border sgtv-border-neutral-300 sgtv-bg-stone-100 sgtv-shadow-item")')
 RE_HR_SPLIT     = re.compile(r'<hr class="sgtv-ml-2[^"]*"[^>]*>')
-RE_CHANNEL      = re.compile(r'<img alt="([^"]*)"[^>]*src="([^"]*channels/\d+/logo[^"]*)"')
+RE_CHANNEL      = re.compile(r'<img[^>]*?\salt="([^"]*)"[^>]*?\ssrc="([^"]*channels/\d+/logo[^"]*)"')
 RE_NOW_TIME     = re.compile(r'<p class="sgtv-text-lg sgtv-font-bold">([^<]+)</p>')
 RE_NOW_TITLE    = re.compile(r'<p class="sgtv-max-w-full sgtv-truncate sgtv-text-lg[^"]*">([^<]+)</p>')
 RE_NOW_TYPE     = re.compile(r'<p class="sgtv-max-w-full sgtv-truncate sgtv-border-l-8[^"]*">([^<]+)</p>')
@@ -89,7 +89,21 @@ def _decode(text):
 
 
 def get_higher_res_logo(logo_url):
-    return logo_url.replace("?width=120", "?width=480") if logo_url else ""
+    if not logo_url:
+        return ""
+    return logo_url.replace("&amp;", "&").replace("?width=120", "?width=480")
+
+
+# documentari e telegiornali non si riproducono per id: non sono film ne serie che i player diretti possano avere
+_NON_RIPRODUCIBILI = ('documentar', 'notizie', 'telegiornal', 'informazione')
+_RE_TG = re.compile(r'(?i)^\s*(?:sky\s*)?(?:tg|rainews)|^\s*news\b|\b(?:tg\s?\d*|telegiornale)\b')
+
+
+def _riproducibile(item):
+    testo = ' '.join([item.infoLabels.get('genre') or '', getattr(item, 'event_type', '') or '']).lower()
+    if any(parola in testo for parola in _NON_RIPRODUCIBILI):
+        return False
+    return not _RE_TG.search(item.search_text or item.fulltitle or '')
 
 
 class FilmCache:
@@ -252,19 +266,31 @@ def _cerca(item):
 
 
 def _riproduci(item):
-    # play diretto per id tramite il canale TMDb. Solo per i film con un titolo TMDB affidabile: di una serie in onda
-    # non si sa quale episodio sia. Restituisce False se non si puo, e allora si cerca negli altri canali
-    if item.contentType != 'movie' or not item.infoLabels.get('tmdb_id') or not _titolo_simile(item):
+    # prova prima i player diretti per id (VixSrc e Vidxgo) tramite il canale TMDb, per tutti i titoli con un riscontro
+    # TMDB affidabile tranne documentari e telegiornali. Un film parte subito. Di una serie in onda non si sa quale
+    # episodio sia: si apre la scheda della serie nel canale TMDb (stagioni ed episodi), che riproduce con gli stessi
+    # player. Restituisce False solo se non si puo, e allora si cerca negli altri canali
+    if not item.infoLabels.get('tmdb_id') or not _titolo_simile(item) or not _riproducibile(item):
         return False
     if not filetools.exists(filetools.join(config.get_runtime_path(), 'channels', 'tmdb.py')):
         return False
     import xbmc
+    if item.contentType != 'movie':
+        nome = item.contentSerieName or item.fulltitle
+        serie = Item(channel='tmdb', action='seasons', contentType='tvshow', title=nome, fulltitle=nome,
+                     contentSerieName=nome, show=nome, infoLabels=item.infoLabels, thumbnail=item.thumbnail,
+                     fanart=item.fanart, folder=True)
+        xbmc.executebuiltin('Container.Update(%s?%s)' % (sys.argv[0], serie.tourl()))
+        return True
     play = Item(channel='tmdb', action='findvideos', contentType='movie', title=item.fulltitle,
                 fulltitle=item.fulltitle, contentTitle=item.contentTitle, infoLabels=item.infoLabels,
                 thumbnail=item.thumbnail, fanart=item.fanart,
                 salta_scelta=True, cerca_se_vuoto=True,
                 disableAutoplay=item.disableAutoplay)  # dal menu contestuale "Seleziona il server" l'elenco va mostrato
-    xbmc.executebuiltin('RunPlugin(%s?%s)' % (sys.argv[0], play.tourl()))
+    # stesso percorso del click su un titolo del canale TMDb: findvideos del launcher chiede i server a tmdb e mostra la
+    # finestra (o autoplay), nello stesso processo, senza rilanciare il plugin con RunPlugin
+    from platformcode import launcher
+    launcher.findvideos(play)
     return True
 
 
@@ -274,7 +300,10 @@ def click(item):
     try:
         scelta = int(config.get_setting('al_click', channel='filmontv') or 0)
     except (TypeError, ValueError):
-        scelta = 0
+        scelta = 3
+    if scelta == 3:
+        # predefinito "Automatico": con l'autoplay attivo si riproduce subito, altrimenti si lascia scegliere
+        scelta = 0 if config.get_setting('autoplay') else 1
     if scelta == 1:
         voce = platformtools.dialog_select('Cosa vuoi fare?', ['Riproduci subito', 'Cerca negli altri canali'])
         if voce < 0:
