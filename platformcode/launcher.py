@@ -84,7 +84,7 @@ def run(item=None):
 
         # Special action for open item.url in browser
         elif item.action == "open_browser":
-            import webbrowser
+            import webbrowser, xbmc
             if not webbrowser.open(item.url):
                 if xbmc.getCondVisibility('system.platform.linux') and xbmc.getCondVisibility('system.platform.android'):  # android
                     xbmc.executebuiltin('StartAndroidActivity("", "android.intent.action.VIEW", "", "%s")' % item.url)
