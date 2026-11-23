@@ -23,10 +23,11 @@
             "enabled": true,
             "visible": true,
             "lvalues": [
-                "Riproduci subito",
-                "Scelta utente",
-                "Ricerca globale"
-            ]
+                "Automatico (riproduci con autoplay, altrimenti scelta)",
+				"Ricerca globale",
+				"Riproduci subito",
+				"Scelta utente"
+			]
         },
         {
             "id": "include_in_global_search",

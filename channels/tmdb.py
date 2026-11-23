@@ -1108,9 +1108,41 @@ def _diretti(item):
     # al server successivo (autoplay) o si sceglie un altro dalla finestra.
     tmdb_id = item.tmdb or item.infoLabels.get('tmdb_id') or item.infoLabels.get('tmdb_id_show')
     serie = bool(item.season and item.episode)
-    validi = _server_validi(list(_dai_canali(item, controlla=False) or [])[:1]) + _da_vidxgo(item, tmdb_id, serie)
+    # anche VixSrc si mostra senza controllo preventivo: il controllo (rete, fino a ATTESA_SERVER secondi) lo faceva sparire
+    # dall'elenco quando non rispondeva in tempo, e rallentava l'apertura. Se il titolo non c'e, parte il server dopo.
+    validi = list(_dai_canali(item, controlla=False) or [])[:1] + _da_vidxgo(item, tmdb_id, serie)
+    if validi and item.cerca_se_vuoto and _tutti_assenti(validi):
+        # richiesta da un altro canale (Film in TV): se tutti i player dicono esplicitamente che il titolo non c'e,
+        # l'elenco resta vuoto e si passa alla ricerca negli altri canali
+        logger.info('tmdb: nessun player diretto ha il titolo, ricerca negli altri canali')
+        return []
     logger.info('tmdb: player diretti per id: %s' % (', '.join(v.server or '?' for v in validi) or 'nessuno'))
     return validi
+
+
+def _assente(voce):
+    # True solo se il server risponde esplicitamente che il titolo non c'e (404, "non disponibile"). Un errore, un blocco
+    # Cloudflare o un tempo scaduto non sono una risposta: in quei casi il server resta nell'elenco
+    try:
+        modulo = __import__('servers.%s' % voce.server, None, None, ['servers.%s' % voce.server])
+        if not hasattr(modulo, 'test_video_exists'):
+            return False
+        risposta = modulo.test_video_exists(page_url=voce.url)
+        if isinstance(risposta, (tuple, list)) and risposta and risposta[0] is False:
+            return 'contenuto non disponibile' in str(risposta[1] if len(risposta) > 1 else '').lower()
+    except Exception:
+        logger.error('tmdb: controllo di %s non riuscito' % voce.server)
+    return False
+
+
+def _tutti_assenti(server):
+    from concurrent import futures
+    esecutore = futures.ThreadPoolExecutor(max_workers=len(server))
+    lavori = [esecutore.submit(_assente, voce) for voce in server]
+    _attendi(lavori, ATTESA_SERVER, ATTESA_SERVER, lambda lavoro: False)
+    risultato = all(lavoro.done() and lavoro.result() for lavoro in lavori)
+    esecutore.shutdown(wait=False)
+    return risultato
 
 
 def _da_anime(item, lingua):
@@ -1331,14 +1363,23 @@ def _prossimamente(item):
     return True
 
 
+def _scelta_click(canale):
+    # impostazione "Al click sul contenuto": 0 riproduci subito, 1 scelta utente, 2 ricerca negli altri canali,
+    # 3 automatico (predefinito): con l'autoplay attivo si riproduce subito, altrimenti si lascia scegliere
+    try:
+        scelta = int(config.get_setting('al_click', channel=canale) or 0)
+    except (TypeError, ValueError):
+        scelta = 3
+    if scelta == 3:
+        scelta = 0 if config.get_setting('autoplay') else 1
+    return scelta
+
+
 def _azione_click(canale):
     # con "Riproduci subito" il click apre findvideos. Con le altre due scelte si usa 'avvia': se il canale non
     # restituisce una lista, S4Me non mostra la notifica "Nessun elemento da visualizzare" che findvideos
     # senza server farebbe comparire appena parte la ricerca
-    try:
-        return 'findvideos' if not int(config.get_setting('al_click', channel=canale) or 0) else 'avvia'
-    except (TypeError, ValueError):
-        return 'findvideos'
+    return 'findvideos' if not _scelta_click(canale) else 'avvia'
 
 
 def avvia(item):
@@ -1351,12 +1392,9 @@ def avvia(item):
 
 
 def _al_click(item):
-    # impostazione del canale "Al click sul contenuto": 0 riproduci subito, 1 scelta utente, 2 ricerca negli altri canali.
+    # impostazione del canale "Al click sul contenuto" (vedi _scelta_click).
     # Restituisce True se il click e stato gestito qui (ricerca avviata o scelta annullata), False per riprodurre.
-    try:
-        scelta = int(config.get_setting('al_click', channel=item.channel) or 0)
-    except (TypeError, ValueError):
-        scelta = 0
+    scelta = _scelta_click(item.channel)
     if scelta == 1:
         voce = platformtools.dialog_select('Cosa vuoi fare?', ['Riproduci subito', 'Cerca negli altri canali'])
         if voce < 0:

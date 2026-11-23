@@ -11,14 +11,14 @@
             "id": "al_click",
             "type": "list",
             "label": "Al click sul contenuto",
-            "default": 3,
+            "default": 0,
             "enabled": true,
             "visible": true,
             "lvalues": [
-                "Riproduci subito",
-                "Scelta utente",
-                "Ricerca globale",
-                "Automatico (riproduci con autoplay, altrimenti scelta)"
+                "Automatico (riproduci con autoplay, altrimenti scelta)",
+				"Ricerca globale",
+				"Riproduci subito",
+                "Scelta utente"
             ]
         },
         {
