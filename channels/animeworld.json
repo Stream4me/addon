@@ -5,7 +5,7 @@
     "language": ["ita", "sub-ita"],
     "thumbnail": "animeworld.png",
     "banner": "animeworld.png",
-    "categories": ["anime", "vos"],
+    "categories": ["anime", "vos", "movie"],
     "tiny": true,
     "settings": [
         {

@@ -5,7 +5,7 @@
   "language": ["ita", "sub-ita"],
   "thumbnail": "animeunity.png",
   "banner": "animeunity.png",
-  "categories": ["anime"],
+  "categories": ["anime", "movie"],
   "tiny": true,
   "settings": [
     {
