@@ -2,10 +2,11 @@ import base64
 import hashlib
 import json
 import re
+import time
 from urllib.parse import urlsplit, urlunsplit, urlencode, quote, unquote, quote_plus
 
 from core import httptools, scrapertools, servertools
-from platformcode import logger
+from platformcode import config, logger
 
 UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
       '(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36')
@@ -89,8 +90,10 @@ def _drime(page, page_url):
 
 
 def _risolvi(page_url):
+    t0 = time.time()
     page = httptools.downloadpage(page_url, headers=_intestazioni(page_url),
                                   ignore_response_code=True).data
+    logger.info('loonex: pagina scaricata in %.2f s' % (time.time() - t0))
     if _flag(page, 'isDrime'):
         d = _drime(page, page_url)
         if d:
@@ -128,6 +131,7 @@ def _risolvi(page_url):
                       ('poe_ts', str(cfg['ts'])), ('poe_proof', proof), ('env', env),
                       ('video_id', vid), ('raw_video_id', vid_raw or ''),
                       ('player_type', ptype), ('srv', srv)])
+    t1 = time.time()
     r = httptools.downloadpage(
         page_url.split('#')[0], post=post,
         headers=_intestazioni(page_url, {
@@ -137,6 +141,7 @@ def _risolvi(page_url):
             'Origin': _base(page_url),
             'Referer': page_url}),
         ignore_response_code=True).data
+    logger.info('loonex: richiesta del flusso in %.2f s' % (time.time() - t1))
     try:
         data = json.loads(r)
     except Exception:
@@ -176,6 +181,15 @@ def _codifica(stream):
 
 
 def test_video_exists(page_url):
+    # False solo con 404 o 410 veri; in ogni dubbio il video va provato
+    page_url = page_url.split('|')[0]
+    try:
+        risposta = httptools.downloadpage(page_url, headers=_intestazioni(page_url), ignore_response_code=True,
+                                          timeout=5)
+        if risposta.code in (404, 410):
+            return False, config.get_localized_string(70449) % 'Loonex'
+    except (IOError, OSError, ValueError) as e:
+        logger.info('loonex: test_video_exists %s' % e)
     return True, ''
 
 
@@ -184,8 +198,10 @@ def get_video_url(page_url, premium=False, user='', password='', video_password=
     if '/guarda/srv_ext' in page_url:
         return _esterno(page_url)
     stream = ''
+    inizio = time.time()
     try:
         data = _risolvi(page_url)
+        logger.info('loonex: risoluzione completata in %.2f s' % (time.time() - inizio))
         if data:
             stream = data.get('streamUrl') or ''
             ok = data.get('okruData') or {}
@@ -201,4 +217,8 @@ def get_video_url(page_url, premium=False, user='', password='', video_password=
         return [['hls [Loonex]', stream]]
     base = _base(page_url)
     play = '%s|User-Agent=%s&Referer=%s/&Origin=%s' % (stream, quote_plus(UA), base, base)
+    if '.m3u8' in urlsplit(stream).path:
+        # HLS: con l'etichetta "hls" S4Me lo passa a inputstream.adaptive (come VixSrc), che gestisce gli spostamenti
+        # avanti e indietro. Con "video" lo legge ffmpeg, che sugli HLS firmati si blocca dopo qualche salto
+        return [['hls [Loonex]', play]]
     return [['video [Loonex]', play]]

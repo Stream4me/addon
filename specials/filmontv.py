@@ -239,20 +239,48 @@ def create_search_item(title, search_text, content_type, thumbnail="", year="", 
     else:
         new_item.contentSerieName = clean_text
     new_item.event_type = event_type
+    new_item.anno_guida = str(year or '')  # TMDB poi scrive il suo anno in infoLabels: quello della guida si tiene a parte
     return new_item
+
+
+_PAROLE_VUOTE = {'il', 'lo', 'la', 'i', 'gli', 'le', 'un', 'uno', 'una', 'e', 'ed', 'di', 'del', 'dello', 'della', 'dei',
+                 'degli', 'delle', 'da', 'in', 'con', 'su', 'per', 'a', 'al', 'alla', 'nel', 'nella', 'the', 'of', 'and',
+                 'a', 'an', 'parte', 'part', 'film', 'ii', 'iii', 'iv'}
+
+
+def _parole(titolo):
+    # parole che contano per confrontare due titoli: senza articoli, preposizioni e numeri romani
+    return set(re.findall(r'\w+', titolo.lower())) - _PAROLE_VUOTE
 
 
 def _titolo_simile(item):
     # TMDB, se non trova il titolo, ripiega sul risultato piu simile anche se sbagliato: prima di riprodurre per id
-    # si controlla che il titolo trovato somigli a quello della guida tv
+    # si controlla che il titolo trovato somigli a quello della guida tv. Il titolo italiano della guida spesso differisce
+    # da quello di TMDB (articoli, numeri romani, sottotitoli): se anche l'anno coincide basta che la maggior parte delle
+    # parole sia in comune, o anche una sola se importante. Senza anno o con anno diverso vale solo la somiglianza stretta
     cercato = (item.search_text or '').lower().strip()
     if not cercato:
+        support.info('filmontv: titolo della guida vuoto, ricerca globale')
         return False
+    anno_tmdb = str(item.infoLabels.get('year') or '')
+    stesso_anno = bool(item.anno_guida) and item.anno_guida == anno_tmdb
     for chiave in ('title', 'originaltitle'):
         trovato = (item.infoLabels.get(chiave) or '').lower().strip()
-        if trovato and (cercato in trovato or trovato in cercato or
-                        difflib.SequenceMatcher(None, cercato, trovato).ratio() >= 0.9):
+        if not trovato:
+            continue
+        if cercato in trovato or trovato in cercato or difflib.SequenceMatcher(None, cercato, trovato).ratio() >= 0.9:
             return True
+        parole_a, parole_b = _parole(cercato), _parole(trovato)
+        comuni = len(parole_a & parole_b)
+        if stesso_anno and comuni >= 2 and comuni / max(len(parole_a), len(parole_b), 1) >= 0.6:
+            return True
+        # titolo italiano e titolo TMDB anche molto diversi (come "Lupin e il mago dei computers" e "Lupin III: Bye Bye
+        # Liberty - Scoppia la crisi!"): TMDB ha trovato il film cercando il titolo della guida con quell'anno, quindi con
+        # lo stesso anno e almeno una parola importante in comune ci si fida
+        if stesso_anno and any(len(parola) >= 4 for parola in parole_a & parole_b):
+            return True
+    support.info('filmontv: "%s" non somiglia al titolo TMDB "%s" (anno guida %s, TMDB %s), ricerca globale' % (
+        cercato, item.infoLabels.get('title'), item.anno_guida, anno_tmdb))
     return False
 
 
@@ -270,7 +298,14 @@ def _riproduci(item):
     # TMDB affidabile tranne documentari e telegiornali. Un film parte subito. Di una serie in onda non si sa quale
     # episodio sia: si apre la scheda della serie nel canale TMDb (stagioni ed episodi), che riproduce con gli stessi
     # player. Restituisce False solo se non si puo, e allora si cerca negli altri canali
-    if not item.infoLabels.get('tmdb_id') or not _titolo_simile(item) or not _riproducibile(item):
+    if not item.infoLabels.get('tmdb_id'):
+        support.info('filmontv: nessun id TMDB per "%s", ricerca globale' % item.search_text)
+        return False
+    if not _titolo_simile(item):
+        return False
+    if not _riproducibile(item):
+        support.info('filmontv: "%s" escluso (documentario o telegiornale, genere "%s"), ricerca globale' % (
+            item.search_text, item.infoLabels.get('genre')))
         return False
     if not filetools.exists(filetools.join(config.get_runtime_path(), 'channels', 'tmdb.py')):
         return False
@@ -295,12 +330,17 @@ def _riproduci(item):
 
 
 def click(item):
-    # impostazione "Al click sul contenuto": 0 riproduci subito, 1 scelta utente, 2 ricerca globale.
+    # impostazione "Al click sul contenuto", nell'ordine delle voci del json: 0 automatico, 1 ricerca globale,
+    # 2 riproduci subito, 3 scelta utente. Qui sotto si lavora con i valori interni: 0 riproduci subito, 1 scelta
+    # utente, 2 ricerca globale, 3 automatico
     # Restituisce None (non una lista) per non far comparire la notifica "Nessun elemento da visualizzare"
+    valore = config.get_setting('al_click', channel='filmontv')
     try:
-        scelta = int(config.get_setting('al_click', channel='filmontv') or 0)
+        scelta = {0: 3, 1: 2, 2: 0, 3: 1}.get(int(valore or 0), 3)
     except (TypeError, ValueError):
         scelta = 3
+    support.info('filmontv: click su "%s", impostazione al_click=%s (valore interno %s), autoplay=%s' % (
+        item.search_text, valore, scelta, config.get_setting('autoplay')))
     if scelta == 3:
         # predefinito "Automatico": con l'autoplay attivo si riproduce subito, altrimenti si lascia scegliere
         scelta = 0 if config.get_setting('autoplay') else 1
