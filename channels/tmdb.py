@@ -13,7 +13,7 @@ import time
 from datetime import datetime, timedelta
 from urllib.parse import quote
 
-from core import support, tmdb, servertools
+from core import support, tmdb, servertools, db
 from core.item import Item
 from platformcode import config, logger, platformtools
 
@@ -236,7 +236,7 @@ def _titoli_latini(dati, percorso, pagina):
             break
         try:
             url = _tmdb(percorso, pagina).replace('language=%s' % tmdb.def_lang, 'language=%s' % lingua)
-            altra = tmdb.Tmdb.get_json(url) or {}
+            altra = tmdb.Tmdb.get_json(url, cache=False) or {}
         except Exception:
             logger.error('tmdb: titoli in %s non disponibili' % lingua)
             continue
@@ -264,7 +264,7 @@ def _trame_inglesi(risultati, percorso, pagina):
         return
     try:
         url = _tmdb(percorso, pagina).replace('language=%s' % tmdb.def_lang, 'language=en-US')
-        altra = tmdb.Tmdb.get_json(url) or {}
+        altra = tmdb.Tmdb.get_json(url, cache=False) or {}
     except Exception:
         logger.error('tmdb: trame in inglese non disponibili')
         return
@@ -351,6 +351,10 @@ def _elemento(r, tipo, base, latini=None):
     anno = data[:4]
     voto = round(r.get('vote_average') or 0, 1)
     titolo = support.typo(visibile, 'bold')
+    if tipo == 'movie' and (not data or data > datetime.now().strftime('%Y-%m-%d')):
+        # come TMDb Helper: film non ancora uscito (o senza data) in rosso e corsivo
+        # solo rosso: la data la mostra gia la skin in basso e il click apre l'avviso con la data
+        titolo = _rosso(titolo)
     # niente anno ne voto nel titolo: la skin mostra la data (premiered) in basso e il voto sulla copertina
     info = {'tmdb_id': str(tmdb_id), 'year': anno, 'plot': r.get('overview') or '', 'rating': voto}
     if data:
@@ -368,6 +372,10 @@ def _elemento(r, tipo, base, latini=None):
     if tipo == 'movie':
         info.update(mediatype='movie', title=nome)
         azione = _azione_click(base.channel)
+        if data and data > datetime.now().strftime('%Y-%m-%d'):
+            # non ancora uscito: azione propria che mostra solo l'avviso. Con findvideos il launcher di S4Me aggiunge la
+            # notifica "Nessun elemento da visualizzare" e dopo il primo click l'avviso non compariva piu
+            azione = 'non_uscito'
         menu = [{'title': 'Vai alla collezione', 'action': 'collezione_del_film', 'channel': base.channel}]
         if azione != 'findvideos':
             # con findvideos S4Me aggiunge da solo la voce; con le altre azioni la si aggiunge qui (add_movie salva findvideos)
@@ -376,6 +384,32 @@ def _elemento(r, tipo, base, latini=None):
     info.update(mediatype='tvshow', tvshowtitle=nome)
     return Item(action='seasons', folder=True, contentType='tvshow', contentSerieName=nome, infoLabels=info,
                 context=[{'title': config.get_localized_string(60352), 'action': 'aggiungi_serie'}], **comuni)
+
+
+def _elenco(percorso, pagina, tipo):
+    # come TMDb Helper: l'elenco gia completo (titoli latini, trame, durate) resta in cache per 6 ore, poi si riscarica.
+    # La cache generale di S4Me non scade mai e mostrava elenchi vecchi rispetto a TMDb Helper
+    chiave = _tmdb(percorso, pagina)
+    try:
+        riga = db['tmdb_elenchi'].get(chiave)
+        if riga and (datetime.now() - riga[1]).total_seconds() <= VALIDITA_ELENCHI:
+            return riga[0]
+    except Exception:
+        logger.error('tmdb: cache degli elenchi non leggibile')
+    try:
+        dati = tmdb.Tmdb.get_json(chiave, cache=False) or {}
+    except Exception:
+        logger.error('tmdb: elenco non disponibile')
+        return {}, {}
+    if not dati.get('results'):
+        return dati, {}
+    latini = _titoli_latini(dati, percorso, pagina)
+    _durate(dati.get('results') or [], tipo)
+    try:
+        db['tmdb_elenchi'][chiave] = [(dati, latini), datetime.now()]
+    except Exception:
+        logger.error('tmdb: elenco non salvato in cache')
+    return dati, latini
 
 
 def peliculas(item):
@@ -393,13 +427,10 @@ def peliculas(item):
     tipo = 'movie' if 'movie' in percorso.split('?')[0] else 'tv'
     pagina = int(item.page or 1)
     itemlist = []
-    try:
-        dati = tmdb.Tmdb.get_json(_tmdb(percorso, pagina)) or {}
-    except Exception:
-        logger.error('tmdb: elenco non disponibile')
+    dati, latini = _elenco(percorso, pagina, tipo)
+    if not dati:
         return itemlist
-    latini = _titoli_latini(dati, percorso, pagina)
-    _durate(dati.get('results') or [], tipo)
+    _senza_durata_a_destra()  # anche quando l'elenco viene dalla cache e _durate non viene eseguita
     for r in dati.get('results') or []:
         el = _elemento(r, tipo, item, latini)
         if el:
@@ -650,6 +681,7 @@ ESPORTAZIONI = {'collezioni': 'collection', 'studi': 'production_company', 'reti
 URL_ESPORTAZIONE = 'https://files.tmdb.org/p/exports/%s_ids_%s.json.gz'
 VALIDITA_ELENCO = 7 * 24 * 3600
 PER_PAGINA = 20
+VALIDITA_ELENCHI = 6 * 3600  # ore di validita di un elenco di titoli, come TMDb Helper
 
 
 def _scarica_esportazione(esportazione):
@@ -881,12 +913,22 @@ def seasons(item):
             trama = (tmdb.Tmdb.get_json(url) or {}).get('overview') or ''
         except Exception:
             trama = ''
+    oggi = datetime.now().strftime('%Y-%m-%d')
+    ultima = max([x.get('season_number') or 0 for x in elenco] or [0])
     for s in elenco:
         n = s.get('season_number')
         if not n:  # salta gli speciali (stagione 0)
             continue
         img = (IMG + 'w500' + s['poster_path']) if s.get('poster_path') else item.thumbnail
-        itemlist.append(item.clone(title=support.typo(s.get('name') or 'Stagione %d' % n, 'bold'),
+        nome_stagione = s.get('name') or 'Stagione %d' % n
+        titolo_stagione = support.typo(nome_stagione, 'bold')
+        uscita = s.get('air_date') or ''
+        if n == ultima and uscita <= oggi:
+            # la data della stagione puo essere gia passata (o mancare) senza nessun episodio uscito: si guardano gli episodi
+            uscita = _prima_uscita(otmdb, n, oggi)
+        if uscita > oggi:  # non ancora uscita: solo rosso, la data la mostra l'avviso al click
+            titolo_stagione = _rosso(titolo_stagione)
+        itemlist.append(item.clone(title=titolo_stagione,
                                    action='episodios', season=n, contentSeason=n, thumbnail=img,
                                    plot=s.get('overview') or trama, fulltitle=nome, show=nome, folder=True))
     # come gli altri canali: voce "Aggiungi alla videoteca" in fondo, salva tutte le stagioni tramite episodios
@@ -921,6 +963,7 @@ def episodios(item):
         logger.error('tmdb: scheda serie non disponibile')
         return itemlist
     azione = 'findvideos' if libreria else _azione_click(item.channel)
+    prossima = ''  # data del primo episodio non ancora uscito, per l'avviso "Prossimamente"
     for n in stagioni:
         try:
             dati = otmdb.get_season(n) or {}
@@ -930,6 +973,17 @@ def episodios(item):
         for e in dati.get('episodes') or []:
             num = e.get('episode_number')
             if num is None or (e.get('air_date') or '9999') > oggi:
+                futura = e.get('air_date') or ''
+                if futura and (not prossima or futura < prossima):
+                    prossima = futura
+                # episodio non ancora uscito: solo rosso, al click l'avviso con la data (non entra in videoteca)
+                if num is not None and futura and not libreria:
+                    itemlist.append(item.clone(
+                        title=_rosso(support.typo('%dx%02d' % (n, num) + (': ' + (e.get('name') or '') if e.get('name') else ''),
+                                                  'bold')),
+                        action='non_uscito', contentType='episode', contentSeason=n, contentEpisodeNumber=num,
+                        season=n, episode=num, thumbnail=item.thumbnail, tmdb=str(id_serie), fulltitle=nome, show=nome,
+                        contentSerieName=nome, context=[], data_uscita=futura, plot=e.get('overview') or item.plot or ''))
                 continue  # episodi non ancora usciti
             titolo = e.get('name') or ''
             # gli episodi ereditano la copertina della stagione (o della serie se la stagione non ce l'ha): niente
@@ -940,9 +994,41 @@ def episodios(item):
                                        contentEpisodeNumber=num, season=n, episode=num, thumbnail=img,
                                        tmdb=str(id_serie), fulltitle=nome, show=nome, contentSerieName=nome, context=[],
                                        plot=e.get('overview') or item.plot or ''))
+    if not itemlist and not libreria:
+        # stagione senza nessun episodio uscito: si avvisa con la data, se TMDB la conosce
+        platformtools.dialog_ok('Prossimamente', '%s - Stagione %s\n%s' % (
+            nome, item.season, 'Uscita prevista: %s' % _data_it(prossima) if prossima else 'Data di uscita non ancora annunciata'))
+        return itemlist
     if not libreria:
         _senza_durata_a_destra()  # il tmdb di S4Me aggiunge la durata agli episodi: a destra non deve comparire
     return itemlist
+
+
+def _prima_uscita(otmdb, n, oggi):
+    # come TMDb Helper: una stagione e non ancora uscita se nessun suo episodio e gia uscito (anche se TMDB non ne elenca
+    # nessuno). Ritorna '' se almeno un episodio e uscito o se la stagione non si puo leggere, altrimenti la data del
+    # primo episodio in uscita, o '9999-12-31' se TMDB non annuncia nessuna data
+    try:
+        dati = otmdb.get_season(n) or {}
+    except Exception:
+        return ''
+    date = [e.get('air_date') or '' for e in dati.get('episodes') or []]
+    if any(d and d <= oggi for d in date):
+        return ''
+    futuri = sorted(d for d in date if d)
+    return futuri[0] if futuri else '9999-12-31'
+
+
+def _rosso(titolo):
+    # stesso formato di TMDb Helper per i titoli non ancora usciti: rosso e corsivo
+    return '[COLOR=ffcc0000][I]%s[/I][/COLOR]' % titolo
+
+
+def _data_it(data):
+    try:
+        return datetime.strptime(data, '%Y-%m-%d').strftime('%d/%m/%Y')
+    except (TypeError, ValueError):
+        return data or ''
 
 
 # Riproduzione: i player diretti per id, controllati prima di passarli a S4Me
@@ -1359,15 +1445,25 @@ def _prossimamente(item):
     except ValueError:
         uscita = data
     nome = item.contentSerieName or item.contentTitle or item.fulltitle
+    if item.contentType == 'episode' and item.season and item.episode:
+        nome += ' %sx%02d' % (item.season, int(item.episode))
     platformtools.dialog_ok('Prossimamente', '%s\nUscita prevista: %s' % (nome, uscita))
     return True
 
 
+def non_uscito(item):
+    # click su un film non ancora uscito: solo l'avviso con la data, niente elenco (None, come fa avvia)
+    _prossimamente(item)
+    return None
+
+
 def _scelta_click(canale):
-    # impostazione "Al click sul contenuto": 0 riproduci subito, 1 scelta utente, 2 ricerca negli altri canali,
-    # 3 automatico (predefinito): con l'autoplay attivo si riproduce subito, altrimenti si lascia scegliere
+    # impostazione "Al click sul contenuto", nell'ordine delle voci del json: 0 automatico (predefinito), 1 ricerca
+    # negli altri canali, 2 riproduci subito, 3 scelta utente. Qui si lavora con i valori interni: 0 riproduci subito,
+    # 1 scelta utente, 2 ricerca negli altri canali, 3 automatico: con l'autoplay attivo si riproduce subito, altrimenti
+    # si lascia scegliere
     try:
-        scelta = int(config.get_setting('al_click', channel=canale) or 0)
+        scelta = {0: 3, 1: 2, 2: 0, 3: 1}.get(int(config.get_setting('al_click', channel=canale) or 0), 3)
     except (TypeError, ValueError):
         scelta = 3
     if scelta == 3:
