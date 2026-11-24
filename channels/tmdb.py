@@ -1025,10 +1025,10 @@ def _rosso(titolo):
 
 
 def _data_it(data):
-    try:
-        return datetime.strptime(data, '%Y-%m-%d').strftime('%d/%m/%Y')
-    except (TypeError, ValueError):
-        return data or ''
+    # 'YYYY-MM-DD' -> 'GG/MM/AAAA' senza strptime (nel Python di Kodi puo risultare None)
+    if data and len(data) >= 10 and data[4] == '-' and data[7] == '-':
+        return '%s/%s/%s' % (data[8:10], data[5:7], data[:4])
+    return data or ''
 
 
 # Riproduzione: i player diretti per id, controllati prima di passarli a S4Me
@@ -1440,10 +1440,7 @@ def _prossimamente(item):
     data = item.data_uscita
     if not data or data <= datetime.now().strftime('%Y-%m-%d'):
         return False
-    try:
-        uscita = datetime.strptime(data, '%Y-%m-%d').strftime('%d/%m/%Y')
-    except ValueError:
-        uscita = data
+    uscita = _data_it(data)
     nome = item.contentSerieName or item.contentTitle or item.fulltitle
     if item.contentType == 'episode' and item.season and item.episode:
         nome += ' %sx%02d' % (item.season, int(item.episode))
