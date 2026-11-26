@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # ------------------------------------------------------------------------------------------------------------
-# tmdb.py - versione ottimizzata (completa, basata sull'originale) + ripristini per sync Trakt
+# tmdb.py - versione ottimizzata (completa, basata sull'originale)
 #
 # PERFORMANCE:
 #  1. FIX cache: l'originale testava result.get('results'), assente nelle risposte by-ID ->
@@ -59,7 +59,7 @@ api = 'a1ab8b8669da03637a4b98fa39c39228'
 
 _IMAGE_BASE = 'https://image.tmdb.org/t/p/'
 _IMAGE_ORIGINAL = 'https://image.tmdb.org/t/p/original'
-_RE_BRACKETS = re.compile(r'\[\\?/?(B|I|COLOR)\s?[^\]]*\]')
+_RE_BRACKETS = re.compile(r'\[[^\]]+\]')
 _RE_NEWLINES = re.compile(r"\n|\r|\t")
 
 otmdb_global = None
@@ -168,7 +168,7 @@ def cache_response(fn):
             if owner:
                 try:
                     result = fn(*args)
-                    if result and 'status_code' not in result:  # non cachare risposte vuote/errori
+                    if result:  # FIX: non cachare risposte vuote/errori
                         now = datetime.datetime.now()
                         with _db_lock:
                             db['tmdb_cache'][url] = [copy.deepcopy(result), now]
@@ -357,7 +357,6 @@ def set_infoLabels_item(item, seekTmdb=True, search_language=def_lang):
 
             else:
                 # Ricerca per ID, altrimenti per titolo
-                otmdb = copy.copy(otmdb_global)
                 if item.infoLabels['tmdb_id']:
                     otmdb = Tmdb(id_Tmdb=item.infoLabels['tmdb_id'], search_type=search_type,
                                  search_language=search_language)
@@ -377,6 +376,10 @@ def set_infoLabels_item(item, seekTmdb=True, search_language=def_lang):
                     elif item.infoLabels['tvrage_id']:
                         otmdb = Tmdb(external_id=item.infoLabels['tvrage_id'], external_source="tvrage_id",
                                      search_type=search_type, search_language=search_language)
+                    else:
+                        otmdb = None
+                else:
+                    otmdb = None
 
                 if not item.infoLabels['tmdb_id'] and not item.infoLabels['imdb_id'] and not item.infoLabels['tvdb_id'] \
                         and not item.infoLabels['freebase_mid'] and not item.infoLabels['freebase_id'] \
@@ -824,15 +827,14 @@ class Tmdb(object):
 
             if result:
                 if source != "tmdb":
+                    # FIX: l'originale poteva sollevare IndexError su liste vuote
                     if self.search_type == "movie":
-                        found = result.get("movie_results")
+                        result = (result.get("movie_results") or [{}])[0]
                     else:
-                        found = result.get("tv_results") or result.get("tv_episode_results")
-                    if not found:
-                        # nessun risultato: NON popolare self.result (evita tmdb_id vuoto "valido")
-                        logger.debug("The search of %s gave no results" % searching)
-                        return
-                    result = found[0]
+                        if result.get("tv_results"):
+                            result = result["tv_results"][0]
+                        else:
+                            result = (result.get('tv_episode_results') or [{}])[0]
 
                 result = self.get_mpaa(result)
 
@@ -878,12 +880,8 @@ class Tmdb(object):
                 for key, value in list(dict(self.search_filter).items()):
                     kept = []
                     for r in results:
-                        raw = r.get(key, '')
-                        if isinstance(raw, (list, tuple)):
-                            ok = value in raw
-                        else:
-                            ok = str(value) in str(raw if raw is not None else '')
-                        if ok:
+                        field = str(r.get(key, '') or '')
+                        if value in field:
                             kept.append(r)
                         else:
                             total_results -= 1
@@ -957,9 +955,8 @@ class Tmdb(object):
                 # FIX: r[key] su chiavi assenti + remove in loop -> filtro O(n)
                 if self.search_filter and results:
                     for key, value in list(dict(self.search_filter).items()):
-                        before = len(results)
                         results = [r for r in results if r.get(key) == value]
-                        total_results -= (before - len(results))
+                    total_results = len(results)
             elif total_results == -1:
                 results = result
 

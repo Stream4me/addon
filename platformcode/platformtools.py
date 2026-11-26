@@ -633,45 +633,27 @@ def set_infolabels(listitem, item, player=False):
 
 def set_uniqueids(listitem, item):
     """
-    Espone ai servizi che leggono il player (es. TheIntroDB) l'ID TMDb ('tmdb' per i film,
-    'tmdbshow' per gli episodi), SENZA cambiare l'ID "predefinito" del listitem.
-    In Kodi l'infolabel imdbnumber coincide con l'uniqueid predefinito e script.trakt lo usa
-    per identificare il titolo (tt... = IMDb, numerico = TVDb per le serie / TMDb per i film).
-    Prima di questa funzione setInfo() lo valorizzava con imdb_id: lo manteniamo identico, cosi
-    la sincronizzazione Trakt non cambia. Disattivabile con 'expose_uniqueids' (default: attiva).
-    Serve Kodi 20 o superiore, sulle versioni vecchie non fa nulla.
+    Passa al player gli id TMDb, IMDb e TVDB come uniqueid, cosi gli addon di servizio che li leggono dal
+    player (per esempio TheIntroDB, plugin.video.tidb) li trovano. Per gli episodi l'id TMDb e quello della
+    serie, quindi va in 'tmdbshow'. Serve Kodi 19 o superiore, sulle versioni vecchie non fa nulla.
     """
     try:
-        if not config.get_setting('expose_uniqueids', default=True):
-            return
         info = item.infoLabels
+        ids = {}
         episodio = item.contentType == 'episode' or info.get('mediatype') == 'episode' \
                    or (info.get('season') and info.get('episode'))
         tmdb_id = str(info.get('tmdb_id') or '').strip()
-        if not (tmdb_id.isdigit() and int(tmdb_id) > 0):
-            return
-
-        # ID predefinito = quello che setInfo() aveva gia messo in imdbnumber (comportamento stable)
+        if tmdb_id.isdigit() and int(tmdb_id) > 0:
+            ids['tmdbshow' if episodio else 'tmdb'] = tmdb_id
         imdb_id = str(info.get('imdb_id') or info.get('imdbnumber') or '').strip()
-        tvdb_id = str(info.get('tvdb_id') or '').strip()
-        ids = {}
-        default = None
-        if imdb_id:
+        if imdb_id.startswith('tt'):
             ids['imdb'] = imdb_id
-            default = 'imdb'
-        elif episodio and tvdb_id.isdigit():
-            ids['tvdb'] = tvdb_id
-            default = 'tvdb'
-
-        ids['tmdbshow' if episodio else 'tmdb'] = tmdb_id
-        if default is None:
-            if episodio:
-                # senza un ID "da Trakt" non tocchiamo il listitem: meglio nessun uniqueid che uno sbagliato
-                return
-            default = 'tmdb'
-
-        logger.debug('uniqueids -> {} (default={})'.format(ids, default))
-        listitem.getVideoInfoTag().setUniqueIDs(ids, default)
+        tvdb_id = str(info.get('tvdb_id') or '').strip()
+        if tvdb_id.isdigit() and int(tvdb_id) > 0:
+            ids['tvdbshow' if episodio else 'tvdb'] = tvdb_id
+        if ids:
+            default = 'tmdbshow' if 'tmdbshow' in ids else 'tmdb' if 'tmdb' in ids else list(ids)[0]
+            listitem.getVideoInfoTag().setUniqueIDs(ids, default)
     except Exception:
         logger.debug('uniqueid non impostati')
 
