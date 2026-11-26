@@ -1904,14 +1904,14 @@ def acciones_trakt(item):
     token_auth = config.get_setting("token_trakt", "trakt")
     itemlist = []
     item.contentType = item.args.replace("show", "tvshow")
-    client_id = "502bd1660b833c1ae69828163c0848e84e9850061e5529f30930e7356cae73b1"
+    client_id = trakt_tools.client_id
     headers = [['Content-Type', 'application/json'], ['trakt-api-key', client_id], ['trakt-api-version', '2']]
     if token_auth: headers.append(['Authorization', "Bearer %s" % token_auth])
 
     post = None
     if item.post: post = jsontools.dump(item.post)
 
-    url = "http://api.trakt.tv/%s" % item.url
+    url = "https://api.trakt.tv/%s" % item.url
     data = httptools.downloadpage(url, post=post, headers=headers)
     if data.code == "401":
         trakt_tools.token_trakt(item.clone(args="renew"))
