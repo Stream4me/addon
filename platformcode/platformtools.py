@@ -1082,6 +1082,13 @@ def play_video(item, strm=False, force_direct=False, autoplay=False):
     logger.debug()
     logger.debug(item.tostring('\n'))
 
+    # L'autoplay chiama play_video senza passare da launcher.play: i dati per script.trakt si impostano qui
+    try:
+        from core import trakt_tools
+        trakt_tools.set_trakt_info(item)
+    except Exception:
+        pass
+
     def play():
         if item.channel == 'downloads':
             logger.debug("Play local video: %s [%s]" % (item.title, item.url))

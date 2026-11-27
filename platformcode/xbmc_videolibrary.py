@@ -237,8 +237,9 @@ def sync_trakt_addon(path_folder):
 def sync_trakt_kodi(silent=True):
     # So that the synchronization is not silent it is worth with silent = False
     if xbmc.getCondVisibility('System.HasAddon("script.trakt")'):
-        notificacion = True
-        if not config.get_setting("sync_trakt_notification", "videolibrary") and platformtools.is_playing():
+        # La notifica compare solo se il flag e attivo e non si sta riproducendo un video
+        notificacion = bool(config.get_setting("sync_trakt_notification", "videolibrary"))
+        if platformtools.is_playing():
             notificacion = False
 
         xbmc.executebuiltin('RunScript(script.trakt,action=sync,silent=%s)' % silent)

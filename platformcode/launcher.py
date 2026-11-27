@@ -475,6 +475,7 @@ def actions(item):
     if type(itemlist) == list:
         if config.get_setting('trakt_sync'):
             from core import trakt_tools
+            trakt_tools.reset_if_client_changed()
             token_auth = config.get_setting('token_trakt', 'trakt')
             if not token_auth:
                 trakt_tools.auth_trakt()

@@ -40,6 +40,7 @@ CHECK_INTERVAL = 900
 RETRY_DELAY = 120
 REFRESH_MARGIN = 3600
 REFRESH_COOLDOWN = 300
+AUTH_COOLDOWN = 300
 SEASON_TTL = 21600
 OVERLAY_WATCHED = 5
 
@@ -134,6 +135,7 @@ def _save_tokens(data):
         config.set_setting("refresh_token_trakt", data["refresh_token"], "trakt")
     config.set_setting("token_expires_trakt", str(created + expires_in), "trakt")
     config.set_setting("client_id_trakt", client_id, "trakt")
+    config.set_setting("auth_fail_trakt", "", "trakt")
 
 
 def _clear_tokens():
@@ -215,7 +217,20 @@ def _api_get(path, params=None, retry=True):
     return code, data, headers
 
 
+def _auth_in_cooldown():
+    last = _to_int(config.get_setting("auth_fail_trakt", "trakt"))
+    return bool(last) and 0 <= time.time() - last < AUTH_COOLDOWN
+
+
+def _auth_failed():
+    config.set_setting("auth_fail_trakt", str(int(time.time())), "trakt")
+
+
 def auth_trakt():
+    # Il launcher chiama questa funzione a ogni lista finche manca il token:
+    # dopo un errore si attende prima di riprovare, per non martellare Trakt
+    if _auth_in_cooldown():
+        return
     item = Item()
     folder = (config.get_platform() == "plex")
     item.folder = folder
@@ -224,6 +239,7 @@ def auth_trakt():
         code, data, _ = _request(AUTH_URL + "/oauth/device/code", post=post, timeout=TIMEOUT_AUTH)
         if code != 200 or not isinstance(data, dict) or 'device_code' not in data:
             logger.error('Trakt: richiesta del codice dispositivo fallita (HTTP %s): %s' % (code, data))
+            _auth_failed()
             _notify('Impossibile contattare Trakt, riprova piu tardi')
             return
 
@@ -245,6 +261,7 @@ def auth_trakt():
             return itemlist
     except Exception:
         logger.error(traceback.format_exc())
+        _auth_failed()
 
 
 def _poll_device_token(device_code):
@@ -359,12 +376,15 @@ def set_trakt_info(item):
     import xbmcgui
     from core import scrapertools
     try:
-        info = item.infoLabels
-        ids = jsontools.dump({'tmdb': info['tmdb_id'], 'tvdb': info.get('tvdb_id'), 'imdb': info['imdb_id'],
-                              'slug': scrapertools.slugify(info['title'])})
+        info = item.infoLabels or {}
+        tmdb = info.get('tmdb_id') or info.get('tmdb_id_show')
+        title = info.get('title') or info.get('tvshowtitle') or item.contentSerieName or item.fulltitle
+        ids = jsontools.dump({'tmdb': tmdb, 'tvdb': info.get('tvdb_id'), 'imdb': info.get('imdb_id', ''),
+                              'slug': scrapertools.slugify(title)})
         xbmcgui.Window(10000).setProperty('script.trakt.ids', ids)
+        logger.info('Trakt: ids per script.trakt: %s anno=%s tipo=%s' % (ids, info.get('year'), item.contentType))
     except Exception:
-        pass
+        logger.info('Trakt: ids per script.trakt non impostati: %s' % traceback.format_exc())
 
 
 def _fetch_all(path, params, limit):
@@ -525,7 +545,7 @@ def get_trakt_watched(id_type, mediatype, update=False):
     return data
 
 
-def sync_if_changed(kinds=None, force=False):
+def sync_if_changed(kinds=None, force=False, full=False):
     kinds = kinds or ('movies', 'shows')
     if not _get_token():
         return
@@ -550,6 +570,7 @@ def sync_if_changed(kinds=None, force=False):
         else:
             logger.error('Trakt: last_activities non disponibile')
 
+        changed = False
         for kind in due:
             m = meta.get(kind) or {}
             meta[kind] = m
@@ -562,7 +583,7 @@ def sync_if_changed(kinds=None, force=False):
             section = (activities or {}).get('movies' if kind == 'movies' else 'episodes') or {}
             stamp = section.get('watched_at')
 
-            if node.get(kind) is None or stamp is None or stamp != m.get('activity') \
+            if full or node.get(kind) is None or stamp is None or stamp != m.get('activity') \
                     or (kind == 'shows' and _shows_meta_missing(node)):
                 id_map = {} if kind == 'shows' else None
                 complete = [] if kind == 'shows' else None
@@ -571,6 +592,7 @@ def sync_if_changed(kinds=None, force=False):
                     m['checked'] = retry_at
                     continue
                 node[kind] = data
+                changed = True
                 if id_map is not None:
                     node['show_ids'] = id_map
                     node['shows_complete'] = complete
@@ -579,6 +601,7 @@ def sync_if_changed(kinds=None, force=False):
 
         node['sync_meta'] = meta
         _save_node(node)
+        return changed
     except Exception:
         logger.error(traceback.format_exc())
     finally:
@@ -767,15 +790,63 @@ def ask_install_script():
 
 def wait_for_update_trakt():
     logger.debug()
-    t = Thread(target=update_all)
+    # Dopo una riproduzione basta il controllo con last_activities: niente scaricamento completo
+    t = Thread(target=update_all, kwargs={'full': False})
     t.daemon = True
     t.start()
 
 
-def update_all():
+def _refresh_list():
+    # Ridisegna la lista S4Me aperta, cosi' le spunte nuove si vedono senza uscire e rientrare.
+    # Ritorna True se ha eseguito il refresh
+    try:
+        if xbmc.Player().isPlaying():
+            return False
+        if 'plugin.video.s4me' in xbmc.getInfoLabel('Container.FolderPath'):
+            xbmc.executebuiltin('Container.Refresh')
+            return True
+    except Exception:
+        logger.error(traceback.format_exc())
+    return False
+
+
+def _stamps():
+    # Segni di modifica salvati con i dati Trakt: cambiano quando qualunque processo aggiorna i visti
+    meta = _load_node().get('sync_meta') or {}
+    return (str((meta.get('movies') or {}).get('activity')), str((meta.get('shows') or {}).get('activity')))
+
+
+def update_all(full=True):
+    # full=True (avvio del servizio): ricarica sempre i visti da Trakt, cosi una visione
+    # tolta dal sito sparisce. full=False (dopo una riproduzione): ricarica solo se Trakt segnala modifiche
     from time import sleep
     logger.debug()
-    sleep(20)
-    while xbmc.Player().isPlaying():
+    if full:
         sleep(20)
-    sync_if_changed(force=True)
+        while xbmc.Player().isPlaying():
+            sleep(20)
+        sync_if_changed(force=True, full=True)
+        return
+
+    before = _stamps()
+    # attende l'avvio e poi la fine della riproduzione, controllando ogni secondo
+    for _ in range(60):
+        if xbmc.Player().isPlaying():
+            break
+        sleep(1)
+    while xbmc.Player().isPlaying():
+        sleep(1)
+    # script.trakt invia la visione a Trakt qualche secondo dopo lo stop: si controlla ogni 2 secondi
+    # (solo last_activities, leggero) e appena Trakt segnala la novita si ridisegna la lista.
+    # I dati possono essere aggiornati anche dal servizio: si confrontano i segni salvati
+    sleep(1)
+    for _ in range(30):
+        sync_if_changed(force=True, full=False)
+        if _stamps() != before:
+            # subito dopo lo stop la finestra puo essere ancora quella del video: si riprova per qualche secondo
+            for _ in range(10):
+                if _refresh_list():
+                    break
+                sleep(1)
+            return
+        sleep(2)
