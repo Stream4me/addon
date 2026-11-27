@@ -2,7 +2,7 @@
 
 ## Notice
 
-Stream4Me (S4Me) is a free, open source add-on for Kodi. It uses the Trakt API to show which movies and episodes you have already watched. **This application uses Trakt but is not endorsed or certified by Trakt.** Trakt and the Trakt logo are trademarks of Trakt.
+Stream4Me (S4Me) is a free, open source add-on for Kodi. It uses the Trakt API to show which movies and episodes you have already watched. **Trakt for S4Me uses Trakt but is not endorsed or certified by Trakt.** Trakt and the Trakt logo are trademarks of Trakt.
 
 ## What the Trakt integration does
 
