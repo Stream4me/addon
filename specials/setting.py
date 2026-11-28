@@ -1200,3 +1200,22 @@ def call_browser(item):
                 'https://u.nu/api.php?action=shorturl&format=simple&url=' + item.url).read()
             platformtools.dialog_ok(config.get_localized_string(20000),
                                     config.get_localized_string(70740) % short)
+
+
+
+def trakt_login(item):
+    from core import trakt_tools
+    if trakt_tools.is_logged_in():
+        platformtools.dialog_ok(config.get_localized_string(20000), config.get_localized_string(80054))
+        return
+    trakt_tools.login_trakt()
+
+
+def trakt_logout(item):
+    from core import trakt_tools
+    if not trakt_tools.is_logged_in():
+        platformtools.dialog_notification(config.get_localized_string(20000), config.get_localized_string(80053))
+        return
+    if platformtools.dialog_yesno(config.get_localized_string(20000), config.get_localized_string(80055)):
+        if trakt_tools.logout_trakt():
+            platformtools.dialog_notification(config.get_localized_string(20000), config.get_localized_string(80053))

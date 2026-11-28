@@ -6567,3 +6567,27 @@ msgstr "Site blocked by your provider. Enable DNS override in the General settin
 msgctxt "#90046"
 msgid "Blocked site: %s"
 msgstr "Blocked site: %s"
+
+msgctxt "#80051"
+msgid "Sign out of Trakt"
+msgstr "Sign out of Trakt"
+
+msgctxt "#80052"
+msgid "Sign in to Trakt"
+msgstr "Sign in to Trakt"
+
+msgctxt "#80053"
+msgid "Signed out of Trakt"
+msgstr "Signed out of Trakt"
+
+msgctxt "#80054"
+msgid "You are already signed in to Trakt"
+msgstr "You are already signed in to Trakt"
+
+msgctxt "#80055"
+msgid "Sign out of the S4Me Trakt account?"
+msgstr "Sign out of the S4Me Trakt account?"
+
+msgctxt "#80056"
+msgid "Trakt account"
+msgstr "Trakt account"

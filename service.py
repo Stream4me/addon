@@ -286,6 +286,7 @@ def check_for_update(overwrite=True):
 
     if config.get_setting('trakt_sync'):
         from core import trakt_tools
+        trakt_tools.update_username_async()
         trakt_tools.update_all()
 
 

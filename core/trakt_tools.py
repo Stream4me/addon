@@ -136,12 +136,56 @@ def _save_tokens(data):
     config.set_setting("token_expires_trakt", str(created + expires_in), "trakt")
     config.set_setting("client_id_trakt", client_id, "trakt")
     config.set_setting("auth_fail_trakt", "", "trakt")
+    config.set_setting("logged_out_trakt", "", "trakt")
 
 
 def _clear_tokens():
     config.set_setting("token_trakt", "", "trakt")
     config.set_setting("refresh_token_trakt", "", "trakt")
     config.set_setting("token_expires_trakt", "", "trakt")
+    _store_username("")
+
+
+def _store_username(name):
+    # Il nome si salva nelle impostazioni di S4Me: la riga "Account Trakt" lo mostra.
+    # Si scrive solo se cambia, per non toccare il file a ogni lista
+    try:
+        if (config.get_setting("trakt_username") or "") != name:
+            config.set_setting("trakt_username", name)
+    except Exception:
+        logger.error(traceback.format_exc())
+
+
+def update_username(force=False):
+    # Legge da Trakt il nome dell'account e lo salva. Senza token svuota la riga.
+    # Dopo un errore si attende prima di riprovare, per non chiamare Trakt a ogni lista
+    try:
+        if not config.get_setting('token_trakt', 'trakt'):
+            _store_username("")
+            return
+        if config.get_setting("trakt_username") and not force:
+            return
+        last = _to_int(config.get_setting("username_fail_trakt", "trakt"))
+        if not force and last and 0 <= time.time() - last < AUTH_COOLDOWN:
+            return
+        res = _api_get('/users/settings')
+        if res and res[0] == 200 and isinstance(res[1], dict):
+            user = res[1].get('user') or {}
+            name = user.get('username') or user.get('name') or ''
+            if name:
+                _store_username(name)
+                config.set_setting("username_fail_trakt", "", "trakt")
+                return
+        config.set_setting("username_fail_trakt", str(int(time.time())), "trakt")
+        logger.error('Trakt: nome utente non disponibile')
+    except Exception:
+        logger.error(traceback.format_exc())
+
+
+def update_username_async(force=False):
+    t = Thread(target=update_username, kwargs={'force': force})
+    t.daemon = True
+    t.start()
 
 
 def reset_if_client_changed():
@@ -152,6 +196,35 @@ def reset_if_client_changed():
             _clear_tokens()
     except Exception:
         logger.error(traceback.format_exc())
+
+
+def is_logged_in():
+    return bool(config.get_setting('token_trakt', 'trakt'))
+
+
+def logout_trakt():
+    # Esce dall'account Trakt di S4Me: azzera i token, la pausa dopo un errore e i dati dei visti.
+    # Il flag impedisce che l'autorizzazione riparta da sola alla lista successiva
+    try:
+        _clear_tokens()
+        config.set_setting("client_id_trakt", "", "trakt")
+        config.set_setting("auth_fail_trakt", "", "trakt")
+        config.set_setting("logged_out_trakt", "1", "trakt")
+        _save_node({})
+        logger.info('Trakt: uscito dall\'account')
+        return True
+    except Exception:
+        logger.error(traceback.format_exc())
+        return False
+
+
+def login_trakt():
+    # Accesso dal menu: toglie il flag di uscita e la pausa dopo un errore, poi avvia subito l'autorizzazione
+    config.set_setting("logged_out_trakt", "", "trakt")
+    config.set_setting("auth_fail_trakt", "", "trakt")
+    auth_trakt(manual=True)
+    if is_logged_in():
+        update_username(force=True)
 
 
 def refresh_access_token(used_token=None):
@@ -226,9 +299,12 @@ def _auth_failed():
     config.set_setting("auth_fail_trakt", str(int(time.time())), "trakt")
 
 
-def auth_trakt():
+def auth_trakt(manual=False):
     # Il launcher chiama questa funzione a ogni lista finche manca il token:
-    # dopo un errore si attende prima di riprovare, per non martellare Trakt
+    # dopo un errore si attende prima di riprovare, per non martellare Trakt.
+    # Dopo l'uscita voluta dall'account (logout_trakt) non riparte da sola: solo con l'accesso dal menu (manual)
+    if not manual and config.get_setting("logged_out_trakt", "trakt"):
+        return
     if _auth_in_cooldown():
         return
     item = Item()

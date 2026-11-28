@@ -480,6 +480,8 @@ def actions(item):
             if not token_auth:
                 trakt_tools.auth_trakt()
             else:
+                if not config.get_setting('trakt_username'):
+                    trakt_tools.update_username_async()
                 if not xbmc.getCondVisibility('System.HasAddon(script.trakt)') and config.get_setting('install_trakt'):
                     trakt_tools.ask_install_script()
             itemlist = trakt_tools.trakt_check(itemlist)

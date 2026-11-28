@@ -45,7 +45,10 @@
         <setting id="next_ep_type" type="select" label="70754" lvalues="70755|70756|70757" default="0" visible="!eq(-1,0)" subsetting="true"/>
         <setting id="next_ep_seconds" type="slider" option="int" range="20,10,240" label="70749" default="40" visible="!eq(-2,0)" subsetting="true"/>
         <setting id="watched_setting" type="slider" option="int" range="20,5,90" label="60634" default="80"/>
+        <setting id="trakt_login" type="action" label="80052" action="RunPlugin(plugin://plugin.video.s4me/?ew0KICAgICJhY3Rpb24iOiAidHJha3RfbG9naW4iLA0KICAgICJjaGFubmVsIjogInNldHRpbmciDQp9)"/>
+        <setting id="trakt_username" type="text" label="80056" default="" enable="false"/>
         <setting id="trakt_sync" type="bool" label="70109" default="false"/>
+        <setting id="trakt_logout" type="action" label="80051" action="RunPlugin(plugin://plugin.video.s4me/?ew0KICAgICJhY3Rpb24iOiAidHJha3RfbG9nb3V0IiwNCiAgICAiY2hhbm5lbCI6ICJzZXR0aW5nIg0KfQ==)"/>
         <setting label="30030" type="lsep"/>
         <setting id="vidolibrary_preferences" type="action" label="60542" action="RunPlugin(plugin://plugin.video.s4me/?ew0KICAgICJhY3Rpb24iOiAiY2hhbm5lbF9jb25maWciLA0KICAgICJjaGFubmVsIjogInZpZGVvbGlicmFyeSINCn0==)"/>
         <setting id="vidolibrary_update" type="action" label="60568" action="RunPlugin(plugin://plugin.video.s4me/?ew0KICAgICJhY3Rpb24iOiAidXBkYXRlX3ZpZGVvbGlicmFyeSIsDQogICAgImNoYW5uZWwiOiAidmlkZW9saWJyYXJ5Ig0KfQ==)"/>
