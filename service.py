@@ -409,6 +409,11 @@ class AddonMonitor(xbmc.Monitor):
             logger.debug({k: self.settings_pre[k] for k in self.settings_pre
                           if k in settings_post and self.settings_pre[k] != settings_post[k]})
 
+            # Nome utente Trakt: premendo OK la finestra delle impostazioni puo riscrivere il valore che aveva
+            # all'apertura, quindi dopo ogni modifica si controlla che la riga corrisponda all'account collegato
+            from core import trakt_tools
+            trakt_tools.update_username_async()
+
             self.settings_pre = config.get_all_settings_addon()
 
     def onNotification(self, sender, method, data):
