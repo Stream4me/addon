@@ -23,7 +23,7 @@ else:
     from concurrent_py2 import futures
     from urllib import urlencode
 
-client_id = "_hqtBK5uMWB4A-Q73rFBI43-8JB3LyCTk32228QJcy0"
+client_id = "zzm0oXxVRk0RodM-ryxy8ODJJToVNVhiYvaT9Kp0COw"
 client_secret = ""
 
 AUTH_URL = "https://auth.trakt.tv"
